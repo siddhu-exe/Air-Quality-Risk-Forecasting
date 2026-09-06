@@ -1,0 +1,106 @@
+file_key,sheet,station_folder,n_rows,n_full_duplicate_rows,n_timestamp_duplicates,note
+"Anand Vihar, Delhi - DPCC/AQI Hourly/aqi_hourly_station_level_anand_vihar,_delhi_-_dpcc_2025_April_delhi_2025.xlsx",Sheet1,"Anand Vihar, Delhi - DPCC",30,0,0,cross-file overlap checked separately below
+"Anand Vihar, Delhi - DPCC/AQI Hourly/aqi_hourly_station_level_anand_vihar,_delhi_-_dpcc_2025_August_delhi_2025.xlsx",Sheet1,"Anand Vihar, Delhi - DPCC",31,0,0,cross-file overlap checked separately below
+"Anand Vihar, Delhi - DPCC/AQI Hourly/aqi_hourly_station_level_anand_vihar,_delhi_-_dpcc_2025_December_delhi_2025.xlsx",Sheet1,"Anand Vihar, Delhi - DPCC",31,0,0,cross-file overlap checked separately below
+"Anand Vihar, Delhi - DPCC/AQI Hourly/aqi_hourly_station_level_anand_vihar,_delhi_-_dpcc_2025_February_delhi_2025.xlsx",Sheet1,"Anand Vihar, Delhi - DPCC",27,0,0,cross-file overlap checked separately below
+"Anand Vihar, Delhi - DPCC/AQI Hourly/aqi_hourly_station_level_anand_vihar,_delhi_-_dpcc_2025_January_delhi_2025.xlsx",Sheet1,"Anand Vihar, Delhi - DPCC",31,0,0,cross-file overlap checked separately below
+"Anand Vihar, Delhi - DPCC/AQI Hourly/aqi_hourly_station_level_anand_vihar,_delhi_-_dpcc_2025_July_delhi_2025.xlsx",Sheet1,"Anand Vihar, Delhi - DPCC",31,0,0,cross-file overlap checked separately below
+"Anand Vihar, Delhi - DPCC/AQI Hourly/aqi_hourly_station_level_anand_vihar,_delhi_-_dpcc_2025_June_delhi_2025.xlsx",Sheet1,"Anand Vihar, Delhi - DPCC",30,0,0,cross-file overlap checked separately below
+"Anand Vihar, Delhi - DPCC/AQI Hourly/aqi_hourly_station_level_anand_vihar,_delhi_-_dpcc_2025_March_delhi_2025.xlsx",Sheet1,"Anand Vihar, Delhi - DPCC",31,0,0,cross-file overlap checked separately below
+"Anand Vihar, Delhi - DPCC/AQI Hourly/aqi_hourly_station_level_anand_vihar,_delhi_-_dpcc_2025_May_delhi_2025.xlsx",Sheet1,"Anand Vihar, Delhi - DPCC",31,0,0,cross-file overlap checked separately below
+"Anand Vihar, Delhi - DPCC/AQI Hourly/aqi_hourly_station_level_anand_vihar,_delhi_-_dpcc_2025_November_delhi_2025.xlsx",Sheet1,"Anand Vihar, Delhi - DPCC",30,0,0,cross-file overlap checked separately below
+"Anand Vihar, Delhi - DPCC/AQI Hourly/aqi_hourly_station_level_anand_vihar,_delhi_-_dpcc_2025_October_delhi_2025.xlsx",Sheet1,"Anand Vihar, Delhi - DPCC",31,0,0,cross-file overlap checked separately below
+"Anand Vihar, Delhi - DPCC/AQI Hourly/aqi_hourly_station_level_anand_vihar,_delhi_-_dpcc_2025_September_delhi_2025.xlsx",Sheet1,"Anand Vihar, Delhi - DPCC",30,0,0,cross-file overlap checked separately below
+"Anand Vihar, Delhi - DPCC/Raw Data/2024_raw_data_hourly_anand_vihar,_delhi_-_dpcc_1H.csv",sheet1,"Anand Vihar, Delhi - DPCC",8784,0,0,cross-file overlap checked separately below
+"Anand Vihar, Delhi - DPCC/Raw Data/2025_raw_data_hourly_anand_vihar,_delhi_-_dpcc_1H.csv",sheet1,"Anand Vihar, Delhi - DPCC",8760,0,0,cross-file overlap checked separately below
+"Anand Vihar, Delhi - DPCC/Raw Data/2026_raw_data_hourly_anand_vihar,_delhi_-_dpcc_1H.csv",sheet1,"Anand Vihar, Delhi - DPCC",5088,0,0,cross-file overlap checked separately below
+"Bawana, Delhi - DPCC/AQI Hourly/aqi_hourly_station_level_bawana,_delhi_-_dpcc_2025_April_delhi_2025.xlsx",Sheet1,"Bawana, Delhi - DPCC",30,0,0,cross-file overlap checked separately below
+"Bawana, Delhi - DPCC/AQI Hourly/aqi_hourly_station_level_bawana,_delhi_-_dpcc_2025_August_delhi_2025.xlsx",Sheet1,"Bawana, Delhi - DPCC",31,0,0,cross-file overlap checked separately below
+"Bawana, Delhi - DPCC/AQI Hourly/aqi_hourly_station_level_bawana,_delhi_-_dpcc_2025_December_delhi_2025.xlsx",Sheet1,"Bawana, Delhi - DPCC",31,0,0,cross-file overlap checked separately below
+"Bawana, Delhi - DPCC/AQI Hourly/aqi_hourly_station_level_bawana,_delhi_-_dpcc_2025_February_delhi_2025.xlsx",Sheet1,"Bawana, Delhi - DPCC",28,0,0,cross-file overlap checked separately below
+"Bawana, Delhi - DPCC/AQI Hourly/aqi_hourly_station_level_bawana,_delhi_-_dpcc_2025_January_delhi_2025.xlsx",Sheet1,"Bawana, Delhi - DPCC",31,0,0,cross-file overlap checked separately below
+"Bawana, Delhi - DPCC/AQI Hourly/aqi_hourly_station_level_bawana,_delhi_-_dpcc_2025_July_delhi_2025.xlsx",Sheet1,"Bawana, Delhi - DPCC",31,0,0,cross-file overlap checked separately below
+"Bawana, Delhi - DPCC/AQI Hourly/aqi_hourly_station_level_bawana,_delhi_-_dpcc_2025_June_delhi_2025.xlsx",Sheet1,"Bawana, Delhi - DPCC",30,0,0,cross-file overlap checked separately below
+"Bawana, Delhi - DPCC/AQI Hourly/aqi_hourly_station_level_bawana,_delhi_-_dpcc_2025_March_delhi_2025.xlsx",Sheet1,"Bawana, Delhi - DPCC",31,0,0,cross-file overlap checked separately below
+"Bawana, Delhi - DPCC/AQI Hourly/aqi_hourly_station_level_bawana,_delhi_-_dpcc_2025_May_delhi_2025.xlsx",Sheet1,"Bawana, Delhi - DPCC",31,0,0,cross-file overlap checked separately below
+"Bawana, Delhi - DPCC/AQI Hourly/aqi_hourly_station_level_bawana,_delhi_-_dpcc_2025_November_delhi_2025.xlsx",Sheet1,"Bawana, Delhi - DPCC",30,0,0,cross-file overlap checked separately below
+"Bawana, Delhi - DPCC/AQI Hourly/aqi_hourly_station_level_bawana,_delhi_-_dpcc_2025_October_delhi_2025.xlsx",Sheet1,"Bawana, Delhi - DPCC",31,0,0,cross-file overlap checked separately below
+"Bawana, Delhi - DPCC/AQI Hourly/aqi_hourly_station_level_bawana,_delhi_-_dpcc_2025_September_delhi_2025.xlsx",Sheet1,"Bawana, Delhi - DPCC",30,0,0,cross-file overlap checked separately below
+"Bawana, Delhi - DPCC/Raw Data/2024_raw_data_hourly_bawana,_delhi_-_dpcc_1H.csv",sheet1,"Bawana, Delhi - DPCC",8784,0,0,cross-file overlap checked separately below
+"Bawana, Delhi - DPCC/Raw Data/2025_raw_data_hourly_bawana,_delhi_-_dpcc_1H.csv",sheet1,"Bawana, Delhi - DPCC",8760,0,0,cross-file overlap checked separately below
+"Bawana, Delhi - DPCC/Raw Data/2026_raw_data_hourly_bawana,_delhi_-_dpcc_1H.csv",sheet1,"Bawana, Delhi - DPCC",5088,0,0,cross-file overlap checked separately below
+"Dwarka-Sector 8, Delhi - DPCC/AQI Hourly/aqi_hourly_station_level_dwarka-sector_8,_delhi_-_dpcc__2025_April_delhi_2025.xlsx",Sheet1,"Dwarka-Sector 8, Delhi - DPCC",30,0,0,cross-file overlap checked separately below
+"Dwarka-Sector 8, Delhi - DPCC/AQI Hourly/aqi_hourly_station_level_dwarka-sector_8,_delhi_-_dpcc__2025_August_delhi_2025.xlsx",Sheet1,"Dwarka-Sector 8, Delhi - DPCC",31,0,0,cross-file overlap checked separately below
+"Dwarka-Sector 8, Delhi - DPCC/AQI Hourly/aqi_hourly_station_level_dwarka-sector_8,_delhi_-_dpcc__2025_December_delhi_2025.xlsx",Sheet1,"Dwarka-Sector 8, Delhi - DPCC",31,0,0,cross-file overlap checked separately below
+"Dwarka-Sector 8, Delhi - DPCC/AQI Hourly/aqi_hourly_station_level_dwarka-sector_8,_delhi_-_dpcc__2025_February_delhi_2025.xlsx",Sheet1,"Dwarka-Sector 8, Delhi - DPCC",28,0,0,cross-file overlap checked separately below
+"Dwarka-Sector 8, Delhi - DPCC/AQI Hourly/aqi_hourly_station_level_dwarka-sector_8,_delhi_-_dpcc__2025_January_delhi_2025.xlsx",Sheet1,"Dwarka-Sector 8, Delhi - DPCC",31,0,0,cross-file overlap checked separately below
+"Dwarka-Sector 8, Delhi - DPCC/AQI Hourly/aqi_hourly_station_level_dwarka-sector_8,_delhi_-_dpcc__2025_July_delhi_2025.xlsx",Sheet1,"Dwarka-Sector 8, Delhi - DPCC",31,0,0,cross-file overlap checked separately below
+"Dwarka-Sector 8, Delhi - DPCC/AQI Hourly/aqi_hourly_station_level_dwarka-sector_8,_delhi_-_dpcc__2025_June_delhi_2025.xlsx",Sheet1,"Dwarka-Sector 8, Delhi - DPCC",30,0,0,cross-file overlap checked separately below
+"Dwarka-Sector 8, Delhi - DPCC/AQI Hourly/aqi_hourly_station_level_dwarka-sector_8,_delhi_-_dpcc__2025_March_delhi_2025.xlsx",Sheet1,"Dwarka-Sector 8, Delhi - DPCC",31,0,0,cross-file overlap checked separately below
+"Dwarka-Sector 8, Delhi - DPCC/AQI Hourly/aqi_hourly_station_level_dwarka-sector_8,_delhi_-_dpcc__2025_May_delhi_2025.xlsx",Sheet1,"Dwarka-Sector 8, Delhi - DPCC",31,0,0,cross-file overlap checked separately below
+"Dwarka-Sector 8, Delhi - DPCC/AQI Hourly/aqi_hourly_station_level_dwarka-sector_8,_delhi_-_dpcc__2025_November_delhi_2025.xlsx",Sheet1,"Dwarka-Sector 8, Delhi - DPCC",30,0,0,cross-file overlap checked separately below
+"Dwarka-Sector 8, Delhi - DPCC/AQI Hourly/aqi_hourly_station_level_dwarka-sector_8,_delhi_-_dpcc__2025_October_delhi_2025.xlsx",Sheet1,"Dwarka-Sector 8, Delhi - DPCC",31,0,0,cross-file overlap checked separately below
+"Dwarka-Sector 8, Delhi - DPCC/AQI Hourly/aqi_hourly_station_level_dwarka-sector_8,_delhi_-_dpcc__2025_September_delhi_2025.xlsx",Sheet1,"Dwarka-Sector 8, Delhi - DPCC",30,0,0,cross-file overlap checked separately below
+"Dwarka-Sector 8, Delhi - DPCC/Raw Data/2023_raw_data_hourly_dwarka-sector_8,_delhi_-_dpcc__1H.csv",sheet1,"Dwarka-Sector 8, Delhi - DPCC",8760,0,0,cross-file overlap checked separately below
+"Dwarka-Sector 8, Delhi - DPCC/Raw Data/2024_raw_data_hourly_dwarka-sector_8,_delhi_-_dpcc__1H.csv",sheet1,"Dwarka-Sector 8, Delhi - DPCC",8784,0,0,cross-file overlap checked separately below
+"Dwarka-Sector 8, Delhi - DPCC/Raw Data/2025_raw_data_hourly_dwarka-sector_8,_delhi_-_dpcc__1H.csv",sheet1,"Dwarka-Sector 8, Delhi - DPCC",8760,0,0,cross-file overlap checked separately below
+"ITO, Delhi - CPCB/AQI Hourly/aqi_hourly_station_level_ito,_delhi_-_cpcb_2025_April_delhi_2025.xlsx",Sheet1,"ITO, Delhi - CPCB",30,0,0,cross-file overlap checked separately below
+"ITO, Delhi - CPCB/AQI Hourly/aqi_hourly_station_level_ito,_delhi_-_cpcb_2025_August_delhi_2025.xlsx",Sheet1,"ITO, Delhi - CPCB",31,0,0,cross-file overlap checked separately below
+"ITO, Delhi - CPCB/AQI Hourly/aqi_hourly_station_level_ito,_delhi_-_cpcb_2025_December_delhi_2025.xlsx",Sheet1,"ITO, Delhi - CPCB",31,0,0,cross-file overlap checked separately below
+"ITO, Delhi - CPCB/AQI Hourly/aqi_hourly_station_level_ito,_delhi_-_cpcb_2025_February_delhi_2025.xlsx",Sheet1,"ITO, Delhi - CPCB",28,0,0,cross-file overlap checked separately below
+"ITO, Delhi - CPCB/AQI Hourly/aqi_hourly_station_level_ito,_delhi_-_cpcb_2025_January_delhi_2025.xlsx",Sheet1,"ITO, Delhi - CPCB",31,0,0,cross-file overlap checked separately below
+"ITO, Delhi - CPCB/AQI Hourly/aqi_hourly_station_level_ito,_delhi_-_cpcb_2025_July_delhi_2025.xlsx",Sheet1,"ITO, Delhi - CPCB",31,0,0,cross-file overlap checked separately below
+"ITO, Delhi - CPCB/AQI Hourly/aqi_hourly_station_level_ito,_delhi_-_cpcb_2025_June_delhi_2025.xlsx",Sheet1,"ITO, Delhi - CPCB",30,0,0,cross-file overlap checked separately below
+"ITO, Delhi - CPCB/AQI Hourly/aqi_hourly_station_level_ito,_delhi_-_cpcb_2025_March_delhi_2025.xlsx",Sheet1,"ITO, Delhi - CPCB",31,0,0,cross-file overlap checked separately below
+"ITO, Delhi - CPCB/AQI Hourly/aqi_hourly_station_level_ito,_delhi_-_cpcb_2025_May_delhi_2025.xlsx",Sheet1,"ITO, Delhi - CPCB",31,0,0,cross-file overlap checked separately below
+"ITO, Delhi - CPCB/AQI Hourly/aqi_hourly_station_level_ito,_delhi_-_cpcb_2025_November_delhi_2025.xlsx",Sheet1,"ITO, Delhi - CPCB",30,0,0,cross-file overlap checked separately below
+"ITO, Delhi - CPCB/AQI Hourly/aqi_hourly_station_level_ito,_delhi_-_cpcb_2025_October_delhi_2025.xlsx",Sheet1,"ITO, Delhi - CPCB",31,0,0,cross-file overlap checked separately below
+"ITO, Delhi - CPCB/AQI Hourly/aqi_hourly_station_level_ito,_delhi_-_cpcb_2025_September_delhi_2025.xlsx",Sheet1,"ITO, Delhi - CPCB",30,0,0,cross-file overlap checked separately below
+"ITO, Delhi - CPCB/Raw Data/2024_raw_data_hourly_ito,_delhi_-_cpcb_1H.csv",sheet1,"ITO, Delhi - CPCB",8784,0,0,cross-file overlap checked separately below
+"ITO, Delhi - CPCB/Raw Data/2025_raw_data_hourly_ito,_delhi_-_cpcb_1H.csv",sheet1,"ITO, Delhi - CPCB",8760,0,0,cross-file overlap checked separately below
+"ITO, Delhi - CPCB/Raw Data/2026_raw_data_hourly_ito,_delhi_-_cpcb_1H.csv",sheet1,"ITO, Delhi - CPCB",5088,0,0,cross-file overlap checked separately below
+"Jahangirpuri, Delhi - DPCC	/AQI Hourly/aqi_hourly_station_level_jahangirpuri,_delhi_-_dpcc_2025_April_delhi_2025.xlsx",Sheet1,"Jahangirpuri, Delhi - DPCC",30,0,0,cross-file overlap checked separately below
+"Jahangirpuri, Delhi - DPCC	/AQI Hourly/aqi_hourly_station_level_jahangirpuri,_delhi_-_dpcc_2025_August_delhi_2025.xlsx",Sheet1,"Jahangirpuri, Delhi - DPCC",31,0,0,cross-file overlap checked separately below
+"Jahangirpuri, Delhi - DPCC	/AQI Hourly/aqi_hourly_station_level_jahangirpuri,_delhi_-_dpcc_2025_December_delhi_2025.xlsx",Sheet1,"Jahangirpuri, Delhi - DPCC",31,0,0,cross-file overlap checked separately below
+"Jahangirpuri, Delhi - DPCC	/AQI Hourly/aqi_hourly_station_level_jahangirpuri,_delhi_-_dpcc_2025_February_delhi_2025.xlsx",Sheet1,"Jahangirpuri, Delhi - DPCC",28,0,0,cross-file overlap checked separately below
+"Jahangirpuri, Delhi - DPCC	/AQI Hourly/aqi_hourly_station_level_jahangirpuri,_delhi_-_dpcc_2025_January_delhi_2025.xlsx",Sheet1,"Jahangirpuri, Delhi - DPCC",31,0,0,cross-file overlap checked separately below
+"Jahangirpuri, Delhi - DPCC	/AQI Hourly/aqi_hourly_station_level_jahangirpuri,_delhi_-_dpcc_2025_July_delhi_2025.xlsx",Sheet1,"Jahangirpuri, Delhi - DPCC",31,0,0,cross-file overlap checked separately below
+"Jahangirpuri, Delhi - DPCC	/AQI Hourly/aqi_hourly_station_level_jahangirpuri,_delhi_-_dpcc_2025_June_delhi_2025.xlsx",Sheet1,"Jahangirpuri, Delhi - DPCC",30,0,0,cross-file overlap checked separately below
+"Jahangirpuri, Delhi - DPCC	/AQI Hourly/aqi_hourly_station_level_jahangirpuri,_delhi_-_dpcc_2025_March_delhi_2025.xlsx",Sheet1,"Jahangirpuri, Delhi - DPCC",31,0,0,cross-file overlap checked separately below
+"Jahangirpuri, Delhi - DPCC	/AQI Hourly/aqi_hourly_station_level_jahangirpuri,_delhi_-_dpcc_2025_May_delhi_2025.xlsx",Sheet1,"Jahangirpuri, Delhi - DPCC",31,0,0,cross-file overlap checked separately below
+"Jahangirpuri, Delhi - DPCC	/AQI Hourly/aqi_hourly_station_level_jahangirpuri,_delhi_-_dpcc_2025_November_delhi_2025.xlsx",Sheet1,"Jahangirpuri, Delhi - DPCC",30,0,0,cross-file overlap checked separately below
+"Jahangirpuri, Delhi - DPCC	/AQI Hourly/aqi_hourly_station_level_jahangirpuri,_delhi_-_dpcc_2025_October_delhi_2025.xlsx",Sheet1,"Jahangirpuri, Delhi - DPCC",31,0,0,cross-file overlap checked separately below
+"Jahangirpuri, Delhi - DPCC	/AQI Hourly/aqi_hourly_station_level_jahangirpuri,_delhi_-_dpcc_2025_September_delhi_2025.xlsx",Sheet1,"Jahangirpuri, Delhi - DPCC",30,0,0,cross-file overlap checked separately below
+"Jahangirpuri, Delhi - DPCC	/Raw Data/2024_raw_data_hourly_jahangirpuri,_delhi_-_dpcc_1H.csv",sheet1,"Jahangirpuri, Delhi - DPCC",8784,0,0,cross-file overlap checked separately below
+"Jahangirpuri, Delhi - DPCC	/Raw Data/2025_raw_data_hourly_jahangirpuri,_delhi_-_dpcc_1H.csv",sheet1,"Jahangirpuri, Delhi - DPCC",8760,0,0,cross-file overlap checked separately below
+"Jahangirpuri, Delhi - DPCC	/Raw Data/2026_raw_data_hourly_jahangirpuri,_delhi_-_dpcc_1H.csv",sheet1,"Jahangirpuri, Delhi - DPCC",5088,0,0,cross-file overlap checked separately below
+"Punjabi Bagh, Delhi - DPCC/AQI Hourly/aqi_hourly_station_level_punjabi_bagh,_delhi_-_dpcc_2025_April_delhi_2025.xlsx",Sheet1,"Punjabi Bagh, Delhi - DPCC",30,0,0,cross-file overlap checked separately below
+"Punjabi Bagh, Delhi - DPCC/AQI Hourly/aqi_hourly_station_level_punjabi_bagh,_delhi_-_dpcc_2025_August_delhi_2025.xlsx",Sheet1,"Punjabi Bagh, Delhi - DPCC",31,0,0,cross-file overlap checked separately below
+"Punjabi Bagh, Delhi - DPCC/AQI Hourly/aqi_hourly_station_level_punjabi_bagh,_delhi_-_dpcc_2025_December_delhi_2025.xlsx",Sheet1,"Punjabi Bagh, Delhi - DPCC",31,0,0,cross-file overlap checked separately below
+"Punjabi Bagh, Delhi - DPCC/AQI Hourly/aqi_hourly_station_level_punjabi_bagh,_delhi_-_dpcc_2025_February_delhi_2025.xlsx",Sheet1,"Punjabi Bagh, Delhi - DPCC",28,0,0,cross-file overlap checked separately below
+"Punjabi Bagh, Delhi - DPCC/AQI Hourly/aqi_hourly_station_level_punjabi_bagh,_delhi_-_dpcc_2025_January_delhi_2025.xlsx",Sheet1,"Punjabi Bagh, Delhi - DPCC",31,0,0,cross-file overlap checked separately below
+"Punjabi Bagh, Delhi - DPCC/AQI Hourly/aqi_hourly_station_level_punjabi_bagh,_delhi_-_dpcc_2025_July_delhi_2025.xlsx",Sheet1,"Punjabi Bagh, Delhi - DPCC",31,0,0,cross-file overlap checked separately below
+"Punjabi Bagh, Delhi - DPCC/AQI Hourly/aqi_hourly_station_level_punjabi_bagh,_delhi_-_dpcc_2025_June_delhi_2025.xlsx",Sheet1,"Punjabi Bagh, Delhi - DPCC",30,0,0,cross-file overlap checked separately below
+"Punjabi Bagh, Delhi - DPCC/AQI Hourly/aqi_hourly_station_level_punjabi_bagh,_delhi_-_dpcc_2025_March_delhi_2025.xlsx",Sheet1,"Punjabi Bagh, Delhi - DPCC",31,0,0,cross-file overlap checked separately below
+"Punjabi Bagh, Delhi - DPCC/AQI Hourly/aqi_hourly_station_level_punjabi_bagh,_delhi_-_dpcc_2025_May_delhi_2025.xlsx",Sheet1,"Punjabi Bagh, Delhi - DPCC",28,0,0,cross-file overlap checked separately below
+"Punjabi Bagh, Delhi - DPCC/AQI Hourly/aqi_hourly_station_level_punjabi_bagh,_delhi_-_dpcc_2025_November_delhi_2025.xlsx",Sheet1,"Punjabi Bagh, Delhi - DPCC",30,0,0,cross-file overlap checked separately below
+"Punjabi Bagh, Delhi - DPCC/AQI Hourly/aqi_hourly_station_level_punjabi_bagh,_delhi_-_dpcc_2025_October_delhi_2025.xlsx",Sheet1,"Punjabi Bagh, Delhi - DPCC",31,0,0,cross-file overlap checked separately below
+"Punjabi Bagh, Delhi - DPCC/AQI Hourly/aqi_hourly_station_level_punjabi_bagh,_delhi_-_dpcc_2025_September_delhi_2025.xlsx",Sheet1,"Punjabi Bagh, Delhi - DPCC",30,0,0,cross-file overlap checked separately below
+"Punjabi Bagh, Delhi - DPCC/Raw Data/2024_raw_data_hourly_punjabi_bagh,_delhi_-_dpcc_1H.csv",sheet1,"Punjabi Bagh, Delhi - DPCC",8784,0,0,cross-file overlap checked separately below
+"Punjabi Bagh, Delhi - DPCC/Raw Data/2025_raw_data_hourly_punjabi_bagh,_delhi_-_dpcc_1H.csv",sheet1,"Punjabi Bagh, Delhi - DPCC",8760,0,0,cross-file overlap checked separately below
+"Punjabi Bagh, Delhi - DPCC/Raw Data/2026_raw_data_hourly_punjabi_bagh,_delhi_-_dpcc_1H.csv",sheet1,"Punjabi Bagh, Delhi - DPCC",5088,0,0,cross-file overlap checked separately below
+"R K Puram, Delhi - DPCC/AQI Hourly/aqi_hourly_station_level_r_k_puram,_delhi_-_dpcc_2025_April_delhi_2025.xlsx",Sheet1,"R K Puram, Delhi - DPCC",28,0,0,cross-file overlap checked separately below
+"R K Puram, Delhi - DPCC/AQI Hourly/aqi_hourly_station_level_r_k_puram,_delhi_-_dpcc_2025_August_delhi_2025.xlsx",Sheet1,"R K Puram, Delhi - DPCC",31,0,0,cross-file overlap checked separately below
+"R K Puram, Delhi - DPCC/AQI Hourly/aqi_hourly_station_level_r_k_puram,_delhi_-_dpcc_2025_December_delhi_2025.xlsx",Sheet1,"R K Puram, Delhi - DPCC",31,0,0,cross-file overlap checked separately below
+"R K Puram, Delhi - DPCC/AQI Hourly/aqi_hourly_station_level_r_k_puram,_delhi_-_dpcc_2025_February_delhi_2025.xlsx",Sheet1,"R K Puram, Delhi - DPCC",28,0,0,cross-file overlap checked separately below
+"R K Puram, Delhi - DPCC/AQI Hourly/aqi_hourly_station_level_r_k_puram,_delhi_-_dpcc_2025_January_delhi_2025.xlsx",Sheet1,"R K Puram, Delhi - DPCC",31,0,0,cross-file overlap checked separately below
+"R K Puram, Delhi - DPCC/AQI Hourly/aqi_hourly_station_level_r_k_puram,_delhi_-_dpcc_2025_July_delhi_2025.xlsx",Sheet1,"R K Puram, Delhi - DPCC",31,0,0,cross-file overlap checked separately below
+"R K Puram, Delhi - DPCC/AQI Hourly/aqi_hourly_station_level_r_k_puram,_delhi_-_dpcc_2025_June_delhi_2025.xlsx",Sheet1,"R K Puram, Delhi - DPCC",30,0,0,cross-file overlap checked separately below
+"R K Puram, Delhi - DPCC/AQI Hourly/aqi_hourly_station_level_r_k_puram,_delhi_-_dpcc_2025_March_delhi_2025.xlsx",Sheet1,"R K Puram, Delhi - DPCC",31,0,0,cross-file overlap checked separately below
+"R K Puram, Delhi - DPCC/AQI Hourly/aqi_hourly_station_level_r_k_puram,_delhi_-_dpcc_2025_May_delhi_2025.xlsx",Sheet1,"R K Puram, Delhi - DPCC",31,0,0,cross-file overlap checked separately below
+"R K Puram, Delhi - DPCC/AQI Hourly/aqi_hourly_station_level_r_k_puram,_delhi_-_dpcc_2025_November_delhi_2025.xlsx",Sheet1,"R K Puram, Delhi - DPCC",30,0,0,cross-file overlap checked separately below
+"R K Puram, Delhi - DPCC/AQI Hourly/aqi_hourly_station_level_r_k_puram,_delhi_-_dpcc_2025_October_delhi_2025.xlsx",Sheet1,"R K Puram, Delhi - DPCC",31,0,0,cross-file overlap checked separately below
+"R K Puram, Delhi - DPCC/AQI Hourly/aqi_hourly_station_level_r_k_puram,_delhi_-_dpcc_2025_September_delhi_2025.xlsx",Sheet1,"R K Puram, Delhi - DPCC",30,0,0,cross-file overlap checked separately below
+"R K Puram, Delhi - DPCC/Raw Data/2024_raw_data_hourly_r_k_puram,_delhi_-_dpcc_1H.csv",sheet1,"R K Puram, Delhi - DPCC",8784,0,0,cross-file overlap checked separately below
+"R K Puram, Delhi - DPCC/Raw Data/2025_raw_data_hourly_r_k_puram,_delhi_-_dpcc_1H.csv",sheet1,"R K Puram, Delhi - DPCC",8760,0,0,cross-file overlap checked separately below
+"R K Puram, Delhi - DPCC/Raw Data/2026_raw_data_hourly_r_k_puram,_delhi_-_dpcc_1H.csv",sheet1,"R K Puram, Delhi - DPCC",5088,0,0,cross-file overlap checked separately below
