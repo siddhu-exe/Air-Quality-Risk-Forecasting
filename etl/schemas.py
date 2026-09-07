@@ -34,7 +34,11 @@ CSV_COLUMN_MAPPING = {
 CAAQMS_DB_COLUMNS = list(CSV_COLUMN_MAPPING.values())
 
 # Sentinel values to be mapped to NULL (NaN)
-SENTINEL_VALUES = {-999, -99, 999, 9999, -9999, 9, -9}
+# Only clearly unnatural instrument codes that can never be real measurements.
+# - Removed 9 and -9: these are valid environmental readings (°C, µg/m³, etc.)
+# - Removed 999: this is variable-specific; bp_mmhg=999 is handled via PHYSICAL_BOUNDS
+# - Removed -99: too close to valid ranges for some columns
+SENTINEL_VALUES = {-9999, 9999, -999}
 
 # Physical bounds for numeric variables
 # Tuple: (min_valid, max_valid)
@@ -61,6 +65,8 @@ PHYSICAL_BOUNDS = {
     "tot_rf_mm": (0, None),
     "ws_ms": (0, None),
     "sr_wm2": (0, None),
+    # bp_mmhg: Real values are in hPa (960-998 range). 999.0 is a documented sensor error/clipping max.
+    "bp_mmhg": (400, 998.9),
 }
 
 def clean_station_name(raw_name: str) -> tuple[str, str, str]:
