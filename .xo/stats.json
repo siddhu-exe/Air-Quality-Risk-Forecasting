@@ -1,0 +1,31 @@
+{
+  "schema": 2,
+  "updated_at": "2026-09-07T17:13:09Z",
+  "rolling": {
+    "7d": {
+      "tokens": {
+        "input": 0,
+        "output": 0
+      },
+      "by_model": {},
+      "by_tool": {},
+      "files_edited": 0,
+      "sessions": 0,
+      "active_minutes": 0
+    },
+    "30d": {
+      "tokens": {
+        "input": 0,
+        "output": 0
+      },
+      "by_model": {},
+      "by_tool": {},
+      "files_edited": 0,
+      "sessions": 0,
+      "active_minutes": 0
+    }
+  },
+  "by_session": {},
+  "by_runtime": {},
+  "by_day": {}
+}

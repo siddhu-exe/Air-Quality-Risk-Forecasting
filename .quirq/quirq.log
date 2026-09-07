@@ -1,0 +1,47 @@
+INFO:     Started server process [20326]
+INFO:     Waiting for application startup.
+rclone not available: rclone binary not found in PATH
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:5002 (Press CTRL+C to quit)
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [20326]
+🔧 QUIRQ_SKIP_BOOT_INSTALL set — skipping agent bootstrap
+🔧 QUIRQ_SKIP_BOOT_INSTALL set — skipping shared dep install
+   argus daemon start: argusd started, PID 20737
+🚀 Starting XO Space API Server...
+   Chat API: https://api-swarm-beta.xo.builders
+   Chat API auth: not set
+   Stage: local
+   AI Provider: claude
+   Claude CLI: /home/siddharth/.nvm/versions/node/v24.16.0/bin/claude (timeout=300s)
+   Claude Permission Mode: bypassPermissions
+   AI Workspace Root: /home/siddharth/Desktop/Projects/projects/Air quality risk forecasting
+   Codex CLI: /home/siddharth/.nvm/versions/node/v24.16.0/bin/codex (timeout=300s)
+   Startup warmup: enabled (http://127.0.0.1:5002/)
+   Skills: .claude/skills (Claude-native)
+   Skills: .agents/skills + AGENTS.md (Codex-native)
+   rclone daemon: started for gdrive/onedrive connectors
+   gnupg: available (xo-projects-sync ready)
+⚠️ antigravity skill install skipped for 'xo-projects': /home/siddharth/.gemini/antigravity-cli does not exist
+✅ claude_code skill installed: /home/siddharth/.claude/skills/xo-projects
+✅ codex skill installed: /home/siddharth/.codex/skills/xo-projects
+⚠️ hermes skill install skipped for 'xo-projects': /home/siddharth/.hermes does not exist
+⚠️ openclaw skill install skipped for 'xo-projects': /home/siddharth/.openclaw does not exist
+   Startup skills: background install scheduled
+✅ xo.json: wrote static manifest for agent=claude_code at /home/siddharth/Desktop/Projects/projects/Air quality risk forecasting/.xo/xo.json
+   xo.json: status seed scheduled (background)
+   Usage sync: background task started
+   Watcher: background task started
+   xo.json: models status seed → fetching…
+   xo.json: channels status seed → fetching…
+✅ xo.json: channels status seeded
+✅ xo.json: models status seeded
+space_index: kept strongest 60 of 90 derived ties
+[2026-09-07 17:13:04 UTC] usage_sync: no watermark found, starting historical backfill...
+[2026-09-07 17:13:06 UTC] usage_sync: not authenticated — skipping report (nothing sent)
+[2026-09-07 17:13:06 UTC] usage_sync: backfill complete
+[2026-09-07 17:13:06 UTC] usage_sync: next sync in 8.8h (at 02:00 UTC)
+   argus daemon stop: argusd stopped.
+👋 Shutting down XO Space API Server...

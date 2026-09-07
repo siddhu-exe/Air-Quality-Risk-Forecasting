@@ -1,0 +1,68 @@
+{
+  "agent": "claude_code",
+  "models": {
+    "enabled": true,
+    "oauth": {
+      "claude_code": {
+        "enabled": true
+      },
+      "codex": {
+        "enabled": false
+      }
+    },
+    "api_keys": {
+      "enabled": true,
+      "anthropic": {
+        "enabled": true
+      },
+      "openai": {
+        "enabled": false
+      },
+      "openrouter": {
+        "enabled": true
+      }
+    },
+    "status": {
+      "default": "claude_code/claude",
+      "models": [
+        {
+          "id": "claude_code/claude",
+          "status": "ok"
+        }
+      ]
+    }
+  },
+  "data": {
+    "enabled": true,
+    "google_drive": {
+      "enabled": true
+    },
+    "one_drive": {
+      "enabled": true
+    },
+    "github": {
+      "enabled": true
+    },
+    "vercel": {
+      "enabled": true
+    }
+  },
+  "channels": {
+    "enabled": false,
+    "telegram": {
+      "enabled": false
+    },
+    "slack": {
+      "enabled": false
+    },
+    "status": {
+      "channels": []
+    }
+  },
+  "secrets": {
+    "enabled": true
+  },
+  "remote_control": {
+    "enabled": true
+  }
+}

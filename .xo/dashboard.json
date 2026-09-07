@@ -1,0 +1,283 @@
+{
+  "meta": {
+    "title": "Dashboard",
+    "tagline": "projects gathered into purpose environments",
+    "mappedOn": "07 September 2026",
+    "workspace": "/home/siddharth/Desktop/Projects/projects/Air quality risk forecasting",
+    "noun": "projects",
+    "collectionLabel": "environments",
+    "rootEdgeLabel": "an environment of this workspace",
+    "hubLabel": "Environment",
+    "timelineTitle": "The workspace, by purpose, over time.",
+    "timelineSub": "Scrub through the project map and trace an environment.",
+    "enclose": true,
+    "tieSpring": {
+      "d": 80,
+      "k": 0.07
+    },
+    "shapeLegend": [
+      {
+        "shape": "disc",
+        "label": "App"
+      },
+      {
+        "shape": "ring",
+        "label": "One-pager"
+      },
+      {
+        "shape": "stack",
+        "label": "Docs"
+      },
+      {
+        "shape": "slab",
+        "label": "Slides"
+      },
+      {
+        "shape": "diamond",
+        "label": "Unknown"
+      }
+    ],
+    "typeLegend": [
+      {
+        "id": "output",
+        "label": "Output"
+      },
+      {
+        "id": "inbox",
+        "label": "Inbox"
+      },
+      {
+        "id": "session",
+        "label": "Sessions",
+        "weight": "dim"
+      },
+      {
+        "id": "system",
+        "label": "System",
+        "weight": "dim"
+      }
+    ]
+  },
+  "categories": {
+    "engineering": {
+      "name": "Engineering",
+      "color": "#6fb7e0"
+    },
+    "ops": {
+      "name": "Ops",
+      "color": "#e8a15c"
+    },
+    "documentation": {
+      "name": "Documentation",
+      "color": "#c792ea"
+    },
+    "research": {
+      "name": "Research",
+      "color": "#7fd0a8"
+    },
+    "marketing": {
+      "name": "Marketing",
+      "color": "#e0708a"
+    }
+  },
+  "hubAngles": {
+    "engineering": -1.5707963267948966,
+    "ops": -0.3141592653589793,
+    "documentation": 0.9424777960769379,
+    "research": 2.199114857512855,
+    "marketing": 3.4557519189487724
+  },
+  "timeline": {
+    "start": "2026-08-27",
+    "end": "2026-09-14"
+  },
+  "root": {
+    "id": "environments-root",
+    "label": "Environments",
+    "blurb": "7 projects across 5 environments"
+  },
+  "hubs": [
+    {
+      "id": "engineering",
+      "cat": "engineering",
+      "label": "Engineering",
+      "blurb": "7 projects · Apps, services, and libraries that are built and shipped."
+    },
+    {
+      "id": "ops",
+      "cat": "ops",
+      "label": "Ops",
+      "blurb": "0 projects · Infrastructure-as-code and operational tooling."
+    },
+    {
+      "id": "documentation",
+      "cat": "documentation",
+      "label": "Documentation",
+      "blurb": "1 project · Docs sites, wikis, notes, and one-pagers."
+    },
+    {
+      "id": "research",
+      "cat": "research",
+      "label": "Research",
+      "blurb": "0 projects · Papers, notebooks, studies, and exploratory work."
+    },
+    {
+      "id": "marketing",
+      "cat": "marketing",
+      "label": "Marketing",
+      "blurb": "1 project · Decks, brand assets, proposals, and outward-facing material."
+    }
+  ],
+  "groups": [
+    {
+      "id": "g_engineering",
+      "cat": "engineering",
+      "label": "Engineering",
+      "blurb": "7 projects"
+    },
+    {
+      "id": "g_ops",
+      "cat": "ops",
+      "label": "Ops",
+      "blurb": "0 projects"
+    },
+    {
+      "id": "g_documentation",
+      "cat": "documentation",
+      "label": "Documentation",
+      "blurb": "1 project"
+    },
+    {
+      "id": "g_research",
+      "cat": "research",
+      "label": "Research",
+      "blurb": "0 projects"
+    },
+    {
+      "id": "g_marketing",
+      "cat": "marketing",
+      "label": "Marketing",
+      "blurb": "1 project"
+    }
+  ],
+  "leaves": [
+    {
+      "id": "Og Data",
+      "group": "g_engineering",
+      "shape": "diamond",
+      "tag": "Unknown",
+      "label": "Og Data",
+      "date": "2026-09-07",
+      "blurb": "112 mapped files · Engineering",
+      "path": "Og Data",
+      "clusters": [
+        "engineering"
+      ],
+      "xotype": "output"
+    },
+    {
+      "id": "etl",
+      "group": "g_engineering",
+      "shape": "disc",
+      "tag": "App",
+      "label": "etl",
+      "date": "2026-09-07",
+      "blurb": "9 mapped files · Engineering",
+      "path": "etl",
+      "clusters": [
+        "engineering"
+      ],
+      "xotype": "output"
+    },
+    {
+      "id": "profiling",
+      "group": "g_engineering",
+      "shape": "ring",
+      "tag": "One-pager",
+      "label": "profiling",
+      "date": "2026-09-07",
+      "blurb": "10 mapped files · Engineering",
+      "path": "profiling",
+      "clusters": [
+        "engineering"
+      ],
+      "xotype": "output"
+    },
+    {
+      "id": "reports",
+      "group": "g_engineering",
+      "shape": "ring",
+      "tag": "One-pager",
+      "label": "reports",
+      "date": "2026-09-07",
+      "blurb": "1 mapped files · Engineering",
+      "path": "reports",
+      "clusters": [
+        "engineering"
+      ],
+      "xotype": "output"
+    },
+    {
+      "id": "sql",
+      "group": "g_engineering",
+      "shape": "diamond",
+      "tag": "Unknown",
+      "label": "sql",
+      "date": "2026-09-07",
+      "blurb": "3 mapped files · Engineering",
+      "path": "sql",
+      "clusters": [
+        "engineering"
+      ],
+      "xotype": "output"
+    },
+    {
+      "id": "venv",
+      "group": "g_engineering",
+      "shape": "disc",
+      "tag": "App",
+      "label": "venv",
+      "date": "2026-09-07",
+      "blurb": "18 mapped files · Engineering",
+      "path": "venv",
+      "clusters": [
+        "engineering"
+      ],
+      "xotype": "output"
+    },
+    {
+      "id": "xo-space",
+      "group": "g_marketing",
+      "shape": "stack",
+      "tag": "Docs",
+      "label": "xo-space",
+      "date": "2026-09-03",
+      "blurb": "370 mapped files · Marketing + Documentation + Engineering",
+      "path": "xo-space",
+      "clusters": [
+        "marketing",
+        "documentation",
+        "engineering"
+      ],
+      "xotype": "output"
+    }
+  ],
+  "ties": [
+    {
+      "s": "xo-space",
+      "t": "g_documentation",
+      "label": "also in"
+    },
+    {
+      "s": "xo-space",
+      "t": "g_engineering",
+      "label": "also in"
+    }
+  ],
+  "milestones": [
+    {
+      "d": "2026-09-03",
+      "t": "xo-space first mapped work"
+    }
+  ]
+}

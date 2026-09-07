@@ -1,0 +1,2662 @@
+{
+  "meta": {
+    "generated_at": "2026-09-07T17:13:09.481747Z",
+    "db_path": "/home/siddharth/.argus/argus.db",
+    "schema_version": "6",
+    "pricing_version": "2026-06-12",
+    "sources": [
+      {
+        "id": "claude_code",
+        "label": "Claude Code",
+        "cost_status": "estimated",
+        "status": "available",
+        "available": true,
+        "session_count": 12,
+        "token_count": 52054601
+      },
+      {
+        "id": "codex",
+        "label": "Codex",
+        "cost_status": "unavailable",
+        "invalid_rollouts": 0,
+        "rollouts_skipped_for_budget": 0,
+        "detailed_rollouts": 14,
+        "detailed_bytes": 17475509,
+        "zero_token_roots_considered": 7,
+        "zero_token_roots_probed": 7,
+        "zero_token_probe_bytes": 419953,
+        "zero_token_roots_skipped_for_probe_budget": 0,
+        "zero_token_roots_recovered": 0,
+        "status": "available",
+        "available": true,
+        "session_count": 14,
+        "token_count": 71177920
+      },
+      {
+        "id": "cursor",
+        "label": "Cursor",
+        "cost_status": "unavailable",
+        "transcript_files": 3,
+        "store_sessions": 0,
+        "composer_sessions": 5,
+        "status": "available",
+        "available": true,
+        "session_count": 2,
+        "token_count": 3015
+      }
+    ]
+  },
+  "totals": {
+    "sessions": 28,
+    "tokens": 123235536,
+    "cost_usd": 111.57397904999999,
+    "projects": 7,
+    "sessions_by_agent": {
+      "claude_code": 12,
+      "codex": 14,
+      "cursor": 2
+    },
+    "tokens_by_agent": {
+      "claude_code": 52054601,
+      "codex": 71177920,
+      "cursor": 3015
+    },
+    "cost_by_agent": {
+      "claude_code": 111.57397904999999,
+      "codex": 0.0,
+      "cursor": 0.0
+    },
+    "cost_complete": false
+  },
+  "daily_models": [
+    {
+      "day": "2026-07-09",
+      "agent": "cursor",
+      "model": "unknown",
+      "tokens": 3015,
+      "unclassified": 3015,
+      "breakdown_known": false,
+      "cost": 0.0,
+      "cost_known": false
+    },
+    {
+      "day": "2026-07-20",
+      "agent": "codex",
+      "model": "gpt-5.6-sol",
+      "tokens": 5925168,
+      "unclassified": 0,
+      "breakdown_known": true,
+      "cost": 0.0,
+      "cost_known": false
+    },
+    {
+      "day": "2026-07-30",
+      "agent": "claude_code",
+      "model": "<synthetic>",
+      "tokens": 0,
+      "cost": 0.0,
+      "cost_known": true,
+      "unclassified": 0
+    },
+    {
+      "day": "2026-08-03",
+      "agent": "claude_code",
+      "model": "<synthetic>",
+      "tokens": 0,
+      "cost": 0.0,
+      "cost_known": true,
+      "unclassified": 0
+    },
+    {
+      "day": "2026-08-03",
+      "agent": "claude_code",
+      "model": "claude-opus-4-8",
+      "tokens": 6519143,
+      "cost": 18.465482,
+      "cost_known": true,
+      "unclassified": 0
+    },
+    {
+      "day": "2026-08-03",
+      "agent": "codex",
+      "model": "gpt-5.6-sol",
+      "tokens": 500051,
+      "unclassified": 0,
+      "breakdown_known": true,
+      "cost": 0.0,
+      "cost_known": false
+    },
+    {
+      "day": "2026-08-04",
+      "agent": "claude_code",
+      "model": "<synthetic>",
+      "tokens": 0,
+      "cost": 0.0,
+      "cost_known": true,
+      "unclassified": 0
+    },
+    {
+      "day": "2026-08-04",
+      "agent": "claude_code",
+      "model": "claude-opus-4-8",
+      "tokens": 5242454,
+      "cost": 17.98726275,
+      "cost_known": true,
+      "unclassified": 0
+    },
+    {
+      "day": "2026-08-04",
+      "agent": "codex",
+      "model": "gpt-5.6-sol",
+      "tokens": 3019849,
+      "unclassified": 0,
+      "breakdown_known": true,
+      "cost": 0.0,
+      "cost_known": false
+    },
+    {
+      "day": "2026-08-06",
+      "agent": "claude_code",
+      "model": "<synthetic>",
+      "tokens": 0,
+      "cost": 0.0,
+      "cost_known": true,
+      "unclassified": 0
+    },
+    {
+      "day": "2026-08-06",
+      "agent": "claude_code",
+      "model": "claude-opus-4-8",
+      "tokens": 1953249,
+      "cost": 8.95676875,
+      "cost_known": true,
+      "unclassified": 0
+    },
+    {
+      "day": "2026-08-07",
+      "agent": "claude_code",
+      "model": "<synthetic>",
+      "tokens": 0,
+      "cost": 0.0,
+      "cost_known": true,
+      "unclassified": 0
+    },
+    {
+      "day": "2026-08-07",
+      "agent": "claude_code",
+      "model": "claude-opus-4-8",
+      "tokens": 14731470,
+      "cost": 63.11506575,
+      "cost_known": true,
+      "unclassified": 0
+    },
+    {
+      "day": "2026-08-08",
+      "agent": "codex",
+      "model": "gpt-5.5",
+      "tokens": 3878936,
+      "unclassified": 0,
+      "breakdown_known": true,
+      "cost": 0.0,
+      "cost_known": false
+    },
+    {
+      "day": "2026-08-10",
+      "agent": "codex",
+      "model": "gpt-5.6-sol",
+      "tokens": 9692461,
+      "unclassified": 0,
+      "breakdown_known": true,
+      "cost": 0.0,
+      "cost_known": false
+    },
+    {
+      "day": "2026-08-11",
+      "agent": "codex",
+      "model": "gpt-5.6-sol",
+      "tokens": 4375453,
+      "unclassified": 0,
+      "breakdown_known": true,
+      "cost": 0.0,
+      "cost_known": false
+    },
+    {
+      "day": "2026-08-12",
+      "agent": "claude_code",
+      "model": "<synthetic>",
+      "tokens": 0,
+      "cost": 0.0,
+      "cost_known": true,
+      "unclassified": 0
+    },
+    {
+      "day": "2026-08-12",
+      "agent": "claude_code",
+      "model": "MaaS_Cl_Opus_4.8_20260528_cache",
+      "tokens": 252500,
+      "cost": 0.0,
+      "cost_known": true,
+      "unclassified": 0
+    },
+    {
+      "day": "2026-08-12",
+      "agent": "claude_code",
+      "model": "anthropic/claude-opus-4-8-ps-gcp-dst",
+      "tokens": 2883077,
+      "cost": 0.0,
+      "cost_known": true,
+      "unclassified": 0
+    },
+    {
+      "day": "2026-08-12",
+      "agent": "codex",
+      "model": "gpt-5.6-sol",
+      "tokens": 11680540,
+      "unclassified": 0,
+      "breakdown_known": true,
+      "cost": 0.0,
+      "cost_known": false
+    },
+    {
+      "day": "2026-08-14",
+      "agent": "codex",
+      "model": "gpt-5.6-sol",
+      "tokens": 3028201,
+      "unclassified": 0,
+      "breakdown_known": true,
+      "cost": 0.0,
+      "cost_known": false
+    },
+    {
+      "day": "2026-08-15",
+      "agent": "codex",
+      "model": "gpt-5.6-sol",
+      "tokens": 17755109,
+      "unclassified": 0,
+      "breakdown_known": true,
+      "cost": 0.0,
+      "cost_known": false
+    },
+    {
+      "day": "2026-08-19",
+      "agent": "codex",
+      "model": "gpt-5.6-sol",
+      "tokens": 1345804,
+      "unclassified": 0,
+      "breakdown_known": true,
+      "cost": 0.0,
+      "cost_known": false
+    },
+    {
+      "day": "2026-08-22",
+      "agent": "codex",
+      "model": "gpt-5.6-sol",
+      "tokens": 8886363,
+      "unclassified": 0,
+      "breakdown_known": true,
+      "cost": 0.0,
+      "cost_known": false
+    },
+    {
+      "day": "2026-08-23",
+      "agent": "claude_code",
+      "model": "<synthetic>",
+      "tokens": 0,
+      "cost": 0.0,
+      "cost_known": true,
+      "unclassified": 0
+    },
+    {
+      "day": "2026-08-23",
+      "agent": "claude_code",
+      "model": "MaaS_Cl_Opus_5_20260724_cache",
+      "tokens": 1214247,
+      "cost": 0.0,
+      "cost_known": true,
+      "unclassified": 0
+    },
+    {
+      "day": "2026-08-23",
+      "agent": "claude_code",
+      "model": "anthropic/claude-opus-5-aws",
+      "tokens": 1749683,
+      "cost": 0.0,
+      "cost_known": true,
+      "unclassified": 0
+    },
+    {
+      "day": "2026-08-23",
+      "agent": "claude_code",
+      "model": "anthropic/claude-opus-5-ps-aws-dst",
+      "tokens": 2242995,
+      "cost": 0.0,
+      "cost_known": true,
+      "unclassified": 0
+    },
+    {
+      "day": "2026-08-23",
+      "agent": "claude_code",
+      "model": "claude-opus-5",
+      "tokens": 1399005,
+      "cost": 0.0,
+      "cost_known": true,
+      "unclassified": 0
+    },
+    {
+      "day": "2026-08-29",
+      "agent": "claude_code",
+      "model": "claude-sonnet-4-6",
+      "tokens": 81263,
+      "cost": 0.171048,
+      "cost_known": true,
+      "unclassified": 0
+    },
+    {
+      "day": "2026-09-06",
+      "agent": "claude_code",
+      "model": "claude-sonnet-4-6",
+      "tokens": 1498359,
+      "cost": 2.8783518,
+      "cost_known": true,
+      "unclassified": 0
+    },
+    {
+      "day": "2026-09-06",
+      "agent": "claude_code",
+      "model": "gemini-3.1-pro-low",
+      "tokens": 2333945,
+      "cost": 0.0,
+      "cost_known": true,
+      "unclassified": 0
+    },
+    {
+      "day": "2026-09-06",
+      "agent": "claude_code",
+      "model": "gemini-3.7-flash-tiered",
+      "tokens": 6933915,
+      "cost": 0.0,
+      "cost_known": true,
+      "unclassified": 0
+    },
+    {
+      "day": "2026-09-06",
+      "agent": "claude_code",
+      "model": "gemini-pro-default",
+      "tokens": 2684683,
+      "cost": 0.0,
+      "cost_known": true,
+      "unclassified": 0
+    },
+    {
+      "day": "2026-09-06",
+      "agent": "codex",
+      "model": "gpt-5.6-sol",
+      "tokens": 1089985,
+      "unclassified": 0,
+      "breakdown_known": true,
+      "cost": 0.0,
+      "cost_known": false
+    },
+    {
+      "day": "2026-09-07",
+      "agent": "claude_code",
+      "model": "gemini-3.1-pro-low",
+      "tokens": 249350,
+      "cost": 0.0,
+      "cost_known": true,
+      "unclassified": 0
+    },
+    {
+      "day": "2026-09-07",
+      "agent": "claude_code",
+      "model": "gemini-pro-default",
+      "tokens": 85263,
+      "cost": 0.0,
+      "cost_known": true,
+      "unclassified": 0
+    }
+  ],
+  "daily_sessions": [
+    {
+      "day": "2026-07-09",
+      "agent": "cursor",
+      "session_id": "2cc3cf48-b086-400a-b1a3-33eb57b6276e",
+      "session_key": "cursor:2cc3cf48-b086-400a-b1a3-33eb57b6276e",
+      "tokens": 822,
+      "unclassified": 822,
+      "breakdown_known": false,
+      "cost": 0.0,
+      "cost_known": false
+    },
+    {
+      "day": "2026-07-09",
+      "agent": "cursor",
+      "session_id": "subagents",
+      "session_key": "cursor:subagents",
+      "tokens": 2193,
+      "unclassified": 2193,
+      "breakdown_known": false,
+      "cost": 0.0,
+      "cost_known": false
+    },
+    {
+      "day": "2026-07-20",
+      "agent": "codex",
+      "session_id": "019f7ee0-df91-7783-8500-f4ce9fc77198",
+      "session_key": "codex:019f7ee0-df91-7783-8500-f4ce9fc77198",
+      "tokens": 2951093,
+      "unclassified": 0,
+      "breakdown_known": true,
+      "cost": 0.0,
+      "cost_known": false
+    },
+    {
+      "day": "2026-07-20",
+      "agent": "codex",
+      "session_id": "019f7f12-a182-7ec0-9398-6b0c6f4eb6aa",
+      "session_key": "codex:019f7f12-a182-7ec0-9398-6b0c6f4eb6aa",
+      "tokens": 2974075,
+      "unclassified": 0,
+      "breakdown_known": true,
+      "cost": 0.0,
+      "cost_known": false
+    },
+    {
+      "day": "2026-07-30",
+      "agent": "claude_code",
+      "session_id": "claude_code:d87e8f4e-c283-455c-b104-2d8a125200c6",
+      "session_key": "claude_code:claude_code:d87e8f4e-c283-455c-b104-2d8a125200c6",
+      "tokens": 0,
+      "cost": 0.0,
+      "cost_known": true,
+      "unclassified": 0
+    },
+    {
+      "day": "2026-08-03",
+      "agent": "claude_code",
+      "session_id": "claude_code:763ace08-11f3-41ce-8db2-a513ed8274d9",
+      "session_key": "claude_code:claude_code:763ace08-11f3-41ce-8db2-a513ed8274d9",
+      "tokens": 31948,
+      "cost": 0.19970749999999998,
+      "cost_known": true,
+      "unclassified": 0
+    },
+    {
+      "day": "2026-08-03",
+      "agent": "claude_code",
+      "session_id": "claude_code:e233745a-2cd4-4939-953c-fe6502543334",
+      "session_key": "claude_code:claude_code:e233745a-2cd4-4939-953c-fe6502543334",
+      "tokens": 6487195,
+      "cost": 18.2657745,
+      "cost_known": true,
+      "unclassified": 0
+    },
+    {
+      "day": "2026-08-03",
+      "agent": "codex",
+      "session_id": "019fc8d5-4b5e-7722-8acc-693fd9d1cb18",
+      "session_key": "codex:019fc8d5-4b5e-7722-8acc-693fd9d1cb18",
+      "tokens": 11090,
+      "unclassified": 0,
+      "breakdown_known": true,
+      "cost": 0.0,
+      "cost_known": false
+    },
+    {
+      "day": "2026-08-03",
+      "agent": "codex",
+      "session_id": "019fc8fc-2e09-72d1-a9d4-47a850364089",
+      "session_key": "codex:019fc8fc-2e09-72d1-a9d4-47a850364089",
+      "tokens": 488961,
+      "unclassified": 0,
+      "breakdown_known": true,
+      "cost": 0.0,
+      "cost_known": false
+    },
+    {
+      "day": "2026-08-04",
+      "agent": "claude_code",
+      "session_id": "claude_code:e233745a-2cd4-4939-953c-fe6502543334",
+      "session_key": "claude_code:claude_code:e233745a-2cd4-4939-953c-fe6502543334",
+      "tokens": 5242454,
+      "cost": 17.98726275,
+      "cost_known": true,
+      "unclassified": 0
+    },
+    {
+      "day": "2026-08-04",
+      "agent": "codex",
+      "session_id": "019fcc14-8c8e-78a2-b3b8-7d03f263f37f",
+      "session_key": "codex:019fcc14-8c8e-78a2-b3b8-7d03f263f37f",
+      "tokens": 3019849,
+      "unclassified": 0,
+      "breakdown_known": true,
+      "cost": 0.0,
+      "cost_known": false
+    },
+    {
+      "day": "2026-08-06",
+      "agent": "claude_code",
+      "session_id": "claude_code:55ab32eb-41e4-4537-97fd-1007af7d8bfc",
+      "session_key": "claude_code:claude_code:55ab32eb-41e4-4537-97fd-1007af7d8bfc",
+      "tokens": 1953249,
+      "cost": 8.95676875,
+      "cost_known": true,
+      "unclassified": 0
+    },
+    {
+      "day": "2026-08-07",
+      "agent": "claude_code",
+      "session_id": "claude_code:55ab32eb-41e4-4537-97fd-1007af7d8bfc",
+      "session_key": "claude_code:claude_code:55ab32eb-41e4-4537-97fd-1007af7d8bfc",
+      "tokens": 7491119,
+      "cost": 33.70721575,
+      "cost_known": true,
+      "unclassified": 0
+    },
+    {
+      "day": "2026-08-07",
+      "agent": "claude_code",
+      "session_id": "claude_code:66298fab-95a9-436c-bbdd-2642aa33e7f9",
+      "session_key": "claude_code:claude_code:66298fab-95a9-436c-bbdd-2642aa33e7f9",
+      "tokens": 7240351,
+      "cost": 29.40785,
+      "cost_known": true,
+      "unclassified": 0
+    },
+    {
+      "day": "2026-08-08",
+      "agent": "codex",
+      "session_id": "019fe29f-7542-7693-ae4b-c1deffb5f4b6",
+      "session_key": "codex:019fe29f-7542-7693-ae4b-c1deffb5f4b6",
+      "tokens": 3878936,
+      "unclassified": 0,
+      "breakdown_known": true,
+      "cost": 0.0,
+      "cost_known": false
+    },
+    {
+      "day": "2026-08-10",
+      "agent": "codex",
+      "session_id": "019febf7-b481-75f2-9821-d9adf1d24aa8",
+      "session_key": "codex:019febf7-b481-75f2-9821-d9adf1d24aa8",
+      "tokens": 2979867,
+      "unclassified": 0,
+      "breakdown_known": true,
+      "cost": 0.0,
+      "cost_known": false
+    },
+    {
+      "day": "2026-08-10",
+      "agent": "codex",
+      "session_id": "019fec18-9a21-7160-aef5-10a4e18f938e",
+      "session_key": "codex:019fec18-9a21-7160-aef5-10a4e18f938e",
+      "tokens": 175470,
+      "unclassified": 0,
+      "breakdown_known": true,
+      "cost": 0.0,
+      "cost_known": false
+    },
+    {
+      "day": "2026-08-10",
+      "agent": "codex",
+      "session_id": "019fec63-bbf8-7ac0-9c73-1b7cd10a0f0e",
+      "session_key": "codex:019fec63-bbf8-7ac0-9c73-1b7cd10a0f0e",
+      "tokens": 6152226,
+      "unclassified": 0,
+      "breakdown_known": true,
+      "cost": 0.0,
+      "cost_known": false
+    },
+    {
+      "day": "2026-08-10",
+      "agent": "codex",
+      "session_id": "019fecda-7a5e-7911-8293-213dd3cddc8d",
+      "session_key": "codex:019fecda-7a5e-7911-8293-213dd3cddc8d",
+      "tokens": 384898,
+      "unclassified": 0,
+      "breakdown_known": true,
+      "cost": 0.0,
+      "cost_known": false
+    },
+    {
+      "day": "2026-08-11",
+      "agent": "codex",
+      "session_id": "019fefd4-0be9-7b03-a5ce-c65247835f25",
+      "session_key": "codex:019fefd4-0be9-7b03-a5ce-c65247835f25",
+      "tokens": 4375453,
+      "unclassified": 0,
+      "breakdown_known": true,
+      "cost": 0.0,
+      "cost_known": false
+    },
+    {
+      "day": "2026-08-12",
+      "agent": "claude_code",
+      "session_id": "claude_code:55ab32eb-41e4-4537-97fd-1007af7d8bfc",
+      "session_key": "claude_code:claude_code:55ab32eb-41e4-4537-97fd-1007af7d8bfc",
+      "tokens": 3135577,
+      "cost": 0.0,
+      "cost_known": true,
+      "unclassified": 0
+    },
+    {
+      "day": "2026-08-12",
+      "agent": "claude_code",
+      "session_id": "claude_code:6256b9ca-ec24-4b54-8929-22281f8377e6",
+      "session_key": "claude_code:claude_code:6256b9ca-ec24-4b54-8929-22281f8377e6",
+      "tokens": 0,
+      "cost": 0.0,
+      "cost_known": true,
+      "unclassified": 0
+    },
+    {
+      "day": "2026-08-12",
+      "agent": "claude_code",
+      "session_id": "claude_code:7e306e8a-bd3c-45ac-adc8-491e7d7f0940",
+      "session_key": "claude_code:claude_code:7e306e8a-bd3c-45ac-adc8-491e7d7f0940",
+      "tokens": 0,
+      "cost": 0.0,
+      "cost_known": true,
+      "unclassified": 0
+    },
+    {
+      "day": "2026-08-12",
+      "agent": "codex",
+      "session_id": "019ff4f0-53aa-74b2-b45c-718234dbae27",
+      "session_key": "codex:019ff4f0-53aa-74b2-b45c-718234dbae27",
+      "tokens": 11680540,
+      "unclassified": 0,
+      "breakdown_known": true,
+      "cost": 0.0,
+      "cost_known": false
+    },
+    {
+      "day": "2026-08-14",
+      "agent": "codex",
+      "session_id": "019fec63-bbf8-7ac0-9c73-1b7cd10a0f0e",
+      "session_key": "codex:019fec63-bbf8-7ac0-9c73-1b7cd10a0f0e",
+      "tokens": 3028201,
+      "unclassified": 0,
+      "breakdown_known": true,
+      "cost": 0.0,
+      "cost_known": false
+    },
+    {
+      "day": "2026-08-15",
+      "agent": "codex",
+      "session_id": "019ff4f0-53aa-74b2-b45c-718234dbae27",
+      "session_key": "codex:019ff4f0-53aa-74b2-b45c-718234dbae27",
+      "tokens": 17755109,
+      "unclassified": 0,
+      "breakdown_known": true,
+      "cost": 0.0,
+      "cost_known": false
+    },
+    {
+      "day": "2026-08-19",
+      "agent": "codex",
+      "session_id": "019fec63-bbf8-7ac0-9c73-1b7cd10a0f0e",
+      "session_key": "codex:019fec63-bbf8-7ac0-9c73-1b7cd10a0f0e",
+      "tokens": 1345804,
+      "unclassified": 0,
+      "breakdown_known": true,
+      "cost": 0.0,
+      "cost_known": false
+    },
+    {
+      "day": "2026-08-22",
+      "agent": "codex",
+      "session_id": "01a02a6e-1363-72c3-addb-6b697f5048f5",
+      "session_key": "codex:01a02a6e-1363-72c3-addb-6b697f5048f5",
+      "tokens": 8886363,
+      "unclassified": 0,
+      "breakdown_known": true,
+      "cost": 0.0,
+      "cost_known": false
+    },
+    {
+      "day": "2026-08-23",
+      "agent": "claude_code",
+      "session_id": "claude_code:dc067672-17a2-49f3-9121-03944fffaa1d",
+      "session_key": "claude_code:claude_code:dc067672-17a2-49f3-9121-03944fffaa1d",
+      "tokens": 2693574,
+      "cost": 0.0,
+      "cost_known": true,
+      "unclassified": 0
+    },
+    {
+      "day": "2026-08-23",
+      "agent": "claude_code",
+      "session_id": "claude_code:e24bee99-e132-4c7a-8204-d0d0eed83c68",
+      "session_key": "claude_code:claude_code:e24bee99-e132-4c7a-8204-d0d0eed83c68",
+      "tokens": 3912356,
+      "cost": 0.0,
+      "cost_known": true,
+      "unclassified": 0
+    },
+    {
+      "day": "2026-08-29",
+      "agent": "claude_code",
+      "session_id": "claude_code:8b5409b5-b5fe-4fa6-8c6f-86f3ffa2300c",
+      "session_key": "claude_code:claude_code:8b5409b5-b5fe-4fa6-8c6f-86f3ffa2300c",
+      "tokens": 81263,
+      "cost": 0.171048,
+      "cost_known": true,
+      "unclassified": 0
+    },
+    {
+      "day": "2026-09-06",
+      "agent": "claude_code",
+      "session_id": "claude_code:e16a79e2-cf40-41f3-ab4e-9b97f2770fbe",
+      "session_key": "claude_code:claude_code:e16a79e2-cf40-41f3-ab4e-9b97f2770fbe",
+      "tokens": 6516987,
+      "cost": 2.8783518,
+      "cost_known": true,
+      "unclassified": 0
+    },
+    {
+      "day": "2026-09-06",
+      "agent": "claude_code",
+      "session_id": "claude_code:fe1ce55e-dac9-40ac-8272-c26edd0b71d7",
+      "session_key": "claude_code:claude_code:fe1ce55e-dac9-40ac-8272-c26edd0b71d7",
+      "tokens": 6933915,
+      "cost": 0.0,
+      "cost_known": true,
+      "unclassified": 0
+    },
+    {
+      "day": "2026-09-06",
+      "agent": "codex",
+      "session_id": "01a07704-c807-7f11-a002-f676cf951590",
+      "session_key": "codex:01a07704-c807-7f11-a002-f676cf951590",
+      "tokens": 1089985,
+      "unclassified": 0,
+      "breakdown_known": true,
+      "cost": 0.0,
+      "cost_known": false
+    },
+    {
+      "day": "2026-09-07",
+      "agent": "claude_code",
+      "session_id": "claude_code:e16a79e2-cf40-41f3-ab4e-9b97f2770fbe",
+      "session_key": "claude_code:claude_code:e16a79e2-cf40-41f3-ab4e-9b97f2770fbe",
+      "tokens": 334613,
+      "cost": 0.0,
+      "cost_known": true,
+      "unclassified": 0
+    }
+  ],
+  "sessions": [
+    {
+      "id": "claude_code:e16a79e2-cf40-41f3-ab4e-9b97f2770fbe",
+      "key": "claude_code:claude_code:e16a79e2-cf40-41f3-ab4e-9b97f2770fbe",
+      "agent": "claude_code",
+      "project": "Air quality risk forecasting",
+      "project_path": "/home/siddharth/Desktop/Projects/projects/Air quality risk forecasting",
+      "started_at": "2026-09-06T17:54:23.773Z",
+      "ended_at": "2026-09-07T17:10:30.136Z",
+      "duration_sec": 45,
+      "model": "gemini-pro-default",
+      "agent_version": "2.1.228",
+      "turns": 64,
+      "fresh": 3773685,
+      "output": 35869,
+      "cache_read": 3042046,
+      "cache_write": 0,
+      "tokens": 6851600,
+      "own_tokens": 6851600,
+      "total_tokens": 6851600,
+      "unclassified": 0,
+      "breakdown_known": true,
+      "cost": 2.8783518,
+      "cost_known": true,
+      "tools": [
+        {
+          "name": "Bash",
+          "calls": 33,
+          "errors": 1
+        },
+        {
+          "name": "Write",
+          "calls": 15,
+          "errors": 0
+        },
+        {
+          "name": "TaskUpdate",
+          "calls": 9,
+          "errors": 0
+        },
+        {
+          "name": "TaskCreate",
+          "calls": 5,
+          "errors": 0
+        },
+        {
+          "name": "Edit",
+          "calls": 2,
+          "errors": 0
+        },
+        {
+          "name": "EnterPlanMode",
+          "calls": 1,
+          "errors": 1
+        },
+        {
+          "name": "ExitPlanMode",
+          "calls": 1,
+          "errors": 1
+        },
+        {
+          "name": "Skill",
+          "calls": 1,
+          "errors": 0
+        }
+      ],
+      "subagents": []
+    },
+    {
+      "id": "01a07704-c807-7f11-a002-f676cf951590",
+      "key": "codex:01a07704-c807-7f11-a002-f676cf951590",
+      "agent": "codex",
+      "project": "LunarMatch",
+      "project_path": "/home/siddharth/Desktop/Projects/Hackathon/LunarMatch",
+      "started_at": "2026-09-06T13:59:57.246000Z",
+      "ended_at": "2026-09-06T14:33:32.818000Z",
+      "duration_sec": 2015,
+      "model": "gpt-5.6-sol",
+      "agent_version": "0.149.0",
+      "turns": 4,
+      "fresh": 237802,
+      "output": 9990,
+      "cache_read": 842193,
+      "cache_write": 0,
+      "tokens": 1089985,
+      "own_tokens": 1089985,
+      "total_tokens": 1089985,
+      "unclassified": 0,
+      "breakdown_known": true,
+      "cost": 0.0,
+      "cost_known": false,
+      "tools": [
+        {
+          "name": "exec",
+          "calls": 20,
+          "errors": 0
+        },
+        {
+          "name": "wait",
+          "calls": 2,
+          "errors": 0
+        }
+      ],
+      "subagents": []
+    },
+    {
+      "id": "claude_code:fe1ce55e-dac9-40ac-8272-c26edd0b71d7",
+      "key": "claude_code:claude_code:fe1ce55e-dac9-40ac-8272-c26edd0b71d7",
+      "agent": "claude_code",
+      "project": "LunarMatch",
+      "project_path": "/home/siddharth/Desktop/Projects/Hackathon/LunarMatch",
+      "started_at": "2026-09-06T13:27:13.511Z",
+      "ended_at": "2026-09-06T13:56:55.706Z",
+      "duration_sec": 1782,
+      "model": "gemini-3.7-flash-tiered",
+      "agent_version": "2.1.228",
+      "turns": 69,
+      "fresh": 3786757,
+      "output": 47883,
+      "cache_read": 3099275,
+      "cache_write": 0,
+      "tokens": 6933915,
+      "own_tokens": 6933915,
+      "total_tokens": 6933915,
+      "unclassified": 0,
+      "breakdown_known": true,
+      "cost": 0.0,
+      "cost_known": true,
+      "tools": [
+        {
+          "name": "Bash",
+          "calls": 25,
+          "errors": 2
+        },
+        {
+          "name": "Read",
+          "calls": 21,
+          "errors": 1
+        },
+        {
+          "name": "Write",
+          "calls": 15,
+          "errors": 0
+        },
+        {
+          "name": "Edit",
+          "calls": 1,
+          "errors": 0
+        }
+      ],
+      "subagents": []
+    },
+    {
+      "id": "claude_code:8b5409b5-b5fe-4fa6-8c6f-86f3ffa2300c",
+      "key": "claude_code:claude_code:8b5409b5-b5fe-4fa6-8c6f-86f3ffa2300c",
+      "agent": "claude_code",
+      "project": "Kaggriculture",
+      "project_path": "/home/siddharth/Desktop/Projects/projects/Kaggriculture",
+      "started_at": "2026-08-29T05:31:07.506Z",
+      "ended_at": "2026-08-29T05:31:24.199Z",
+      "duration_sec": 16,
+      "model": "claude-sonnet-4-6",
+      "agent_version": "2.1.228",
+      "turns": 2,
+      "fresh": 54164,
+      "output": 29,
+      "cache_read": 27070,
+      "cache_write": 0,
+      "tokens": 81263,
+      "own_tokens": 81263,
+      "total_tokens": 81263,
+      "unclassified": 0,
+      "breakdown_known": true,
+      "cost": 0.171048,
+      "cost_known": true,
+      "tools": [],
+      "subagents": []
+    },
+    {
+      "id": "claude_code:dc067672-17a2-49f3-9121-03944fffaa1d",
+      "key": "claude_code:claude_code:dc067672-17a2-49f3-9121-03944fffaa1d",
+      "agent": "claude_code",
+      "project": "Kaggriculture",
+      "project_path": "/home/siddharth/Desktop/Projects/projects/Kaggriculture",
+      "started_at": "2026-08-23T05:03:50.322Z",
+      "ended_at": "2026-08-23T05:35:42.309Z",
+      "duration_sec": 1911,
+      "model": "anthropic/claude-opus-5-ps-aws-dst",
+      "agent_version": "2.1.228",
+      "turns": 29,
+      "fresh": 1134,
+      "output": 29810,
+      "cache_read": 2172977,
+      "cache_write": 489653,
+      "tokens": 2693574,
+      "own_tokens": 2693574,
+      "total_tokens": 2693574,
+      "unclassified": 0,
+      "breakdown_known": true,
+      "cost": 0.0,
+      "cost_known": true,
+      "tools": [
+        {
+          "name": "Bash",
+          "calls": 20,
+          "errors": 2
+        },
+        {
+          "name": "Read",
+          "calls": 19,
+          "errors": 0
+        },
+        {
+          "name": "Edit",
+          "calls": 2,
+          "errors": 0
+        },
+        {
+          "name": "Write",
+          "calls": 1,
+          "errors": 0
+        }
+      ],
+      "subagents": []
+    },
+    {
+      "id": "claude_code:e24bee99-e132-4c7a-8204-d0d0eed83c68",
+      "key": "claude_code:claude_code:e24bee99-e132-4c7a-8204-d0d0eed83c68",
+      "agent": "claude_code",
+      "project": "Kaggriculture",
+      "project_path": "/home/siddharth/Desktop/Projects/projects/Kaggriculture",
+      "started_at": "2026-08-23T04:28:40.871Z",
+      "ended_at": "2026-08-23T04:49:07.001Z",
+      "duration_sec": 1226,
+      "model": "anthropic/claude-opus-5-aws",
+      "agent_version": "2.1.228",
+      "turns": 78,
+      "fresh": 370,
+      "output": 45830,
+      "cache_read": 2040527,
+      "cache_write": 1825629,
+      "tokens": 3912356,
+      "own_tokens": 901241,
+      "total_tokens": 3912356,
+      "unclassified": 0,
+      "breakdown_known": true,
+      "cost": 0.0,
+      "cost_known": true,
+      "tools": [
+        {
+          "name": "Bash",
+          "calls": 11,
+          "errors": 3
+        },
+        {
+          "name": "Read",
+          "calls": 5,
+          "errors": 0
+        },
+        {
+          "name": "Agent",
+          "calls": 3,
+          "errors": 0
+        }
+      ],
+      "subagents": [
+        {
+          "id": "claude_code:e24bee99-e132-4c7a-8204-d0d0eed83c68/agent-a637d755549195d77",
+          "tokens": 868112,
+          "own_tokens": 868112,
+          "total_tokens": 868112,
+          "cost": 0.0,
+          "cost_known": true,
+          "turns": 13,
+          "unclassified": 0
+        },
+        {
+          "id": "claude_code:e24bee99-e132-4c7a-8204-d0d0eed83c68/agent-a6ad0e38f078551fa",
+          "tokens": 1705499,
+          "own_tokens": 1705499,
+          "total_tokens": 1705499,
+          "cost": 0.0,
+          "cost_known": true,
+          "turns": 39,
+          "unclassified": 0
+        },
+        {
+          "id": "claude_code:e24bee99-e132-4c7a-8204-d0d0eed83c68/agent-ae53bc87cd38b3f7b",
+          "tokens": 437504,
+          "own_tokens": 437504,
+          "total_tokens": 437504,
+          "cost": 0.0,
+          "cost_known": true,
+          "turns": 11,
+          "unclassified": 0
+        }
+      ]
+    },
+    {
+      "id": "01a02a6e-1363-72c3-addb-6b697f5048f5",
+      "key": "codex:01a02a6e-1363-72c3-addb-6b697f5048f5",
+      "agent": "codex",
+      "project": "Kaggriculture",
+      "project_path": "/home/siddharth/Desktop/Projects/projects/Kaggriculture",
+      "started_at": "2026-08-22T17:04:12.254000Z",
+      "ended_at": "2026-08-22T17:55:19.683000Z",
+      "duration_sec": 3067,
+      "model": "gpt-5.6-sol",
+      "agent_version": "0.149.0",
+      "turns": 6,
+      "fresh": 3790950,
+      "output": 39361,
+      "cache_read": 5056052,
+      "cache_write": 0,
+      "tokens": 8886363,
+      "own_tokens": 8886363,
+      "total_tokens": 8886363,
+      "unclassified": 0,
+      "breakdown_known": true,
+      "cost": 0.0,
+      "cost_known": false,
+      "tools": [
+        {
+          "name": "exec",
+          "calls": 67,
+          "errors": 0
+        },
+        {
+          "name": "wait",
+          "calls": 8,
+          "errors": 0
+        },
+        {
+          "name": "request_user_input",
+          "calls": 2,
+          "errors": 0
+        }
+      ],
+      "subagents": []
+    },
+    {
+      "id": "claude_code:7e306e8a-bd3c-45ac-adc8-491e7d7f0940",
+      "key": "claude_code:claude_code:7e306e8a-bd3c-45ac-adc8-491e7d7f0940",
+      "agent": "claude_code",
+      "project": "Kaggriculture",
+      "project_path": "/home/siddharth/Desktop/Projects/projects/Kaggriculture",
+      "started_at": "2026-08-12T10:01:02.843Z",
+      "ended_at": "2026-08-12T10:01:02.843Z",
+      "duration_sec": 0,
+      "model": "<synthetic>",
+      "agent_version": "2.1.201",
+      "turns": 1,
+      "fresh": 0,
+      "output": 0,
+      "cache_read": 0,
+      "cache_write": 0,
+      "tokens": 0,
+      "own_tokens": 0,
+      "total_tokens": 0,
+      "unclassified": 0,
+      "breakdown_known": true,
+      "cost": 0.0,
+      "cost_known": true,
+      "tools": [],
+      "subagents": []
+    },
+    {
+      "id": "claude_code:6256b9ca-ec24-4b54-8929-22281f8377e6",
+      "key": "claude_code:claude_code:6256b9ca-ec24-4b54-8929-22281f8377e6",
+      "agent": "claude_code",
+      "project": "Kaggriculture",
+      "project_path": "/home/siddharth/Desktop/Projects/projects/Kaggriculture",
+      "started_at": "2026-08-12T09:57:06.409Z",
+      "ended_at": "2026-08-12T09:57:06.409Z",
+      "duration_sec": 0,
+      "model": "<synthetic>",
+      "agent_version": "2.1.201",
+      "turns": 1,
+      "fresh": 0,
+      "output": 0,
+      "cache_read": 0,
+      "cache_write": 0,
+      "tokens": 0,
+      "own_tokens": 0,
+      "total_tokens": 0,
+      "unclassified": 0,
+      "breakdown_known": true,
+      "cost": 0.0,
+      "cost_known": true,
+      "tools": [],
+      "subagents": []
+    },
+    {
+      "id": "019ff4f0-53aa-74b2-b45c-718234dbae27",
+      "key": "codex:019ff4f0-53aa-74b2-b45c-718234dbae27",
+      "agent": "codex",
+      "project": "Kaggriculture",
+      "project_path": "/home/siddharth/Desktop/Projects/projects/Kaggriculture",
+      "started_at": "2026-08-12T07:46:59.332000Z",
+      "ended_at": "2026-08-15T15:22:07.966000Z",
+      "duration_sec": 286508,
+      "model": "gpt-5.6-sol",
+      "agent_version": "0.147.0",
+      "turns": 14,
+      "fresh": 16768457,
+      "output": 63252,
+      "cache_read": 12603940,
+      "cache_write": 0,
+      "tokens": 29435649,
+      "own_tokens": 29435649,
+      "total_tokens": 29435649,
+      "unclassified": 0,
+      "breakdown_known": true,
+      "cost": 0.0,
+      "cost_known": false,
+      "tools": [
+        {
+          "name": "exec",
+          "calls": 183,
+          "errors": 0
+        },
+        {
+          "name": "wait",
+          "calls": 47,
+          "errors": 0
+        },
+        {
+          "name": "functions__wait",
+          "calls": 1,
+          "errors": 0
+        },
+        {
+          "name": "request_user_input",
+          "calls": 1,
+          "errors": 0
+        }
+      ],
+      "subagents": []
+    },
+    {
+      "id": "019fefd4-0be9-7b03-a5ce-c65247835f25",
+      "key": "codex:019fefd4-0be9-7b03-a5ce-c65247835f25",
+      "agent": "codex",
+      "project": "Kaggriculture",
+      "project_path": "/home/siddharth/Desktop/Projects/projects/Kaggriculture",
+      "started_at": "2026-08-11T07:58:00.040000Z",
+      "ended_at": "2026-08-11T08:42:23.600000Z",
+      "duration_sec": 2663,
+      "model": "gpt-5.6-sol",
+      "agent_version": "0.147.0",
+      "turns": 4,
+      "fresh": 3386403,
+      "output": 16250,
+      "cache_read": 972800,
+      "cache_write": 0,
+      "tokens": 4375453,
+      "own_tokens": 4375453,
+      "total_tokens": 4375453,
+      "unclassified": 0,
+      "breakdown_known": true,
+      "cost": 0.0,
+      "cost_known": false,
+      "tools": [
+        {
+          "name": "exec",
+          "calls": 59,
+          "errors": 0
+        },
+        {
+          "name": "wait",
+          "calls": 23,
+          "errors": 0
+        }
+      ],
+      "subagents": []
+    },
+    {
+      "id": "019fecda-7a5e-7911-8293-213dd3cddc8d",
+      "key": "codex:019fecda-7a5e-7911-8293-213dd3cddc8d",
+      "agent": "codex",
+      "project": "Kaggriculture",
+      "project_path": "/home/siddharth/Desktop/Projects/projects/Kaggriculture",
+      "started_at": "2026-08-10T18:06:09.053000Z",
+      "ended_at": "2026-08-10T18:12:19.223000Z",
+      "duration_sec": 370,
+      "model": "gpt-5.6-sol",
+      "agent_version": "0.147.0",
+      "turns": 1,
+      "fresh": 298201,
+      "output": 3241,
+      "cache_read": 83456,
+      "cache_write": 0,
+      "tokens": 384898,
+      "own_tokens": 384898,
+      "total_tokens": 384898,
+      "unclassified": 0,
+      "breakdown_known": true,
+      "cost": 0.0,
+      "cost_known": false,
+      "tools": [
+        {
+          "name": "exec",
+          "calls": 11,
+          "errors": 0
+        }
+      ],
+      "subagents": []
+    },
+    {
+      "id": "019fec63-bbf8-7ac0-9c73-1b7cd10a0f0e",
+      "key": "codex:019fec63-bbf8-7ac0-9c73-1b7cd10a0f0e",
+      "agent": "codex",
+      "project": "Hueclid",
+      "project_path": "/home/siddharth/Desktop/Projects/Open Source/Hueclid",
+      "started_at": "2026-08-10T15:56:27.457000Z",
+      "ended_at": "2026-08-19T03:21:31.374000Z",
+      "duration_sec": 732303,
+      "model": "gpt-5.6-sol",
+      "agent_version": "0.147.0",
+      "turns": 27,
+      "fresh": 6193160,
+      "output": 29224,
+      "cache_read": 4303847,
+      "cache_write": 0,
+      "tokens": 10526231,
+      "own_tokens": 10526231,
+      "total_tokens": 10526231,
+      "unclassified": 0,
+      "breakdown_known": true,
+      "cost": 0.0,
+      "cost_known": false,
+      "tools": [
+        {
+          "name": "exec",
+          "calls": 135,
+          "errors": 0
+        },
+        {
+          "name": "wait",
+          "calls": 1,
+          "errors": 0
+        }
+      ],
+      "subagents": []
+    },
+    {
+      "id": "019fec18-9a21-7160-aef5-10a4e18f938e",
+      "key": "codex:019fec18-9a21-7160-aef5-10a4e18f938e",
+      "agent": "codex",
+      "project": "Kaggriculture",
+      "project_path": "/home/siddharth/Desktop/Projects/projects/Kaggriculture",
+      "started_at": "2026-08-10T14:34:23.147000Z",
+      "ended_at": "2026-08-10T14:37:27.346000Z",
+      "duration_sec": 184,
+      "model": "gpt-5.6-sol",
+      "agent_version": "0.147.0",
+      "turns": 2,
+      "fresh": 120668,
+      "output": 2578,
+      "cache_read": 52224,
+      "cache_write": 0,
+      "tokens": 175470,
+      "own_tokens": 175470,
+      "total_tokens": 175470,
+      "unclassified": 0,
+      "breakdown_known": true,
+      "cost": 0.0,
+      "cost_known": false,
+      "tools": [
+        {
+          "name": "exec",
+          "calls": 6,
+          "errors": 0
+        }
+      ],
+      "subagents": []
+    },
+    {
+      "id": "019febf7-b481-75f2-9821-d9adf1d24aa8",
+      "key": "codex:019febf7-b481-75f2-9821-d9adf1d24aa8",
+      "agent": "codex",
+      "project": "Kaggriculture",
+      "project_path": "/home/siddharth/Desktop/Projects/projects/Kaggriculture",
+      "started_at": "2026-08-10T13:58:27.214000Z",
+      "ended_at": "2026-08-10T14:25:31.968000Z",
+      "duration_sec": 1624,
+      "model": "gpt-5.6-sol",
+      "agent_version": "0.147.0",
+      "turns": 3,
+      "fresh": 1442000,
+      "output": 15179,
+      "cache_read": 1522688,
+      "cache_write": 0,
+      "tokens": 2979867,
+      "own_tokens": 2979867,
+      "total_tokens": 2979867,
+      "unclassified": 0,
+      "breakdown_known": true,
+      "cost": 0.0,
+      "cost_known": false,
+      "tools": [
+        {
+          "name": "exec",
+          "calls": 45,
+          "errors": 0
+        },
+        {
+          "name": "wait",
+          "calls": 13,
+          "errors": 0
+        }
+      ],
+      "subagents": []
+    },
+    {
+      "id": "019fe29f-7542-7693-ae4b-c1deffb5f4b6",
+      "key": "codex:019fe29f-7542-7693-ae4b-c1deffb5f4b6",
+      "agent": "codex",
+      "project": "Hueclid",
+      "project_path": "/home/siddharth/Desktop/Projects/Open Source/Hueclid",
+      "started_at": "2026-08-08T18:25:28.929000Z",
+      "ended_at": "2026-08-08T19:25:47.987000Z",
+      "duration_sec": 3619,
+      "model": "gpt-5.5",
+      "agent_version": "0.142.3",
+      "turns": 10,
+      "fresh": 195327,
+      "output": 17817,
+      "cache_read": 3665792,
+      "cache_write": 0,
+      "tokens": 3878936,
+      "own_tokens": 3878936,
+      "total_tokens": 3878936,
+      "unclassified": 0,
+      "breakdown_known": true,
+      "cost": 0.0,
+      "cost_known": false,
+      "tools": [
+        {
+          "name": "exec_command",
+          "calls": 59,
+          "errors": 0
+        },
+        {
+          "name": "write_stdin",
+          "calls": 14,
+          "errors": 0
+        },
+        {
+          "name": "apply_patch",
+          "calls": 13,
+          "errors": 0
+        }
+      ],
+      "subagents": []
+    },
+    {
+      "id": "claude_code:66298fab-95a9-436c-bbdd-2642aa33e7f9",
+      "key": "claude_code:claude_code:66298fab-95a9-436c-bbdd-2642aa33e7f9",
+      "agent": "claude_code",
+      "project": "Hueclid",
+      "project_path": "/home/siddharth/Desktop/Projects/Open Source/Hueclid",
+      "started_at": "2026-08-07T15:50:41.675Z",
+      "ended_at": "2026-08-07T17:10:43.895Z",
+      "duration_sec": 4802,
+      "model": "claude-opus-4-8",
+      "agent_version": "2.1.201",
+      "turns": 62,
+      "fresh": 2942,
+      "output": 26585,
+      "cache_read": 3366260,
+      "cache_write": 3844564,
+      "tokens": 7240351,
+      "own_tokens": 7240351,
+      "total_tokens": 7240351,
+      "unclassified": 0,
+      "breakdown_known": true,
+      "cost": 29.40785,
+      "cost_known": true,
+      "tools": [
+        {
+          "name": "Read",
+          "calls": 34,
+          "errors": 0
+        },
+        {
+          "name": "Bash",
+          "calls": 28,
+          "errors": 3
+        },
+        {
+          "name": "Edit",
+          "calls": 13,
+          "errors": 0
+        },
+        {
+          "name": "Write",
+          "calls": 4,
+          "errors": 0
+        }
+      ],
+      "subagents": []
+    },
+    {
+      "id": "claude_code:55ab32eb-41e4-4537-97fd-1007af7d8bfc",
+      "key": "claude_code:claude_code:55ab32eb-41e4-4537-97fd-1007af7d8bfc",
+      "agent": "claude_code",
+      "project": "Kaggriculture",
+      "project_path": "/home/siddharth/Desktop/Projects/projects/Kaggriculture",
+      "started_at": "2026-08-06T13:56:43.476Z",
+      "ended_at": "2026-08-12T09:42:26.127Z",
+      "duration_sec": 503142,
+      "model": "claude-opus-4-8",
+      "agent_version": "2.1.201",
+      "turns": 103,
+      "fresh": 161243,
+      "output": 155154,
+      "cache_read": 6277990,
+      "cache_write": 5985558,
+      "tokens": 12579945,
+      "own_tokens": 12464801,
+      "total_tokens": 12579945,
+      "unclassified": 0,
+      "breakdown_known": true,
+      "cost": 42.6639845,
+      "cost_known": true,
+      "tools": [
+        {
+          "name": "Bash",
+          "calls": 40,
+          "errors": 17
+        },
+        {
+          "name": "Edit",
+          "calls": 16,
+          "errors": 1
+        },
+        {
+          "name": "Read",
+          "calls": 14,
+          "errors": 1
+        },
+        {
+          "name": "TodoWrite",
+          "calls": 8,
+          "errors": 0
+        },
+        {
+          "name": "Write",
+          "calls": 5,
+          "errors": 0
+        },
+        {
+          "name": "Agent",
+          "calls": 3,
+          "errors": 0
+        },
+        {
+          "name": "AskUserQuestion",
+          "calls": 2,
+          "errors": 1
+        },
+        {
+          "name": "ExitPlanMode",
+          "calls": 2,
+          "errors": 0
+        },
+        {
+          "name": "TaskCreate",
+          "calls": 2,
+          "errors": 2
+        },
+        {
+          "name": "PowerShell",
+          "calls": 1,
+          "errors": 1
+        }
+      ],
+      "subagents": [
+        {
+          "id": "claude_code:55ab32eb-41e4-4537-97fd-1007af7d8bfc/agent-a504804100549fa2e",
+          "tokens": 10335,
+          "own_tokens": 10335,
+          "total_tokens": 10335,
+          "cost": 0.0618775,
+          "cost_known": true,
+          "turns": 2,
+          "unclassified": 0
+        },
+        {
+          "id": "claude_code:55ab32eb-41e4-4537-97fd-1007af7d8bfc/agent-a2740b371a086092c",
+          "tokens": 94164,
+          "own_tokens": 94164,
+          "total_tokens": 94164,
+          "cost": 0.6305955,
+          "cost_known": true,
+          "turns": 6,
+          "unclassified": 0
+        },
+        {
+          "id": "claude_code:55ab32eb-41e4-4537-97fd-1007af7d8bfc/agent-ac6a7212702dc50ac",
+          "tokens": 10645,
+          "own_tokens": 10645,
+          "total_tokens": 10645,
+          "cost": 0.02487775,
+          "cost_known": true,
+          "turns": 2,
+          "unclassified": 0
+        }
+      ]
+    },
+    {
+      "id": "019fcc14-8c8e-78a2-b3b8-7d03f263f37f",
+      "key": "codex:019fcc14-8c8e-78a2-b3b8-7d03f263f37f",
+      "agent": "codex",
+      "project": "rockefeller",
+      "project_path": "/home/siddharth/Desktop/Projects/projects/rockefeller",
+      "started_at": "2026-08-04T09:22:06.691000Z",
+      "ended_at": "2026-08-04T11:15:47.436000Z",
+      "duration_sec": 6820,
+      "model": "gpt-5.6-sol",
+      "agent_version": "0.145.0",
+      "turns": 5,
+      "fresh": 1373197,
+      "output": 13372,
+      "cache_read": 1633280,
+      "cache_write": 0,
+      "tokens": 3019849,
+      "own_tokens": 3019849,
+      "total_tokens": 3019849,
+      "unclassified": 0,
+      "breakdown_known": true,
+      "cost": 0.0,
+      "cost_known": false,
+      "tools": [
+        {
+          "name": "exec",
+          "calls": 36,
+          "errors": 0
+        },
+        {
+          "name": "wait",
+          "calls": 12,
+          "errors": 0
+        },
+        {
+          "name": "apply_patch",
+          "calls": 5,
+          "errors": 0
+        }
+      ],
+      "subagents": []
+    },
+    {
+      "id": "019fc8fc-2e09-72d1-a9d4-47a850364089",
+      "key": "codex:019fc8fc-2e09-72d1-a9d4-47a850364089",
+      "agent": "codex",
+      "project": "Portfolio",
+      "project_path": "/home/siddharth/Desktop/Projects/projects/Portfolio",
+      "started_at": "2026-08-03T18:56:37.897000Z",
+      "ended_at": "2026-08-03T19:00:17.100000Z",
+      "duration_sec": 219,
+      "model": "gpt-5.6-sol",
+      "agent_version": "0.145.0",
+      "turns": 1,
+      "fresh": 304156,
+      "output": 4581,
+      "cache_read": 180224,
+      "cache_write": 0,
+      "tokens": 488961,
+      "own_tokens": 488961,
+      "total_tokens": 488961,
+      "unclassified": 0,
+      "breakdown_known": true,
+      "cost": 0.0,
+      "cost_known": false,
+      "tools": [
+        {
+          "name": "exec",
+          "calls": 10,
+          "errors": 0
+        },
+        {
+          "name": "wait",
+          "calls": 4,
+          "errors": 0
+        },
+        {
+          "name": "apply_patch",
+          "calls": 2,
+          "errors": 0
+        },
+        {
+          "name": "request_user_input",
+          "calls": 2,
+          "errors": 0
+        }
+      ],
+      "subagents": []
+    },
+    {
+      "id": "019fc8d5-4b5e-7722-8acc-693fd9d1cb18",
+      "key": "codex:019fc8d5-4b5e-7722-8acc-693fd9d1cb18",
+      "agent": "codex",
+      "project": "Portfolio",
+      "project_path": "/home/siddharth/Desktop/Projects/projects/Portfolio",
+      "started_at": "2026-08-03T18:14:09.503000Z",
+      "ended_at": "2026-08-03T18:14:21.533000Z",
+      "duration_sec": 12,
+      "model": "gpt-5.6-sol",
+      "agent_version": "0.145.0",
+      "turns": 1,
+      "fresh": 4429,
+      "output": 5,
+      "cache_read": 6656,
+      "cache_write": 0,
+      "tokens": 11090,
+      "own_tokens": 11090,
+      "total_tokens": 11090,
+      "unclassified": 0,
+      "breakdown_known": true,
+      "cost": 0.0,
+      "cost_known": false,
+      "tools": [],
+      "subagents": []
+    },
+    {
+      "id": "claude_code:e233745a-2cd4-4939-953c-fe6502543334",
+      "key": "claude_code:claude_code:e233745a-2cd4-4939-953c-fe6502543334",
+      "agent": "claude_code",
+      "project": "Portfolio",
+      "project_path": "/home/siddharth/Desktop/Projects/projects/Portfolio",
+      "started_at": "2026-08-03T17:57:18.408Z",
+      "ended_at": "2026-08-04T09:12:51.278Z",
+      "duration_sec": 54932,
+      "model": "claude-opus-4-8",
+      "agent_version": "2.1.201",
+      "turns": 142,
+      "fresh": 2279,
+      "output": 54004,
+      "cache_read": 6620347,
+      "cache_write": 5053019,
+      "tokens": 11729649,
+      "own_tokens": 11729649,
+      "total_tokens": 11729649,
+      "unclassified": 0,
+      "breakdown_known": true,
+      "cost": 36.25303725,
+      "cost_known": true,
+      "tools": [
+        {
+          "name": "Edit",
+          "calls": 43,
+          "errors": 0
+        },
+        {
+          "name": "Read",
+          "calls": 34,
+          "errors": 1
+        },
+        {
+          "name": "Bash",
+          "calls": 33,
+          "errors": 2
+        },
+        {
+          "name": "TodoWrite",
+          "calls": 7,
+          "errors": 0
+        },
+        {
+          "name": "AskUserQuestion",
+          "calls": 4,
+          "errors": 1
+        },
+        {
+          "name": "EnterPlanMode",
+          "calls": 1,
+          "errors": 0
+        },
+        {
+          "name": "ExitPlanMode",
+          "calls": 1,
+          "errors": 0
+        },
+        {
+          "name": "Write",
+          "calls": 1,
+          "errors": 0
+        }
+      ],
+      "subagents": []
+    },
+    {
+      "id": "claude_code:763ace08-11f3-41ce-8db2-a513ed8274d9",
+      "key": "claude_code:claude_code:763ace08-11f3-41ce-8db2-a513ed8274d9",
+      "agent": "claude_code",
+      "project": "Portfolio",
+      "project_path": "/home/siddharth/Desktop/Projects/projects/Portfolio",
+      "started_at": "2026-08-03T16:46:16.748Z",
+      "ended_at": "2026-08-03T16:57:39.524Z",
+      "duration_sec": 682,
+      "model": "claude-opus-4-8",
+      "agent_version": "2.1.201",
+      "turns": 4,
+      "fresh": 34,
+      "output": 4,
+      "cache_read": 0,
+      "cache_write": 31910,
+      "tokens": 31948,
+      "own_tokens": 31948,
+      "total_tokens": 31948,
+      "unclassified": 0,
+      "breakdown_known": true,
+      "cost": 0.19970749999999998,
+      "cost_known": true,
+      "tools": [],
+      "subagents": []
+    },
+    {
+      "id": "claude_code:d87e8f4e-c283-455c-b104-2d8a125200c6",
+      "key": "claude_code:claude_code:d87e8f4e-c283-455c-b104-2d8a125200c6",
+      "agent": "claude_code",
+      "project": "Portfolio",
+      "project_path": "/home/siddharth/Desktop/Projects/projects/Portfolio",
+      "started_at": "2026-07-30T18:14:34.784Z",
+      "ended_at": "2026-07-30T18:14:34.784Z",
+      "duration_sec": 0,
+      "model": "<synthetic>",
+      "agent_version": "2.1.201",
+      "turns": 1,
+      "fresh": 0,
+      "output": 0,
+      "cache_read": 0,
+      "cache_write": 0,
+      "tokens": 0,
+      "own_tokens": 0,
+      "total_tokens": 0,
+      "unclassified": 0,
+      "breakdown_known": true,
+      "cost": 0.0,
+      "cost_known": true,
+      "tools": [],
+      "subagents": []
+    },
+    {
+      "id": "019f7f12-a182-7ec0-9398-6b0c6f4eb6aa",
+      "key": "codex:019f7f12-a182-7ec0-9398-6b0c6f4eb6aa",
+      "agent": "codex",
+      "project": "Portfolio",
+      "project_path": "/home/siddharth/Desktop/Projects/projects/Portfolio",
+      "started_at": "2026-07-20T10:29:15.266000Z",
+      "ended_at": "2026-07-20T11:06:53.626000Z",
+      "duration_sec": 2258,
+      "model": "gpt-5.6-sol",
+      "agent_version": "0.144.6",
+      "turns": 8,
+      "fresh": 855593,
+      "output": 18002,
+      "cache_read": 2100480,
+      "cache_write": 0,
+      "tokens": 2974075,
+      "own_tokens": 2974075,
+      "total_tokens": 2974075,
+      "unclassified": 0,
+      "breakdown_known": true,
+      "cost": 0.0,
+      "cost_known": false,
+      "tools": [
+        {
+          "name": "exec",
+          "calls": 34,
+          "errors": 0
+        },
+        {
+          "name": "wait",
+          "calls": 12,
+          "errors": 0
+        },
+        {
+          "name": "apply_patch",
+          "calls": 10,
+          "errors": 0
+        }
+      ],
+      "subagents": []
+    },
+    {
+      "id": "019f7ee0-df91-7783-8500-f4ce9fc77198",
+      "key": "codex:019f7ee0-df91-7783-8500-f4ce9fc77198",
+      "agent": "codex",
+      "project": "Portfolio",
+      "project_path": "/home/siddharth/Desktop/Projects/projects/Portfolio",
+      "started_at": "2026-07-20T09:34:54.428000Z",
+      "ended_at": "2026-07-20T10:22:11.483000Z",
+      "duration_sec": 2837,
+      "model": "gpt-5.6-sol",
+      "agent_version": "0.144.6",
+      "turns": 7,
+      "fresh": 787378,
+      "output": 20739,
+      "cache_read": 2142976,
+      "cache_write": 0,
+      "tokens": 2951093,
+      "own_tokens": 2951093,
+      "total_tokens": 2951093,
+      "unclassified": 0,
+      "breakdown_known": true,
+      "cost": 0.0,
+      "cost_known": false,
+      "tools": [
+        {
+          "name": "exec",
+          "calls": 32,
+          "errors": 0
+        },
+        {
+          "name": "apply_patch",
+          "calls": 7,
+          "errors": 0
+        },
+        {
+          "name": "wait",
+          "calls": 5,
+          "errors": 0
+        }
+      ],
+      "subagents": []
+    },
+    {
+      "id": "2cc3cf48-b086-400a-b1a3-33eb57b6276e",
+      "key": "cursor:2cc3cf48-b086-400a-b1a3-33eb57b6276e",
+      "agent": "cursor",
+      "project": "Portfolio",
+      "project_path": "/home/siddharth/Desktop/Projects/projects/Portfolio",
+      "started_at": "2026-07-09T13:10:00Z",
+      "ended_at": "2026-07-09T13:12:00Z",
+      "duration_sec": 120,
+      "model": "unknown",
+      "agent_version": "",
+      "turns": 2,
+      "fresh": 0,
+      "output": 0,
+      "cache_read": 0,
+      "cache_write": 0,
+      "tokens": 822,
+      "own_tokens": 822,
+      "total_tokens": 822,
+      "unclassified": 822,
+      "breakdown_known": false,
+      "cost": 0.0,
+      "cost_known": false,
+      "tools": [
+        {
+          "name": "Read",
+          "calls": 9,
+          "errors": 0
+        },
+        {
+          "name": "StrReplace",
+          "calls": 3,
+          "errors": 0
+        },
+        {
+          "name": "Glob",
+          "calls": 2,
+          "errors": 0
+        },
+        {
+          "name": "Grep",
+          "calls": 2,
+          "errors": 0
+        },
+        {
+          "name": "Task",
+          "calls": 2,
+          "errors": 0
+        },
+        {
+          "name": "TodoWrite",
+          "calls": 2,
+          "errors": 0
+        },
+        {
+          "name": "AskQuestion",
+          "calls": 1,
+          "errors": 0
+        },
+        {
+          "name": "CreatePlan",
+          "calls": 1,
+          "errors": 0
+        },
+        {
+          "name": "ReadLints",
+          "calls": 1,
+          "errors": 0
+        },
+        {
+          "name": "Shell",
+          "calls": 1,
+          "errors": 0
+        }
+      ],
+      "subagents": []
+    },
+    {
+      "id": "subagents",
+      "key": "cursor:subagents",
+      "agent": "cursor",
+      "project": "home-siddharth-Desktop-Projects-projects-Portfolio",
+      "project_path": "home-siddharth-Desktop-Projects-projects-Portfolio",
+      "started_at": "2026-07-09T13:10:00Z",
+      "ended_at": "2026-07-09T13:10:00Z",
+      "duration_sec": 0,
+      "model": "unknown",
+      "agent_version": "",
+      "turns": 1,
+      "fresh": 0,
+      "output": 0,
+      "cache_read": 0,
+      "cache_write": 0,
+      "tokens": 2193,
+      "own_tokens": 2193,
+      "total_tokens": 2193,
+      "unclassified": 2193,
+      "breakdown_known": false,
+      "cost": 0.0,
+      "cost_known": false,
+      "tools": [
+        {
+          "name": "Read",
+          "calls": 10,
+          "errors": 0
+        },
+        {
+          "name": "Grep",
+          "calls": 6,
+          "errors": 0
+        },
+        {
+          "name": "Glob",
+          "calls": 3,
+          "errors": 0
+        },
+        {
+          "name": "UpdateCurrentStep",
+          "calls": 2,
+          "errors": 0
+        }
+      ],
+      "subagents": []
+    }
+  ],
+  "daily_tools": [
+    {
+      "day": "2026-07-09",
+      "agent": "cursor",
+      "name": "AskQuestion",
+      "calls": 1,
+      "errors": 0
+    },
+    {
+      "day": "2026-07-09",
+      "agent": "cursor",
+      "name": "CreatePlan",
+      "calls": 1,
+      "errors": 0
+    },
+    {
+      "day": "2026-07-09",
+      "agent": "cursor",
+      "name": "Glob",
+      "calls": 5,
+      "errors": 0
+    },
+    {
+      "day": "2026-07-09",
+      "agent": "cursor",
+      "name": "Grep",
+      "calls": 8,
+      "errors": 0
+    },
+    {
+      "day": "2026-07-09",
+      "agent": "cursor",
+      "name": "Read",
+      "calls": 19,
+      "errors": 0
+    },
+    {
+      "day": "2026-07-09",
+      "agent": "cursor",
+      "name": "ReadLints",
+      "calls": 1,
+      "errors": 0
+    },
+    {
+      "day": "2026-07-09",
+      "agent": "cursor",
+      "name": "Shell",
+      "calls": 1,
+      "errors": 0
+    },
+    {
+      "day": "2026-07-09",
+      "agent": "cursor",
+      "name": "StrReplace",
+      "calls": 3,
+      "errors": 0
+    },
+    {
+      "day": "2026-07-09",
+      "agent": "cursor",
+      "name": "Task",
+      "calls": 2,
+      "errors": 0
+    },
+    {
+      "day": "2026-07-09",
+      "agent": "cursor",
+      "name": "TodoWrite",
+      "calls": 2,
+      "errors": 0
+    },
+    {
+      "day": "2026-07-09",
+      "agent": "cursor",
+      "name": "UpdateCurrentStep",
+      "calls": 2,
+      "errors": 0
+    },
+    {
+      "day": "2026-07-20",
+      "agent": "codex",
+      "name": "apply_patch",
+      "calls": 17,
+      "errors": 0
+    },
+    {
+      "day": "2026-07-20",
+      "agent": "codex",
+      "name": "exec",
+      "calls": 66,
+      "errors": 0
+    },
+    {
+      "day": "2026-07-20",
+      "agent": "codex",
+      "name": "wait",
+      "calls": 17,
+      "errors": 0
+    },
+    {
+      "day": "2026-08-03",
+      "agent": "claude_code",
+      "name": "AskUserQuestion",
+      "calls": 4,
+      "errors": 1
+    },
+    {
+      "day": "2026-08-03",
+      "agent": "claude_code",
+      "name": "Bash",
+      "calls": 20,
+      "errors": 2
+    },
+    {
+      "day": "2026-08-03",
+      "agent": "claude_code",
+      "name": "Edit",
+      "calls": 26,
+      "errors": 0
+    },
+    {
+      "day": "2026-08-03",
+      "agent": "claude_code",
+      "name": "EnterPlanMode",
+      "calls": 1,
+      "errors": 0
+    },
+    {
+      "day": "2026-08-03",
+      "agent": "claude_code",
+      "name": "ExitPlanMode",
+      "calls": 1,
+      "errors": 0
+    },
+    {
+      "day": "2026-08-03",
+      "agent": "claude_code",
+      "name": "Read",
+      "calls": 21,
+      "errors": 1
+    },
+    {
+      "day": "2026-08-03",
+      "agent": "claude_code",
+      "name": "TodoWrite",
+      "calls": 7,
+      "errors": 0
+    },
+    {
+      "day": "2026-08-03",
+      "agent": "claude_code",
+      "name": "Write",
+      "calls": 1,
+      "errors": 0
+    },
+    {
+      "day": "2026-08-03",
+      "agent": "codex",
+      "name": "apply_patch",
+      "calls": 2,
+      "errors": 0
+    },
+    {
+      "day": "2026-08-03",
+      "agent": "codex",
+      "name": "exec",
+      "calls": 10,
+      "errors": 0
+    },
+    {
+      "day": "2026-08-03",
+      "agent": "codex",
+      "name": "request_user_input",
+      "calls": 2,
+      "errors": 0
+    },
+    {
+      "day": "2026-08-03",
+      "agent": "codex",
+      "name": "wait",
+      "calls": 4,
+      "errors": 0
+    },
+    {
+      "day": "2026-08-04",
+      "agent": "claude_code",
+      "name": "Bash",
+      "calls": 13,
+      "errors": 0
+    },
+    {
+      "day": "2026-08-04",
+      "agent": "claude_code",
+      "name": "Edit",
+      "calls": 17,
+      "errors": 0
+    },
+    {
+      "day": "2026-08-04",
+      "agent": "claude_code",
+      "name": "Read",
+      "calls": 13,
+      "errors": 0
+    },
+    {
+      "day": "2026-08-04",
+      "agent": "codex",
+      "name": "apply_patch",
+      "calls": 5,
+      "errors": 0
+    },
+    {
+      "day": "2026-08-04",
+      "agent": "codex",
+      "name": "exec",
+      "calls": 36,
+      "errors": 0
+    },
+    {
+      "day": "2026-08-04",
+      "agent": "codex",
+      "name": "wait",
+      "calls": 12,
+      "errors": 0
+    },
+    {
+      "day": "2026-08-06",
+      "agent": "claude_code",
+      "name": "Agent",
+      "calls": 3,
+      "errors": 0
+    },
+    {
+      "day": "2026-08-06",
+      "agent": "claude_code",
+      "name": "AskUserQuestion",
+      "calls": 1,
+      "errors": 0
+    },
+    {
+      "day": "2026-08-06",
+      "agent": "claude_code",
+      "name": "Bash",
+      "calls": 19,
+      "errors": 0
+    },
+    {
+      "day": "2026-08-06",
+      "agent": "claude_code",
+      "name": "Edit",
+      "calls": 4,
+      "errors": 0
+    },
+    {
+      "day": "2026-08-06",
+      "agent": "claude_code",
+      "name": "ExitPlanMode",
+      "calls": 1,
+      "errors": 0
+    },
+    {
+      "day": "2026-08-06",
+      "agent": "claude_code",
+      "name": "PowerShell",
+      "calls": 1,
+      "errors": 1
+    },
+    {
+      "day": "2026-08-06",
+      "agent": "claude_code",
+      "name": "Read",
+      "calls": 4,
+      "errors": 0
+    },
+    {
+      "day": "2026-08-06",
+      "agent": "claude_code",
+      "name": "TaskCreate",
+      "calls": 2,
+      "errors": 2
+    },
+    {
+      "day": "2026-08-06",
+      "agent": "claude_code",
+      "name": "TodoWrite",
+      "calls": 3,
+      "errors": 0
+    },
+    {
+      "day": "2026-08-06",
+      "agent": "claude_code",
+      "name": "Write",
+      "calls": 3,
+      "errors": 0
+    },
+    {
+      "day": "2026-08-07",
+      "agent": "claude_code",
+      "name": "AskUserQuestion",
+      "calls": 1,
+      "errors": 1
+    },
+    {
+      "day": "2026-08-07",
+      "agent": "claude_code",
+      "name": "Bash",
+      "calls": 53,
+      "errors": 20
+    },
+    {
+      "day": "2026-08-07",
+      "agent": "claude_code",
+      "name": "Edit",
+      "calls": 25,
+      "errors": 1
+    },
+    {
+      "day": "2026-08-07",
+      "agent": "claude_code",
+      "name": "ExitPlanMode",
+      "calls": 1,
+      "errors": 0
+    },
+    {
+      "day": "2026-08-07",
+      "agent": "claude_code",
+      "name": "Read",
+      "calls": 43,
+      "errors": 1
+    },
+    {
+      "day": "2026-08-07",
+      "agent": "claude_code",
+      "name": "TodoWrite",
+      "calls": 4,
+      "errors": 0
+    },
+    {
+      "day": "2026-08-07",
+      "agent": "claude_code",
+      "name": "Write",
+      "calls": 5,
+      "errors": 0
+    },
+    {
+      "day": "2026-08-08",
+      "agent": "codex",
+      "name": "apply_patch",
+      "calls": 13,
+      "errors": 0
+    },
+    {
+      "day": "2026-08-08",
+      "agent": "codex",
+      "name": "exec_command",
+      "calls": 59,
+      "errors": 0
+    },
+    {
+      "day": "2026-08-08",
+      "agent": "codex",
+      "name": "write_stdin",
+      "calls": 14,
+      "errors": 0
+    },
+    {
+      "day": "2026-08-10",
+      "agent": "codex",
+      "name": "exec",
+      "calls": 166,
+      "errors": 0
+    },
+    {
+      "day": "2026-08-10",
+      "agent": "codex",
+      "name": "wait",
+      "calls": 14,
+      "errors": 0
+    },
+    {
+      "day": "2026-08-11",
+      "agent": "codex",
+      "name": "exec",
+      "calls": 59,
+      "errors": 0
+    },
+    {
+      "day": "2026-08-11",
+      "agent": "codex",
+      "name": "wait",
+      "calls": 23,
+      "errors": 0
+    },
+    {
+      "day": "2026-08-12",
+      "agent": "claude_code",
+      "name": "Bash",
+      "calls": 8,
+      "errors": 0
+    },
+    {
+      "day": "2026-08-12",
+      "agent": "claude_code",
+      "name": "Read",
+      "calls": 3,
+      "errors": 0
+    },
+    {
+      "day": "2026-08-12",
+      "agent": "claude_code",
+      "name": "TodoWrite",
+      "calls": 1,
+      "errors": 0
+    },
+    {
+      "day": "2026-08-12",
+      "agent": "claude_code",
+      "name": "Write",
+      "calls": 1,
+      "errors": 0
+    },
+    {
+      "day": "2026-08-12",
+      "agent": "codex",
+      "name": "exec",
+      "calls": 109,
+      "errors": 0
+    },
+    {
+      "day": "2026-08-12",
+      "agent": "codex",
+      "name": "functions__wait",
+      "calls": 1,
+      "errors": 0
+    },
+    {
+      "day": "2026-08-12",
+      "agent": "codex",
+      "name": "wait",
+      "calls": 36,
+      "errors": 0
+    },
+    {
+      "day": "2026-08-14",
+      "agent": "codex",
+      "name": "exec",
+      "calls": 22,
+      "errors": 0
+    },
+    {
+      "day": "2026-08-15",
+      "agent": "codex",
+      "name": "exec",
+      "calls": 74,
+      "errors": 0
+    },
+    {
+      "day": "2026-08-15",
+      "agent": "codex",
+      "name": "request_user_input",
+      "calls": 1,
+      "errors": 0
+    },
+    {
+      "day": "2026-08-15",
+      "agent": "codex",
+      "name": "wait",
+      "calls": 11,
+      "errors": 0
+    },
+    {
+      "day": "2026-08-19",
+      "agent": "codex",
+      "name": "exec",
+      "calls": 9,
+      "errors": 0
+    },
+    {
+      "day": "2026-08-22",
+      "agent": "codex",
+      "name": "exec",
+      "calls": 67,
+      "errors": 0
+    },
+    {
+      "day": "2026-08-22",
+      "agent": "codex",
+      "name": "request_user_input",
+      "calls": 2,
+      "errors": 0
+    },
+    {
+      "day": "2026-08-22",
+      "agent": "codex",
+      "name": "wait",
+      "calls": 8,
+      "errors": 0
+    },
+    {
+      "day": "2026-08-23",
+      "agent": "claude_code",
+      "name": "Agent",
+      "calls": 3,
+      "errors": 0
+    },
+    {
+      "day": "2026-08-23",
+      "agent": "claude_code",
+      "name": "Bash",
+      "calls": 95,
+      "errors": 28
+    },
+    {
+      "day": "2026-08-23",
+      "agent": "claude_code",
+      "name": "Edit",
+      "calls": 2,
+      "errors": 0
+    },
+    {
+      "day": "2026-08-23",
+      "agent": "claude_code",
+      "name": "Read",
+      "calls": 36,
+      "errors": 0
+    },
+    {
+      "day": "2026-08-23",
+      "agent": "claude_code",
+      "name": "Write",
+      "calls": 1,
+      "errors": 0
+    },
+    {
+      "day": "2026-09-06",
+      "agent": "claude_code",
+      "name": "Bash",
+      "calls": 56,
+      "errors": 2
+    },
+    {
+      "day": "2026-09-06",
+      "agent": "claude_code",
+      "name": "Edit",
+      "calls": 3,
+      "errors": 0
+    },
+    {
+      "day": "2026-09-06",
+      "agent": "claude_code",
+      "name": "EnterPlanMode",
+      "calls": 1,
+      "errors": 1
+    },
+    {
+      "day": "2026-09-06",
+      "agent": "claude_code",
+      "name": "ExitPlanMode",
+      "calls": 1,
+      "errors": 1
+    },
+    {
+      "day": "2026-09-06",
+      "agent": "claude_code",
+      "name": "Read",
+      "calls": 21,
+      "errors": 1
+    },
+    {
+      "day": "2026-09-06",
+      "agent": "claude_code",
+      "name": "TaskCreate",
+      "calls": 5,
+      "errors": 0
+    },
+    {
+      "day": "2026-09-06",
+      "agent": "claude_code",
+      "name": "TaskUpdate",
+      "calls": 9,
+      "errors": 0
+    },
+    {
+      "day": "2026-09-06",
+      "agent": "claude_code",
+      "name": "Write",
+      "calls": 30,
+      "errors": 0
+    },
+    {
+      "day": "2026-09-06",
+      "agent": "codex",
+      "name": "exec",
+      "calls": 20,
+      "errors": 0
+    },
+    {
+      "day": "2026-09-06",
+      "agent": "codex",
+      "name": "wait",
+      "calls": 2,
+      "errors": 0
+    },
+    {
+      "day": "2026-09-07",
+      "agent": "claude_code",
+      "name": "Bash",
+      "calls": 2,
+      "errors": 1
+    },
+    {
+      "day": "2026-09-07",
+      "agent": "claude_code",
+      "name": "Skill",
+      "calls": 1,
+      "errors": 0
+    }
+  ]
+}
