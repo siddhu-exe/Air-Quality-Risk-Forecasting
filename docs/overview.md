@@ -1,20 +1,39 @@
 # Air Quality Risk Forecasting: Project Overview
 
 ## What is this project?
-This project aims to predict and forecast air quality risks using historical pollution and weather data from two major Indian mega-cities: **Delhi** and **Mumbai**. 
+This project is an end-to-end air-quality risk forecasting system built on top of genuine, real-world government sensor data from India. Instead of simply downloading a dataset and training a model, this project demonstrates a highly rigorous, full-lifecycle data engineering and data science workflow.
 
-By training Artificial Intelligence (AI) and Machine Learning models on years of historical air patterns, we can forecast future pollution spikes and identify severe health risk periods before they occur.
+## The Broad Lifecycle Ecosystem
+We adhere strictly to the following step-by-step pipeline. We do not skip ahead to machine learning until the data foundation is mathematically reliable.
+```text
+RAW GOVERNMENT DATA
+        ↓
+DATA PROFILING
+        ↓
+DATABASE DESIGN
+        ↓
+ETL / DATA CLEANING
+        ↓
+POSTGRESQL CURATED DATA    <-- (We are here)
+        ↓
+DATA VALIDATION
+        ↓
+EDA (Exploratory Data Analysis)
+        ↓
+FEATURE ENGINEERING
+        ↓
+AQI FORECASTING
+        ↓
+RISK CLASSIFICATION
+        ↓
+CAUSAL / POLICY ANALYSIS
+        ↓
+DASHBOARD / DEPLOYMENT
+```
 
 ## Where does the data come from?
-- **Delhi Data:** We have hourly, station-level data from 7 specific monitoring stations (like Anand Vihar, Punjabi Bagh, and ITO) stretching from 2023 to 2026. This data includes a massive breakdown of pollutants (PM2.5, PM10, NOx, Ozone, etc.) and meteorological weather data (Temperature, Wind Speed, Solar Radiation).
-- **Mumbai Data:** We have overall city-level Air Quality Index (AQI) reports for the first half of 2026.
+- **Primary Set (Delhi):** Station-level measurements containing distinct environmental pollutants (PM2.5, NOx, Ozone, etc.) and meteorological weather data at hourly resolution across 7 distinct sensors.
+- **Secondary Set (Mumbai):** City-level AQI data reserved for future out-of-sample validation and external comparison. 
 
-## How does it work?
-Building an AI forecasting model requires pristine data. The project is currently focused on the **Data Pipeline**, which happens in a few stages:
-1. **Extraction:** Reading thousands of messy Raw CSV and Excel files.
-2. **Cleaning (ETL):** Standardizing column names, fixing broken dates, deleting obvious sensor glitches (like a machine reading "-999" degrees or impossible atmospheric pressure), and filling in the gaps.
-3. **Database:** Storing all the cleaned, hourly data into a fast, central database.
-4. **Forecasting (The Goal):** Feeding this database into machine learning algorithms to map how weather patterns (like wind speeds and temperature) influence toxic pollutant build-ups, eventually producing a predictive forecast model. 
-
-## Current Status
-We have successfully built the cleaning pipeline. It can scan every raw file, fix all formatting errors automatically, rescue fragmented timestamps, and track quality issues. We are currently moving to the Database creation phase, after which the AI modeling will begin.
+## Architectural Philosophy
+Data integrity is paramount. If a sensor breaks and reports `PM10 = -999`, we do not throw away the entire row and lose the perfectly valid Temperature records for that hour. We gracefully NULL the broken cell and log the reason in a dedicated quality control database component. We trace every single row of data back to its original raw file source, meaning this entire architecture behaves identically to a secure, auditable, high-grade enterprise data warehouse.

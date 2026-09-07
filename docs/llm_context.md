@@ -1,43 +1,31 @@
 # LLM Context: Project Architecture & State
 
-**Purpose:** Read this file to instantly understand the repository structure, previous bug fixes, constraints, and current state. This file saves you from reading dozens of codebase files.
+**Purpose:** Read this file to instantly understand the repository structure, previous bug fixes, constraints, and current state of the Air Quality Risk Forecasting system. Do not change project direction or introduce ML technologies prematurely.
 
-## Project Summary
-- **Domain:** Air Quality Risk Forecasting (Delhi & Mumbai).
-- **Goal:** Clean raw sensor data (ETL), store it in PostgreSQL, then build ML forecasting models.
-- **Stack:** Python 3, Pandas, numpy, openpyxl, PostgreSQL (planned).
+## Project Scope & Lifecycle
+**Lifecycle Pipeline:** RAW GOVERNMENT DATA -> DATA PROFILING -> DATABASE DESIGN -> ETL/DATA CLEANING -> POSTGRESQL -> DATA VALIDATION -> EDA -> FEATURE ENGINEERING -> AQI FORECASTING -> RISK CLASSIFICATION -> CAUSAL/POLICY ANALYSIS -> DASHBOARD.
+**Current Stage:** ETL Validated -> ERD Completed -> **Moving to PostgreSQL Setup**.
 
-## Directory Structure
-- `/Og Data` -> Source data (never modify or delete these files).
-  - `/Delhi data` -> Station dirs (e.g., `Anand Vihar, Delhi - DPCC`).
-    - Contains `Raw Data/` (univariate CSVs, 2023-26) and `AQI Hourly/` (XLSX files, 2025).
-    - **Quirk:** `Jahangirpuri, Delhi - DPCC\t` folder has a trailing tab character.
-  - `/Mumbai data` -> City-level AQI XLSX files (Jan-Jul 2026).
-- `/etl` -> The Python processing pipeline.
-  - `pipeline.py`: Main orchestrator orchestrating dry-runs over all files.
-  - `schemas.py`: Constants, column mapping to `snake_case`, validation boundaries.
-  - `validation.py`: Cleans sentinels, checks bounds, generates `qc_flags` JSON.
-  - `transform_caaqms.py`: Parses the Raw Delhi CSVs.
-  - `transform_aqi.py`: Parses the AQI XLSX files (melt wide-to-long format).
-- `/docs` -> Project documentation.
-- `/.claude/projects/*/memory/` -> Persistent cross-session Claude memory.
+## Geographic Scope
+- **Primary:** Delhi (7 specific stations: Anand Vihar, Bawana, Dwarka-Sector 8, ITO, Jahangirpuri, Punjabi Bagh, R K Puram).
+- **Secondary:** Mumbai data exists but MUST NOT be mixed into the primary Delhi dataset blindly. It is reserved for external validation later.
 
-## Critical Technical Quirks & Solved Bugs (DO NOT REGRESS)
-1. **AQI Dates are Integers:** `Date` columns in AQI Excel spreadsheets are just day-of-month integers (1, 2, 3..). Parsing them directly yields `1970-01-01` epoch bugs. 
-   *Fix:* `transform_aqi.py` extracts Year and Month using regex on the filename (`r"_(20\d{2})_([A-Za-z]+)_"`), then assembles a localized IST (`Asia/Kolkata`) timestamp.
-2. **Sentinel False Positives:** Previously, values `9` and `-9` were treated as error sentinels. This destroyed valid readouts (e.g., 9°C, 9µg/m³ PM2.5).
-   *Fix:* `schemas.py` restricts `SENTINEL_VALUES` strictly to structural errors: `{-999, -9999, 9999}`.
-3. **hPa vs mmHg Physical Bounds:** Bawana Station logs `bp_mmhg` in **hPa** (960-999) despite the column name. `999.0` is a widely known sensor clip maximum. 
-   *Fix:* Physical bound in `schemas.py` is dynamically set to `(400, 998.9)`. This successfully traps the `999.0` error without nullifying historically valid hPa outputs.
-4. **Row Retention over Dropping:** When a cell violates a sentinel or physical bounds rule, the cell is converted to `np.nan` and documented in a JSON `qc_flags` column. **The row itself is never dropped** unless the timestamp is fundamentally unrecoverable.
+## Database ERD & Rules (Phase 3)
+The PostgreSQL schema strictly implements **4 Core Tables** (no placeholder ML/Analytics tables yet):
+1. `stations`: Dimension table. Canonical normalized representations.
+2. `source_files`: Lineage tracking. `source_file_id` is its own PK. Identifies reporting periods and row counts per file.
+3. `caaqms_hourly`: Hourly pollutants (pm25, nox_ppb, etc.) and environmental data (temp, rh, etc.).
+4. `aqi_hourly`: Target metric tracking (the wide AQI files).
+*Constraints:* `UNIQUE(station_id, timestamp)` on fact tables for idempotent `ON CONFLICT DO UPDATE` loads. Uses `TIMESTAMPTZ` set to `Asia/Kolkata`.
 
-## Current Pipeline Output Stats (End of Phase 2)
-The ETL dry-run currently successfully processes 112 files yielding:
-- CAAQMS Records: 162,096
-- AQI Records: 59,717
-- Invalid Timestamps Dropped: 0
-- QC Flagged Rows: 930 (Almost exclusively `999.0` BP clip traps).
+## Critical Data/ETL Bugs Solved (Must Maintain!)
+1. **Epoch Bug Avoided:** AQI XLSX `Date` columns contain bare integers (1, 2...). We extract `YYYY-Month` from the filename using regex and concatenate it with the integer to reconstruct the exact `Asia/Kolkata` timestamp.
+2. **Sentinel False Positives:** Values `9` and `-9` were triggering valid readings to nullify (e.g. 9°C). Sentinels are strictly bounded to extreme structural constants (`-999`, `-9999`, `9999`).
+3. **Barometric Pressure Bounds:** `bp_mmhg=999.0` is an explicit physical clip error. Validation traps `bp_mmhg` bounded at `(400, 998.9)` to save genuine hPa scale readings (966-999).
+4. **Invalid Measurement Row Retention:** A bad measurement nullifies the specific cell, NOT the row. The row remains, and a JSON log (e.g. `{"pm25": "SENTINEL_-999"}`) is stamped onto the row's `qc_flags` JSONB column.
 
-## Next Steps Planned 
-We are moving to **Phase 3**: PostgreSQL Database Implementation.
-The target is creating the table schema, setting up the `psycopg2` / `SQLAlchemy` connections, and safely writing the transformed data into the DB using UPSERT logic (`ON CONFLICT (station_id, ts) DO UPDATE`).
+## Current Dry-Run Data State (End of Phase 2 Validation)
+- 112 processed files; 0 failures.
+- 162,096 CAAQMS records retained.
+- 59,717 AQI records retained (up from 1,932 prior to epoch bug fix).
+- 930 out-of-bounds nullifications; 0 TS drops; 0 sentinel drops.
