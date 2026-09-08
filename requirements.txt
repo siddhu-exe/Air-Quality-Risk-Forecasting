@@ -1,5 +1,32 @@
+# ==========================================
+# Phase 1 & 2: Core Data Processing & ETL
+# ==========================================
 pandas==2.1.4
 numpy==1.26.4
 openpyxl==3.1.2
-# SQLAlchemy>=2.0.0
-# psycopg2-binary>=2.9.0
+
+# ==========================================
+# Phase 3: Database & Architecture
+# ==========================================
+psycopg2-binary==2.9.12
+python-dotenv>=1.0.0
+
+# ==========================================
+# Phase 4: Exploratory Data Analysis (EDA)
+# ==========================================
+jupyter>=1.0.0
+matplotlib>=3.8.0
+seaborn>=0.13.0
+
+# ==========================================
+# Phase 5: ML Forecasting & Causal Analysis
+# ==========================================
+scikit-learn>=1.4.0
+xgboost>=2.0.0
+statsmodels>=0.14.0
+
+# ==========================================
+# Phase 6: Interactive Dashboarding
+# ==========================================
+streamlit>=1.32.0
+plotly>=5.18.0
