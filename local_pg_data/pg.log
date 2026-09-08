@@ -1,0 +1,15 @@
+2026-09-08 21:02:30.489 IST [16562] LOG:  starting PostgreSQL 16.14 (Ubuntu 16.14-0ubuntu0.24.04.1) on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, 64-bit
+2026-09-08 21:02:30.489 IST [16562] LOG:  listening on IPv4 address "127.0.0.1", port 5433
+2026-09-08 21:02:30.537 IST [16562] FATAL:  could not create lock file "/var/run/postgresql/.s.PGSQL.5433.lock": Permission denied
+2026-09-08 21:02:30.541 IST [16562] LOG:  database system is shut down
+2026-09-08 21:03:08.685 IST [16660] LOG:  starting PostgreSQL 16.14 (Ubuntu 16.14-0ubuntu0.24.04.1) on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, 64-bit
+2026-09-08 21:03:08.685 IST [16660] LOG:  listening on IPv4 address "127.0.0.1", port 5433
+2026-09-08 21:03:08.768 IST [16660] LOG:  listening on Unix socket "/tmp/.s.PGSQL.5433"
+2026-09-08 21:03:08.867 IST [16667] LOG:  database system was shut down at 2026-09-08 21:02:06 IST
+2026-09-08 21:03:08.949 IST [16660] LOG:  database system is ready to accept connections
+2026-09-08 21:03:11.060 IST [16692] FATAL:  role "siddharth" does not exist
+2026-09-08 21:06:43.307 IST [16851] ERROR:  duplicate key value violates unique constraint "uq_caaqms_hourly_station_ts"
+2026-09-08 21:06:43.307 IST [16851] DETAIL:  Key (station_id, "timestamp")=(1, 2026-08-01 14:00:00+05:30) already exists.
+2026-09-08 21:06:43.307 IST [16851] STATEMENT:  INSERT INTO caaqms_hourly (station_id, source_file_id, timestamp, pm25) VALUES ((SELECT station_id FROM stations LIMIT 1), (SELECT source_file_id FROM source_files LIMIT 1), '2026-08-01 14:00:00+05:30'::TIMESTAMPTZ, 100.0);
+2026-09-08 21:08:08.963 IST [16665] LOG:  checkpoint starting: time
+2026-09-08 21:10:10.793 IST [16665] LOG:  checkpoint complete: wrote 990 buffers (6.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=121.373 s, sync=0.246 s, total=121.830 s; sync files=336, longest=0.085 s, average=0.001 s; distance=4556 kB, estimate=4556 kB; lsn=0/19674A0, redo lsn=0/1967468
