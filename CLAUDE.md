@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a **data repository** for an air quality risk forecasting project. It currently contains only raw source data — no analysis scripts, models, or notebooks have been committed yet. The data covers two Indian cities:
+This is an evolving **air quality risk forecasting** project. It contains raw source data and a fully operational, idempotent Python ETL pipeline backing a reliable PostgreSQL database schema. The next upcoming phase is Phase 4: Exploratory Data Analysis (EDA). The data covers two Indian cities:
 
 - **Delhi**: Station-level hourly measurements from 7 DPCC/CPCB monitoring stations (2023–2026)
 - **Mumbai**: City-level hourly AQI data (Jan–Jul 2026)
@@ -47,9 +47,16 @@ Og Data/
 - Mumbai has **no raw pollutant CSV** — only city-level AQI Excel files; the initial commit had a Bandra Kurla Complex CSV that was removed in commit `c400b02`
 - Station operators: most Delhi stations are DPCC; ITO is CPCB — they may use different calibration standards
 
-## Suggested Next Steps (not yet in repo)
+## Established Tech Stack & DB State
+- Python: `pandas` for processing (`openpyxl` for Excel), `psycopg2` mapping tuples for batched database insertion.
+- DB: PostgreSQL 16 hosted locally via `initdb` connecting on port 5433.
+- Load State: Currently contains 105 total source files, >160K `caaqms_hourly` observations, and ~57K `aqi_hourly` logs specifically representing Delhi.
 
-When adding analysis code, the likely stack is Python with pandas/numpy for data wrangling, scikit-learn or similar for modeling. Recommended structure:
+## Suggested Next Steps (Downstream Phase)
+
+We have successfully finished Phase 3 (DB Schema & Architecture) and have a clean Data Warehouse populated via reliable ETL loader logic.
+
+Next is Phase 4: Exploratory Data Analysis (EDA), adding analysis scripts using the newly ingested DB data. Recommended structure to build next:
 
 ```
 src/         # processing and feature engineering scripts

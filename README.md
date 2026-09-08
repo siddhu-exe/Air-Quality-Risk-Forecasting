@@ -4,12 +4,12 @@ This repository houses the raw data and data engineering pipeline for the **Air 
 
 ## 🚀 Project Overview
 
-The core objective of this phase of the project is to safely parse, standardize, and load scattered raw air quality sensor data (both continuous `.csv` outputs and wide-format `.xlsx` hour-level files) into a relational PostgreSQL database schema.
+The project has now successfully completed Phase 3 (Database Architecture & ETL). Scattered raw air quality sensor data (COVID & post-COVID continuous `.csv` outputs and wide-format `.xlsx` AQI files) are automatically parsed, standardized, and loaded into an idempotent PostgreSQL database schema.
 
 ### Core Features Installed So Far
 1. **Automated Data Profiler**: A 100% read-only recursive scanner that checks for schema consistency, missingness, sentinel faults, and uncovers unique structures inside `.xlsx` documents.
-2. **Idempotent ETL Pipeline**: A robust pipeline equipped with dry-run capabilities that maps non-standard features onto a canonical schema, sanitizes out-of-bounds physical properties (e.g., negative wind speeds), strips sentinels, and transforms wide AQI grids into standard relational row inserts.
-3. **Reproducible Schema DDLs**: Fully prepared PostgreSQL definitions for monitoring stations, dataset files lineage, and specific pollutant matrices ensuring data reliability.
+2. **Idempotent ETL Pipeline**: A robust pipeline that maps non-standard features onto a canonical schema, sanitizes out-of-bounds physical properties, strips sentinels, and transforms wide AQI grids into standard relational row inserts. Connects to Postgres using `psycopg2` `execute_values` for high-throughput batch upserts with perfect idempotency.
+3. **Production Database & Architecture**: Local PostgreSQL cluster configuration, comprehensive schemas with explicit foreign key constraints (`ON DELETE RESTRICT`), validation data checks, and automated backups (`pg_dump`). Fully populated with 105 raw files resulting in ~162K hourly pollution records and ~57K AQI rows for Delhi.
 
 ---
 
@@ -18,6 +18,7 @@ The core objective of this phase of the project is to safely parse, standardize,
 ```text
 .
 ├── CLAUDE.md                   # AI Assistant / Workspace guidance rules
+├── backups/                    # Database pg_dump binary backups
 ├── etl/                        # Pipeline execution logic
 │   ├── discover.py             # File discovery and metadata reading
 │   ├── generate_mapping_report.py # Automated mapping reports
@@ -36,10 +37,13 @@ The core objective of this phase of the project is to safely parse, standardize,
 │   └── ...                     # (Other schema / gap finding CSVs)
 ├── reports/                    # Output from validation & ETL mapping routines
 │   └── column_mapping_report.md
+├── local_pg_data/              # Local PostgreSQL 16 cluster data directory (port 5433)
 └── sql/                        # Target database structural definitions
-    ├── 001_create_schema.sql
-    ├── 002_create_tables.sql
-    └── 003_indexes.sql
+    ├── 001_create_tables.sql
+    ├── 002_constraints.sql
+    ├── 003_indexes.sql
+    ├── 004_validation_schema.sql
+    └── 005_validation_data.sql
 ```
 
 ---
@@ -58,8 +62,19 @@ source venv/bin/activate
 
 **2. Install dependencies**
 ```bash
-pip install pandas numpy openpyxl
+pip install -r requirements.txt
 ```
+
+**3. Database Configuration**
+Create a `.env` file at the root tracking the DB credentials:
+```env
+POSTGRES_HOST=127.0.0.1
+POSTGRES_PORT=5433
+POSTGRES_DB=air_quality_db
+POSTGRES_USER=aq_admin
+POSTGRES_PASSWORD=your_secure_password
+```
+Start your PostgreSQL server instance on the matching port.
 
 ---
 
@@ -78,10 +93,20 @@ To confirm all recognized raw files have matching schemas inside the Canonical D
 python3 etl/generate_mapping_report.py
 ```
 
-### 3. Run the ETL Pipeline (Dry Run)
-Execute the ETL logic safely to see what would be updated or stripped out before touching the Production Database.
+### 3. Run the Production ETL Pipeline
+Execute the ETL logic safely to load data into the Production Database seamlessly tracking source lineage and idempotency.
 ```bash
-python3 etl/pipeline.py --dry-run
+# Small controlled load (Anand Vihar, Jan 2025)
+python3 etl/run_small_load.py
+
+# Full production load (All Delhi 105 files)
+python3 etl/run_full_load.py
+```
+
+### 4. Database Validation
+Re-verify total counts, missing hours, and absolute duplication logic constraints.
+```bash
+python3 verify_full_load.py
 ```
 
 ---
