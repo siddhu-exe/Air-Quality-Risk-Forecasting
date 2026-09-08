@@ -203,7 +203,7 @@ def _df_to_caaqms_rows(
     # Rename ETL columns to DB columns, keeping only what we need
     renamed = df.rename(columns=CAAQMS_COL_MAP)
     rows = []
-    for _, r in renamed.iterrows():
+    for r in renamed.to_dict('records'):
         row = (
             station_id,
             source_file_id,
@@ -240,7 +240,7 @@ def _df_to_aqi_rows(
     """Map ETL dataframe → list of tuples matching _AQI_DB_COLS."""
     renamed = df.rename(columns=AQI_COL_MAP)
     rows = []
-    for _, r in renamed.iterrows():
+    for r in renamed.to_dict('records'):
         rows.append((
             station_id,
             source_file_id,

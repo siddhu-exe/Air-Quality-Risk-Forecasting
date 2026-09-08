@@ -1,0 +1,1052 @@
+[
+  {
+    "filename": "aqi_hourly_station_level_anand_vihar,_delhi_-_dpcc_2025_April_delhi_2025.xlsx",
+    "station": "Anand Vihar",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 712,
+    "inserted_rows": 712,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_anand_vihar,_delhi_-_dpcc_2025_August_delhi_2025.xlsx",
+    "station": "Anand Vihar",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 718,
+    "inserted_rows": 718,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_anand_vihar,_delhi_-_dpcc_2025_December_delhi_2025.xlsx",
+    "station": "Anand Vihar",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 742,
+    "inserted_rows": 742,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_anand_vihar,_delhi_-_dpcc_2025_February_delhi_2025.xlsx",
+    "station": "Anand Vihar",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 397,
+    "inserted_rows": 397,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_anand_vihar,_delhi_-_dpcc_2025_January_delhi_2025.xlsx",
+    "station": "Anand Vihar",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 550,
+    "inserted_rows": 550,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_anand_vihar,_delhi_-_dpcc_2025_July_delhi_2025.xlsx",
+    "station": "Anand Vihar",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 727,
+    "inserted_rows": 727,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_anand_vihar,_delhi_-_dpcc_2025_June_delhi_2025.xlsx",
+    "station": "Anand Vihar",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 700,
+    "inserted_rows": 700,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_anand_vihar,_delhi_-_dpcc_2025_March_delhi_2025.xlsx",
+    "station": "Anand Vihar",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 724,
+    "inserted_rows": 724,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_anand_vihar,_delhi_-_dpcc_2025_May_delhi_2025.xlsx",
+    "station": "Anand Vihar",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 735,
+    "inserted_rows": 735,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_anand_vihar,_delhi_-_dpcc_2025_November_delhi_2025.xlsx",
+    "station": "Anand Vihar",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 674,
+    "inserted_rows": 674,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_anand_vihar,_delhi_-_dpcc_2025_October_delhi_2025.xlsx",
+    "station": "Anand Vihar",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 738,
+    "inserted_rows": 738,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_anand_vihar,_delhi_-_dpcc_2025_September_delhi_2025.xlsx",
+    "station": "Anand Vihar",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 713,
+    "inserted_rows": 713,
+    "error_msg": null
+  },
+  {
+    "filename": "2024_raw_data_hourly_anand_vihar,_delhi_-_dpcc_1H.csv",
+    "station": "Anand Vihar",
+    "type": "CAAQMS",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 8784,
+    "inserted_rows": 8784,
+    "error_msg": null
+  },
+  {
+    "filename": "2025_raw_data_hourly_anand_vihar,_delhi_-_dpcc_1H.csv",
+    "station": "Anand Vihar",
+    "type": "CAAQMS",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 8760,
+    "inserted_rows": 8760,
+    "error_msg": null
+  },
+  {
+    "filename": "2026_raw_data_hourly_anand_vihar,_delhi_-_dpcc_1H.csv",
+    "station": "Anand Vihar",
+    "type": "CAAQMS",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 5088,
+    "inserted_rows": 5088,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_bawana,_delhi_-_dpcc_2025_April_delhi_2025.xlsx",
+    "station": "Bawana",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 712,
+    "inserted_rows": 712,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_bawana,_delhi_-_dpcc_2025_August_delhi_2025.xlsx",
+    "station": "Bawana",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 714,
+    "inserted_rows": 714,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_bawana,_delhi_-_dpcc_2025_December_delhi_2025.xlsx",
+    "station": "Bawana",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 742,
+    "inserted_rows": 742,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_bawana,_delhi_-_dpcc_2025_February_delhi_2025.xlsx",
+    "station": "Bawana",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 650,
+    "inserted_rows": 650,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_bawana,_delhi_-_dpcc_2025_January_delhi_2025.xlsx",
+    "station": "Bawana",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 742,
+    "inserted_rows": 742,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_bawana,_delhi_-_dpcc_2025_July_delhi_2025.xlsx",
+    "station": "Bawana",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 724,
+    "inserted_rows": 724,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_bawana,_delhi_-_dpcc_2025_June_delhi_2025.xlsx",
+    "station": "Bawana",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 710,
+    "inserted_rows": 710,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_bawana,_delhi_-_dpcc_2025_March_delhi_2025.xlsx",
+    "station": "Bawana",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 737,
+    "inserted_rows": 737,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_bawana,_delhi_-_dpcc_2025_May_delhi_2025.xlsx",
+    "station": "Bawana",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 729,
+    "inserted_rows": 729,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_bawana,_delhi_-_dpcc_2025_November_delhi_2025.xlsx",
+    "station": "Bawana",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 717,
+    "inserted_rows": 717,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_bawana,_delhi_-_dpcc_2025_October_delhi_2025.xlsx",
+    "station": "Bawana",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 738,
+    "inserted_rows": 738,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_bawana,_delhi_-_dpcc_2025_September_delhi_2025.xlsx",
+    "station": "Bawana",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 683,
+    "inserted_rows": 683,
+    "error_msg": null
+  },
+  {
+    "filename": "2024_raw_data_hourly_bawana,_delhi_-_dpcc_1H.csv",
+    "station": "Bawana",
+    "type": "CAAQMS",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 8784,
+    "inserted_rows": 8784,
+    "error_msg": null
+  },
+  {
+    "filename": "2025_raw_data_hourly_bawana,_delhi_-_dpcc_1H.csv",
+    "station": "Bawana",
+    "type": "CAAQMS",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 8760,
+    "inserted_rows": 8760,
+    "error_msg": null
+  },
+  {
+    "filename": "2026_raw_data_hourly_bawana,_delhi_-_dpcc_1H.csv",
+    "station": "Bawana",
+    "type": "CAAQMS",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 5088,
+    "inserted_rows": 5088,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_dwarka-sector_8,_delhi_-_dpcc__2025_April_delhi_2025.xlsx",
+    "station": "Dwarka-Sector 8",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 712,
+    "inserted_rows": 712,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_dwarka-sector_8,_delhi_-_dpcc__2025_August_delhi_2025.xlsx",
+    "station": "Dwarka-Sector 8",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 704,
+    "inserted_rows": 704,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_dwarka-sector_8,_delhi_-_dpcc__2025_December_delhi_2025.xlsx",
+    "station": "Dwarka-Sector 8",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 742,
+    "inserted_rows": 742,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_dwarka-sector_8,_delhi_-_dpcc__2025_February_delhi_2025.xlsx",
+    "station": "Dwarka-Sector 8",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 655,
+    "inserted_rows": 655,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_dwarka-sector_8,_delhi_-_dpcc__2025_January_delhi_2025.xlsx",
+    "station": "Dwarka-Sector 8",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 742,
+    "inserted_rows": 742,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_dwarka-sector_8,_delhi_-_dpcc__2025_July_delhi_2025.xlsx",
+    "station": "Dwarka-Sector 8",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 741,
+    "inserted_rows": 741,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_dwarka-sector_8,_delhi_-_dpcc__2025_June_delhi_2025.xlsx",
+    "station": "Dwarka-Sector 8",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 610,
+    "inserted_rows": 610,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_dwarka-sector_8,_delhi_-_dpcc__2025_March_delhi_2025.xlsx",
+    "station": "Dwarka-Sector 8",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 694,
+    "inserted_rows": 694,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_dwarka-sector_8,_delhi_-_dpcc__2025_May_delhi_2025.xlsx",
+    "station": "Dwarka-Sector 8",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 729,
+    "inserted_rows": 729,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_dwarka-sector_8,_delhi_-_dpcc__2025_November_delhi_2025.xlsx",
+    "station": "Dwarka-Sector 8",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 717,
+    "inserted_rows": 717,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_dwarka-sector_8,_delhi_-_dpcc__2025_October_delhi_2025.xlsx",
+    "station": "Dwarka-Sector 8",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 695,
+    "inserted_rows": 695,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_dwarka-sector_8,_delhi_-_dpcc__2025_September_delhi_2025.xlsx",
+    "station": "Dwarka-Sector 8",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 713,
+    "inserted_rows": 713,
+    "error_msg": null
+  },
+  {
+    "filename": "2023_raw_data_hourly_dwarka-sector_8,_delhi_-_dpcc__1H.csv",
+    "station": "Dwarka-Sector 8",
+    "type": "CAAQMS",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 8760,
+    "inserted_rows": 8760,
+    "error_msg": null
+  },
+  {
+    "filename": "2024_raw_data_hourly_dwarka-sector_8,_delhi_-_dpcc__1H.csv",
+    "station": "Dwarka-Sector 8",
+    "type": "CAAQMS",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 8784,
+    "inserted_rows": 8784,
+    "error_msg": null
+  },
+  {
+    "filename": "2025_raw_data_hourly_dwarka-sector_8,_delhi_-_dpcc__1H.csv",
+    "station": "Dwarka-Sector 8",
+    "type": "CAAQMS",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 8760,
+    "inserted_rows": 8760,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_ito,_delhi_-_cpcb_2025_April_delhi_2025.xlsx",
+    "station": "ITO",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 701,
+    "inserted_rows": 701,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_ito,_delhi_-_cpcb_2025_August_delhi_2025.xlsx",
+    "station": "ITO",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 619,
+    "inserted_rows": 619,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_ito,_delhi_-_cpcb_2025_December_delhi_2025.xlsx",
+    "station": "ITO",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 722,
+    "inserted_rows": 722,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_ito,_delhi_-_cpcb_2025_February_delhi_2025.xlsx",
+    "station": "ITO",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 672,
+    "inserted_rows": 672,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_ito,_delhi_-_cpcb_2025_January_delhi_2025.xlsx",
+    "station": "ITO",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 742,
+    "inserted_rows": 742,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_ito,_delhi_-_cpcb_2025_July_delhi_2025.xlsx",
+    "station": "ITO",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 522,
+    "inserted_rows": 522,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_ito,_delhi_-_cpcb_2025_June_delhi_2025.xlsx",
+    "station": "ITO",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 651,
+    "inserted_rows": 651,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_ito,_delhi_-_cpcb_2025_March_delhi_2025.xlsx",
+    "station": "ITO",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 721,
+    "inserted_rows": 721,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_ito,_delhi_-_cpcb_2025_May_delhi_2025.xlsx",
+    "station": "ITO",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 665,
+    "inserted_rows": 665,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_ito,_delhi_-_cpcb_2025_November_delhi_2025.xlsx",
+    "station": "ITO",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 717,
+    "inserted_rows": 717,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_ito,_delhi_-_cpcb_2025_October_delhi_2025.xlsx",
+    "station": "ITO",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 736,
+    "inserted_rows": 736,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_ito,_delhi_-_cpcb_2025_September_delhi_2025.xlsx",
+    "station": "ITO",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 713,
+    "inserted_rows": 713,
+    "error_msg": null
+  },
+  {
+    "filename": "2024_raw_data_hourly_ito,_delhi_-_cpcb_1H.csv",
+    "station": "ITO",
+    "type": "CAAQMS",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 8784,
+    "inserted_rows": 8784,
+    "error_msg": null
+  },
+  {
+    "filename": "2025_raw_data_hourly_ito,_delhi_-_cpcb_1H.csv",
+    "station": "ITO",
+    "type": "CAAQMS",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 8760,
+    "inserted_rows": 8760,
+    "error_msg": null
+  },
+  {
+    "filename": "2026_raw_data_hourly_ito,_delhi_-_cpcb_1H.csv",
+    "station": "ITO",
+    "type": "CAAQMS",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 5088,
+    "inserted_rows": 5088,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_jahangirpuri,_delhi_-_dpcc_2025_April_delhi_2025.xlsx",
+    "station": "Jahangirpuri",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 689,
+    "inserted_rows": 689,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_jahangirpuri,_delhi_-_dpcc_2025_August_delhi_2025.xlsx",
+    "station": "Jahangirpuri",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 738,
+    "inserted_rows": 738,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_jahangirpuri,_delhi_-_dpcc_2025_December_delhi_2025.xlsx",
+    "station": "Jahangirpuri",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 741,
+    "inserted_rows": 741,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_jahangirpuri,_delhi_-_dpcc_2025_February_delhi_2025.xlsx",
+    "station": "Jahangirpuri",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 672,
+    "inserted_rows": 672,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_jahangirpuri,_delhi_-_dpcc_2025_January_delhi_2025.xlsx",
+    "station": "Jahangirpuri",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 646,
+    "inserted_rows": 646,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_jahangirpuri,_delhi_-_dpcc_2025_July_delhi_2025.xlsx",
+    "station": "Jahangirpuri",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 711,
+    "inserted_rows": 711,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_jahangirpuri,_delhi_-_dpcc_2025_June_delhi_2025.xlsx",
+    "station": "Jahangirpuri",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 710,
+    "inserted_rows": 710,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_jahangirpuri,_delhi_-_dpcc_2025_March_delhi_2025.xlsx",
+    "station": "Jahangirpuri",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 737,
+    "inserted_rows": 737,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_jahangirpuri,_delhi_-_dpcc_2025_May_delhi_2025.xlsx",
+    "station": "Jahangirpuri",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 735,
+    "inserted_rows": 735,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_jahangirpuri,_delhi_-_dpcc_2025_November_delhi_2025.xlsx",
+    "station": "Jahangirpuri",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 700,
+    "inserted_rows": 700,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_jahangirpuri,_delhi_-_dpcc_2025_October_delhi_2025.xlsx",
+    "station": "Jahangirpuri",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 738,
+    "inserted_rows": 738,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_jahangirpuri,_delhi_-_dpcc_2025_September_delhi_2025.xlsx",
+    "station": "Jahangirpuri",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 684,
+    "inserted_rows": 684,
+    "error_msg": null
+  },
+  {
+    "filename": "2024_raw_data_hourly_jahangirpuri,_delhi_-_dpcc_1H.csv",
+    "station": "Jahangirpuri",
+    "type": "CAAQMS",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 8784,
+    "inserted_rows": 8784,
+    "error_msg": null
+  },
+  {
+    "filename": "2025_raw_data_hourly_jahangirpuri,_delhi_-_dpcc_1H.csv",
+    "station": "Jahangirpuri",
+    "type": "CAAQMS",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 8760,
+    "inserted_rows": 8760,
+    "error_msg": null
+  },
+  {
+    "filename": "2026_raw_data_hourly_jahangirpuri,_delhi_-_dpcc_1H.csv",
+    "station": "Jahangirpuri",
+    "type": "CAAQMS",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 5088,
+    "inserted_rows": 5088,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_punjabi_bagh,_delhi_-_dpcc_2025_April_delhi_2025.xlsx",
+    "station": "Punjabi Bagh",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 692,
+    "inserted_rows": 692,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_punjabi_bagh,_delhi_-_dpcc_2025_August_delhi_2025.xlsx",
+    "station": "Punjabi Bagh",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 627,
+    "inserted_rows": 627,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_punjabi_bagh,_delhi_-_dpcc_2025_December_delhi_2025.xlsx",
+    "station": "Punjabi Bagh",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 742,
+    "inserted_rows": 742,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_punjabi_bagh,_delhi_-_dpcc_2025_February_delhi_2025.xlsx",
+    "station": "Punjabi Bagh",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 656,
+    "inserted_rows": 656,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_punjabi_bagh,_delhi_-_dpcc_2025_January_delhi_2025.xlsx",
+    "station": "Punjabi Bagh",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 334,
+    "inserted_rows": 334,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_punjabi_bagh,_delhi_-_dpcc_2025_July_delhi_2025.xlsx",
+    "station": "Punjabi Bagh",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 739,
+    "inserted_rows": 739,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_punjabi_bagh,_delhi_-_dpcc_2025_June_delhi_2025.xlsx",
+    "station": "Punjabi Bagh",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 634,
+    "inserted_rows": 634,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_punjabi_bagh,_delhi_-_dpcc_2025_March_delhi_2025.xlsx",
+    "station": "Punjabi Bagh",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 737,
+    "inserted_rows": 737,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_punjabi_bagh,_delhi_-_dpcc_2025_May_delhi_2025.xlsx",
+    "station": "Punjabi Bagh",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 632,
+    "inserted_rows": 632,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_punjabi_bagh,_delhi_-_dpcc_2025_November_delhi_2025.xlsx",
+    "station": "Punjabi Bagh",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 717,
+    "inserted_rows": 717,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_punjabi_bagh,_delhi_-_dpcc_2025_October_delhi_2025.xlsx",
+    "station": "Punjabi Bagh",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 631,
+    "inserted_rows": 631,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_punjabi_bagh,_delhi_-_dpcc_2025_September_delhi_2025.xlsx",
+    "station": "Punjabi Bagh",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 697,
+    "inserted_rows": 697,
+    "error_msg": null
+  },
+  {
+    "filename": "2024_raw_data_hourly_punjabi_bagh,_delhi_-_dpcc_1H.csv",
+    "station": "Punjabi Bagh",
+    "type": "CAAQMS",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 8784,
+    "inserted_rows": 8784,
+    "error_msg": null
+  },
+  {
+    "filename": "2025_raw_data_hourly_punjabi_bagh,_delhi_-_dpcc_1H.csv",
+    "station": "Punjabi Bagh",
+    "type": "CAAQMS",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 8760,
+    "inserted_rows": 8760,
+    "error_msg": null
+  },
+  {
+    "filename": "2026_raw_data_hourly_punjabi_bagh,_delhi_-_dpcc_1H.csv",
+    "station": "Punjabi Bagh",
+    "type": "CAAQMS",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 5088,
+    "inserted_rows": 5088,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_r_k_puram,_delhi_-_dpcc_2025_April_delhi_2025.xlsx",
+    "station": "R K Puram",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 633,
+    "inserted_rows": 633,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_r_k_puram,_delhi_-_dpcc_2025_August_delhi_2025.xlsx",
+    "station": "R K Puram",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 655,
+    "inserted_rows": 655,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_r_k_puram,_delhi_-_dpcc_2025_December_delhi_2025.xlsx",
+    "station": "R K Puram",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 715,
+    "inserted_rows": 715,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_r_k_puram,_delhi_-_dpcc_2025_February_delhi_2025.xlsx",
+    "station": "R K Puram",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 672,
+    "inserted_rows": 672,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_r_k_puram,_delhi_-_dpcc_2025_January_delhi_2025.xlsx",
+    "station": "R K Puram",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 742,
+    "inserted_rows": 742,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_r_k_puram,_delhi_-_dpcc_2025_July_delhi_2025.xlsx",
+    "station": "R K Puram",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 644,
+    "inserted_rows": 644,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_r_k_puram,_delhi_-_dpcc_2025_June_delhi_2025.xlsx",
+    "station": "R K Puram",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 673,
+    "inserted_rows": 673,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_r_k_puram,_delhi_-_dpcc_2025_March_delhi_2025.xlsx",
+    "station": "R K Puram",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 693,
+    "inserted_rows": 693,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_r_k_puram,_delhi_-_dpcc_2025_May_delhi_2025.xlsx",
+    "station": "R K Puram",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 726,
+    "inserted_rows": 726,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_r_k_puram,_delhi_-_dpcc_2025_November_delhi_2025.xlsx",
+    "station": "R K Puram",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 717,
+    "inserted_rows": 717,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_r_k_puram,_delhi_-_dpcc_2025_October_delhi_2025.xlsx",
+    "station": "R K Puram",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 695,
+    "inserted_rows": 695,
+    "error_msg": null
+  },
+  {
+    "filename": "aqi_hourly_station_level_r_k_puram,_delhi_-_dpcc_2025_September_delhi_2025.xlsx",
+    "station": "R K Puram",
+    "type": "AQI",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 679,
+    "inserted_rows": 679,
+    "error_msg": null
+  },
+  {
+    "filename": "2024_raw_data_hourly_r_k_puram,_delhi_-_dpcc_1H.csv",
+    "station": "R K Puram",
+    "type": "CAAQMS",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 8784,
+    "inserted_rows": 8784,
+    "error_msg": null
+  },
+  {
+    "filename": "2025_raw_data_hourly_r_k_puram,_delhi_-_dpcc_1H.csv",
+    "station": "R K Puram",
+    "type": "CAAQMS",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 8760,
+    "inserted_rows": 8760,
+    "error_msg": null
+  },
+  {
+    "filename": "2026_raw_data_hourly_r_k_puram,_delhi_-_dpcc_1H.csv",
+    "station": "R K Puram",
+    "type": "CAAQMS",
+    "status": "success",
+    "input_rows": 0,
+    "retained_rows": 5088,
+    "inserted_rows": 5088,
+    "error_msg": null
+  }
+]
