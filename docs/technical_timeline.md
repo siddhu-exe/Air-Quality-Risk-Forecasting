@@ -25,6 +25,7 @@
   - Implement two localized Fact tables: `caaqms_hourly` (pollutants) + `aqi_hourly` (target index).
   - Implement strict unique temporal constraints `UNIQUE(station_id, timestamp)` to pave the way for `ON CONFLICT DO UPDATE` operations, guaranteeing zero duplication upon multiple sequential runs.
   - Execute PostgreSQL SQL migrations natively.
+  - **Infrastructure WIN:** Bypassed intensive Docker containerization entirely. Bootstrapped a purely local, user-space, zero-root PostgreSQL cluster (`initdb`) in `local_pg_data/` operating on port 5433 to maximize computational efficiency for laptop development.
 
 ## Phase 4: Feature Engineering & Forecasting (Scheduled)
 - **Objective:** Supervised learning and risk categorization.

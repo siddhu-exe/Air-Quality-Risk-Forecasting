@@ -1,1 +1,1 @@
-/usr/lib/postgresql/16/bin/postgres "-D" "local_pg_data"
+/usr/lib/postgresql/16/bin/postgres "-D" "/home/siddharth/Desktop/Projects/projects/Air quality risk forecasting/local_pg_data"

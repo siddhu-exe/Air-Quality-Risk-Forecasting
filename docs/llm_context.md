@@ -29,3 +29,7 @@ The PostgreSQL schema strictly implements **4 Core Tables** (no placeholder ML/A
 - 162,096 CAAQMS records retained.
 - 59,717 AQI records retained (up from 1,932 prior to epoch bug fix).
 - 930 out-of-bounds nullifications; 0 TS drops; 0 sentinel drops.
+## Infrastructure Requirements
+- **NO DOCKER:** Due to strictly constrained laptop computational resources, Docker is prohibited.
+- **Database Engine:** We run a completely native, local, user-space PostgreSQL cluster via `initdb` stored securely inside `./local_pg_data` on port `5433`.
+- **Start/Stop:** The environment is manually spun up via `pg_ctl -D local_pg_data start` to preserve battery and CPU when not actively ingesting data. 

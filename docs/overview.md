@@ -37,3 +37,5 @@ DASHBOARD / DEPLOYMENT
 
 ## Architectural Philosophy
 Data integrity is paramount. If a sensor breaks and reports `PM10 = -999`, we do not throw away the entire row and lose the perfectly valid Temperature records for that hour. We gracefully NULL the broken cell and log the reason in a dedicated quality control database component. We trace every single row of data back to its original raw file source, meaning this entire architecture behaves identically to a secure, auditable, high-grade enterprise data warehouse.
+## Infrastructure & Compute
+To ensure this repository remains ultra-lightweight and battery-friendly for local laptop development, we do **not** use Docker or heavy virtual machines. The entire database is a fully isolated, native PostgreSQL cluster running directly out of the `local_pg_data` folder. It uses virtually zero background resources and can be spun up or down instantly.
