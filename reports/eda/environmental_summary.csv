@@ -1,0 +1,8 @@
+environmental_variable,available_records,overall_pct_available,pm25_pearson_corr,pm25_spearman_corr,aqi_pearson_corr,aqi_spearman_corr,usability_assessment
+temperature,135560,83.6,-0.521,-0.562,-0.588,-0.553,High
+humidity,135669,83.7,0.272,0.204,-0.031,-0.088,High
+wind_speed,134468,83.0,-0.158,-0.292,-0.082,-0.209,High
+wind_direction,134639,83.1,0.02,0.043,0.096,0.138,High
+rainfall,70350,43.4,-0.043,-0.111,-0.081,-0.138,Low/Sparse
+solar_radiation,135531,83.6,-0.157,-0.176,-0.076,-0.029,High
+barometric_pressure,112447,69.4,-0.007,0.099,-0.034,0.085,Moderate

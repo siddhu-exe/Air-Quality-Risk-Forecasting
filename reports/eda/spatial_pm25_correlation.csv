@@ -1,0 +1,8 @@
+station_name,Anand Vihar,Bawana,Dwarka-Sector 8,ITO,Jahangirpuri,Punjabi Bagh,R K Puram
+Anand Vihar,1.0,0.841,0.866,0.875,0.881,0.907,0.862
+Bawana,0.841,1.0,0.873,0.857,0.91,0.883,0.855
+Dwarka-Sector 8,0.866,0.873,1.0,0.866,0.88,0.92,0.92
+ITO,0.875,0.857,0.866,1.0,0.866,0.894,0.865
+Jahangirpuri,0.881,0.91,0.88,0.866,1.0,0.906,0.876
+Punjabi Bagh,0.907,0.883,0.92,0.894,0.906,1.0,0.892
+R K Puram,0.862,0.855,0.92,0.865,0.876,0.892,1.0

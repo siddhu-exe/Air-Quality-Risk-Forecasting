@@ -1,0 +1,6 @@
+variable,reason,flag_count
+bp_mmhg,OOB_ABOVE_998.9(was_999.0),926
+bp_mmhg,OOB_ABOVE_998.9(was_998.925),1
+bp_mmhg,OOB_ABOVE_998.9(was_999.5),1
+bp_mmhg,OOB_ABOVE_998.9(was_1000.38),1
+bp_mmhg,OOB_ABOVE_998.9(was_1002.12),1

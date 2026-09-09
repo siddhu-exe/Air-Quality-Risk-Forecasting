@@ -1,0 +1,29 @@
+season,station_name,aqi_mean,aqi_rank,pm25_mean,pm25_rank,pm10_mean,pm10_rank
+Winter,Anand Vihar,349.1,1,202.33,1,361.7,1
+Winter,Bawana,328.12,3,178.9,5,273.73,6
+Winter,Dwarka-Sector 8,309.91,4,178.77,6,304.79,3
+Winter,ITO,294.34,7,155.17,7,217.22,7
+Winter,Jahangirpuri,331.12,2,196.4,2,330.27,2
+Winter,Punjabi Bagh,309.81,5,180.24,4,280.73,4
+Winter,R K Puram,307.32,6,181.53,3,277.87,5
+Summer,Anand Vihar,197.3,3,86.46,3,258.97,1
+Summer,Bawana,204.63,2,93.17,1,228.59,4
+Summer,Dwarka-Sector 8,184.71,4,76.79,5,230.53,3
+Summer,ITO,146.03,7,70.66,7,138.21,7
+Summer,Jahangirpuri,224.11,1,91.1,2,255.6,2
+Summer,Punjabi Bagh,172.13,5,78.41,4,195.29,6
+Summer,R K Puram,171.66,6,76.47,6,196.2,5
+Monsoon,Anand Vihar,130.05,2,59.49,1,183.61,1
+Monsoon,Bawana,97.14,5,48.5,3,116.46,5
+Monsoon,Dwarka-Sector 8,110.7,3,37.57,7,126.74,3
+Monsoon,ITO,93.71,7,40.74,6,77.39,7
+Monsoon,Jahangirpuri,147.87,1,53.92,2,159.96,2
+Monsoon,Punjabi Bagh,94.45,6,43.65,5,117.6,4
+Monsoon,R K Puram,98.67,4,46.26,4,112.11,6
+Post-Monsoon,Anand Vihar,333.54,1,213.39,3,455.81,1
+Post-Monsoon,Bawana,329.24,2,220.57,1,329.69,4
+Post-Monsoon,Dwarka-Sector 8,303.25,5,180.68,6,351.72,3
+Post-Monsoon,ITO,289.13,7,168.12,7,243.7,7
+Post-Monsoon,Jahangirpuri,324.07,3,215.97,2,396.85,2
+Post-Monsoon,Punjabi Bagh,307.89,4,197.06,4,323.31,5
+Post-Monsoon,R K Puram,302.89,6,183.97,5,296.9,6
