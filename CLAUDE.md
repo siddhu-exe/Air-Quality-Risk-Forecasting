@@ -54,13 +54,19 @@ Og Data/
 
 ## Suggested Next Steps (Downstream Phase)
 
-We have successfully finished Phase 3 (DB Schema & Architecture) and have a clean Data Warehouse populated via reliable ETL loader logic.
+We have successfully finished **Phase 4 (Exploratory Data Analysis)**. The `src/eda/` scripts analyze the database structure, extracting temporal trends, spatial patterns, and pollutant relationships, generating a deep statistical report and visual suite in `reports/eda/`.
 
-Next is Phase 4: Exploratory Data Analysis (EDA), adding analysis scripts using the newly ingested DB data. Recommended structure to build next:
+Next is Phase 5: Feature Engineering & Baseline Modelling. Based on EDA findings (like high lag-1 autocorrelation for AQI), we should focus on:
+
+1. Setting up short-term forecast baseline models (e.g., Persistence model where AQI(t) ≈ AQI(t-1)).
+2. Structuring machine learning pipelines to forecast PM2.5 (1–24 hours ahead) using meteorological drivers (Temp, Humidity, Wind), temporal cyclic features, and cross-station spatial inputs.
+
+Recommended structure to build next:
 
 ```
-src/         # processing and feature engineering scripts
-notebooks/   # exploratory analysis
-models/      # trained model artifacts
-outputs/     # forecasts, reports, figures
+src/features/    # Feature construction from DB
+src/models/      # Baseline & ML forecasting models
+notebooks/       # Experimental sandbox
+models/          # Trained model artifacts / weights
+outputs/         # Forecast results and performance metrics
 ```

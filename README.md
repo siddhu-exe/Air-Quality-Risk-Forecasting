@@ -4,12 +4,13 @@ This repository houses the raw data and data engineering pipeline for the **Air 
 
 ## 🚀 Project Overview
 
-The project has now successfully completed Phase 3 (Database Architecture & ETL). Scattered raw air quality sensor data (COVID & post-COVID continuous `.csv` outputs and wide-format `.xlsx` AQI files) are automatically parsed, standardized, and loaded into an idempotent PostgreSQL database schema.
+The project has now successfully completed Phase 4 (Exploratory Data Analysis). Scattered raw air quality sensor data (COVID & post-COVID continuous `.csv` outputs and wide-format `.xlsx` AQI files) are automatically parsed, standardized, and loaded into an idempotent PostgreSQL database schema. We have subsequently generated a comprehensive statistical and visual profile of the data.
 
 ### Core Features Installed So Far
 1. **Automated Data Profiler**: A 100% read-only recursive scanner that checks for schema consistency, missingness, sentinel faults, and uncovers unique structures inside `.xlsx` documents.
 2. **Idempotent ETL Pipeline**: A robust pipeline that maps non-standard features onto a canonical schema, sanitizes out-of-bounds physical properties, strips sentinels, and transforms wide AQI grids into standard relational row inserts. Connects to Postgres using `psycopg2` `execute_values` for high-throughput batch upserts with perfect idempotency.
 3. **Production Database & Architecture**: Local PostgreSQL cluster configuration, comprehensive schemas with explicit foreign key constraints (`ON DELETE RESTRICT`), validation data checks, and automated backups (`pg_dump`). Fully populated with 105 raw files resulting in ~162K hourly pollution records and ~57K AQI rows for Delhi.
+4. **Exploratory Data Analysis (EDA)**: A comprehensive SQL-first statistical analysis generating 11 publication-quality visualizations and deep metric evaluations (spatial correlation, pollutant dynamics, missingness profiles, autocorrelation, severe episode tracking) to guide Phase 5 forecasting.
 
 ---
 
@@ -107,6 +108,15 @@ python3 etl/run_full_load.py
 Re-verify total counts, missing hours, and absolute duplication logic constraints.
 ```bash
 python3 verify_full_load.py
+```
+
+### 5. Generate Exploratory Data Analysis (EDA)
+To re-run the statistical analysis suite and rebuild the 11 visualizations:
+```bash
+python3 src/eda/data_health_and_coverage.py
+python3 src/eda/temporal_and_station_analysis.py
+python3 src/eda/advanced_statistical_analysis.py
+python3 src/eda/generate_visualizations.py
 ```
 
 ---
