@@ -36,8 +36,18 @@ The project has now successfully completed Phase 4 (Exploratory Data Analysis). 
 │   ├── profile_raw_data.py     # Automated read-only schema discovery scanner
 │   ├── profiling_summary.md    # Actionable 14-point narrative
 │   └── ...                     # (Other schema / gap finding CSVs)
-├── reports/                    # Output from validation & ETL mapping routines
-│   └── column_mapping_report.md
+├── reports/                    # Output from validation, mapping, & EDA routines
+│   ├── column_mapping_report.md
+│   └── eda/                    # Phase 4 EDA outputs
+│       ├── EDA_REPORT.md       # Comprehensive 12-section statistical report
+│       ├── figures/            # 11 Publication-quality visualizations (.png)
+│       └── *.csv               # Statistical summary tables & metrics
+├── src/                        # Analysis and processing source code
+│   └── eda/                    # Modular EDA analysis & visualization scripts
+│       ├── data_health_and_coverage.py
+│       ├── temporal_and_station_analysis.py
+│       ├── advanced_statistical_analysis.py
+│       └── generate_visualizations.py
 ├── local_pg_data/              # Local PostgreSQL 16 cluster data directory (port 5433)
 └── sql/                        # Target database structural definitions
     ├── 001_create_tables.sql

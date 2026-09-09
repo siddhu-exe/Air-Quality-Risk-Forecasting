@@ -33,6 +33,8 @@ pip-delete-this-directory.txt
 # Local environment variables
 .env
 .env.local
+local_pg.log
+*.log
 
 # IDEs and Editors
 .vscode/
