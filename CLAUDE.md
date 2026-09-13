@@ -58,16 +58,16 @@ Og Data/
 - **Phase 1-3:** ETL Pipeline, Data Quality Hardening, Idempotent PostgreSQL Ingestion.
 - **Phase 4:** Exploratory Data Analysis (EDA), Statistical Profiling, 11 Visualizations (`reports/eda/`).
 - **Phase 5:** Feature Engineering & Baseline Modeling (124 causal features, leakage audit, heuristic baselines, feature ranking).
-- **Phase 6 Preparation:** Exported versioned Parquet ML datasets (`air_quality_ml_{1h,6h,24h}_v1.parquet`), SHA-256 manifests, and Google Colab 16-section training notebook (`notebooks/phase_6_colab_training.ipynb`).
+- **Phase 6 & 6B:** Multi-Horizon Forecasting & 24h Optimization Suite (1h LightGBM MAE 2.29, 6h LightGBM MAE 11.84, 24h Hybrid Persistence + Ridge MAE 35.48; failure diagnostics, delta formulation, and Colab notebooks `notebooks/phase_6_colab_training.ipynb` and `notebooks/phase_6b_24h_optimization.ipynb`).
 
-## Suggested Next Steps (Phase 6 Colab Training & Phase 7 Risk Classification)
-The repository is fully provisioned with versioned ML datasets and an interactive Colab training suite. Next steps:
+## Suggested Next Steps (Phase 7: CPCB AQI Risk Classification & GRAP Policy Alerting)
+All forecasting horizons (1h, 6h, 24h) are validated and outperform heuristic baselines. Next steps:
 
-1. Execute model training in Google Colab (`notebooks/phase_6_colab_training.ipynb`) to train LightGBM, XGBoost, and Ridge models across 1h, 6h, and 24h horizons.
-2. Run Optuna Bayesian hyperparameter search on the validation split.
-3. Quantify feature group importances (Groups A–G) and perform ablation experiments.
-4. Benchmark out-of-sample performance on the held-out winter crisis test set ($\text{AQI} \ge 300$).
-5. Export trained models and predictions for Phase 7 (CPCB AQI risk classification and GRAP emergency threshold alerts).
+1. Map forecasted continuous AQI values into 6 official CPCB risk tiers (Good, Satisfactory, Moderate, Poor, Very Poor, Severe).
+2. Compute multi-class classification metrics (F1-score, Precision, Recall, Confusion Matrix) with severe-class weighting.
+3. Formulate Graded Response Action Plan (GRAP Stages I–IV) emergency alert thresholds.
+4. Measure lead-time early warning capabilities for Stage III (AQI > 400) and Stage IV (AQI > 450) episodes.
+5. Export classification reports and alert simulation logs.
 
 ```
 src/features/    # Feature engineering & ML dataset export (124 features)

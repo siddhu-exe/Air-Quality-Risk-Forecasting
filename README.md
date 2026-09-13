@@ -4,7 +4,7 @@ This repository houses the raw data and data engineering pipeline for the **Air 
 
 ## 🚀 Project Overview
 
-The project has completed **Phase 1–3 (ETL & Database Ingestion)**, **Phase 4 (Exploratory Data Analysis)**, **Phase 5 (Feature Engineering & Baseline Modeling)**, and **Phase 6 Preparation (Versioned ML Datasets & Google Colab Pipeline)**. Scattered raw air quality sensor data (continuous `.csv` outputs and wide-format `.xlsx` AQI files) are automatically parsed, standardized, and loaded into an idempotent PostgreSQL database schema. A comprehensive 124-feature tabular dataset across 7 feature groups has been constructed with zero temporal leakage, future forecasting targets ($h \in \{1\text{h}, 6\text{h}, 24\text{h}\}$) audited, versioned ML datasets exported with SHA-256 integrity checksums, and a 16-section self-contained Google Colab training suite built to train, optimize, and evaluate supervised models (LightGBM, XGBoost, Ridge) without local CPU/GPU bottlenecks.
+The project has completed **Phase 1–3 (ETL & Database Ingestion)**, **Phase 4 (Exploratory Data Analysis)**, **Phase 5 (Feature Engineering & Baseline Modeling)**, and **Phase 6 / 6B (Multi-Horizon Forecasting & 24h Optimization Suite)**. Scattered raw air quality sensor data (continuous `.csv` outputs and wide-format `.xlsx` AQI files) are automatically parsed, standardized, and loaded into an idempotent PostgreSQL database schema. A comprehensive 124-feature tabular dataset across 7 feature groups has been constructed with zero temporal leakage, future forecasting targets ($h \in \{1\text{h}, 6\text{h}, 24\text{h}\}$) audited, versioned ML datasets exported with SHA-256 integrity checksums, and multi-horizon models (LightGBM Tuned and Regularized Hybrid Persistence Ensembles) deployed and verified across all 7 Delhi stations.
 
 ### Core Features Installed So Far
 1. **Automated Data Profiler**: A 100% read-only recursive scanner that checks for schema consistency, missingness, sentinel faults, and uncovers unique structures inside `.xlsx` documents.
@@ -12,7 +12,7 @@ The project has completed **Phase 1–3 (ETL & Database Ingestion)**, **Phase 4 
 3. **Production Database & Architecture**: Local PostgreSQL cluster configuration, comprehensive schemas with explicit foreign key constraints (`ON DELETE RESTRICT`), validation data checks, and automated backups (`pg_dump`). Fully populated with 105 raw files resulting in ~162K hourly pollution records and ~58K AQI rows for Delhi.
 4. **Exploratory Data Analysis (EDA)**: A comprehensive SQL-first statistical analysis generating 11 publication-quality visualizations and deep metric evaluations (spatial correlation, pollutant dynamics, missingness profiles, autocorrelation, severe episode tracking) to guide forecasting.
 5. **Feature Engineering & Baseline Modeling**: A leakage-safe tabular pipeline constructing 124 features across 7 groups (AQI lags, pollutant lags, causal rolling statistics, cyclical temporal features, IMD seasonality, meteorology, and leave-one-out spatial network features). Benchmarks Naive, Seasonal, and Moving Average baselines and ranks feature predictive power across 1h, 6h, and 24h horizons.
-6. **Versioned ML Datasets & Colab Training Suite**: Generates compressed Parquet ML matrices (`data/processed/ml/`) for 1h, 6h, and 24h horizons paired with cryptographic SHA-256 manifests. Integrates a 16-section interactive Google Colab notebook (`notebooks/phase_6_colab_training.ipynb`) enabling cloud-accelerated gradient boosting training, Optuna Bayesian tuning, feature ablation studies, and extreme episode error evaluations ($\text{AQI} \ge 300$).
+6. **Multi-Horizon Forecasting & 24h Failure Optimization (Phase 6 / 6B)**: Full multi-horizon benchmarking (1h LightGBM MAE = 2.29, 6h LightGBM MAE = 11.84, 24h Hybrid MAE = 35.48) with dedicated Google Colab training suites (`notebooks/phase_6_colab_training.ipynb`, `notebooks/phase_6b_24h_optimization.ipynb`), exhaustive mathematical failure diagnostics (tree extrapolation ceilings, non-stationary temporal traps, delta formulations), and serialization of production model weights.
 
 ---
 
@@ -36,6 +36,7 @@ The project has completed **Phase 1–3 (ETL & Database Ingestion)**, **Phase 4 
 │   ├── eda_findings.md
 │   ├── baseline_findings.md    # Phase 5 Baseline & Feature findings
 │   ├── phase_6_training.md     # Phase 6 Colab ML Training Guide
+│   ├── phase_6b_findings.md    # Phase 6B 24h Failure & Optimization findings
 │   └── llm_context.md
 ├── etl/                        # Pipeline execution logic
 │   ├── discover.py             # File discovery and metadata reading
@@ -47,7 +48,12 @@ The project has completed **Phase 1–3 (ETL & Database Ingestion)**, **Phase 4 
 │   ├── transform_caaqms.py     # Pandas read algorithms for Raw CSVs 
 │   └── validation.py           # Integrity checking (sentinels / bounds)
 ├── notebooks/                  # Interactive experimentation & Cloud Training
-│   └── phase_6_colab_training.ipynb # 16-section Google Colab Training Notebook
+│   ├── phase_6_colab_training.ipynb # 16-section Google Colab Multi-Horizon Training Notebook
+│   └── phase_6b_24h_optimization.ipynb # 12-section Google Colab 24h Optimization Notebook
+├── models/                     # Serialized production model artifacts
+│   ├── 1h/                     # 1-Hour LightGBM model pipeline
+│   ├── 6h/                     # 6-Hour LightGBM model pipeline
+│   └── 24h/                    # 24-Hour Ridge & Hybrid model pipelines
 ├── Og Data/                    # Raw data (Organized by City -> Station)
 │   ├── Delhi data/
 │   └── Mumbai data/
@@ -69,9 +75,17 @@ The project has completed **Phase 1–3 (ETL & Database Ingestion)**, **Phase 4 
 │       ├── baselines.csv       # Heuristic & ML baseline metrics
 │       ├── feature_importance.csv # Ranked feature correlations
 │       ├── ml_dataset_manifest.csv # Cryptographic SHA-256 ML dataset manifest
-│       └── PHASE_5_BASELINE_REPORT.md # Comprehensive Phase 5 report
+│       ├── PHASE_5_BASELINE_REPORT.md # Comprehensive Phase 5 report
+│       ├── 24h/                # Phase 6B 24h failure diagnostics & benchmarks
+│       │   ├── 24h_failure_audit.csv
+│       │   ├── 24h_distribution_shift.csv
+│       │   ├── 24h_error_analysis.csv
+│       │   ├── 24h_feature_ablation.csv
+│       │   └── 24h_optimization_results.csv
+│       └── PHASE_6B_24H_REPORT.md # Comprehensive Phase 6B 24h optimization report
 ├── scripts/                    # Maintenance & generator utilities
-│   └── generate_colab_notebook.py # Builds phase_6_colab_training.ipynb
+│   ├── generate_colab_notebook.py # Builds phase_6_colab_training.ipynb
+│   └── generate_phase_6b_notebook.py # Builds phase_6b_24h_optimization.ipynb
 ├── src/                        # Analysis and modeling source code
 │   ├── eda/                    # Modular EDA analysis & visualization scripts
 │   ├── features/               # Feature engineering & dataset export

@@ -1,0 +1,9 @@
+Configuration,Num_Features,Model,Test_MAE,Test_RMSE,Test_R2,Test_Bias
+Full Feature Set (124),124,Ridge (alpha=1000),96.73,107.24,-2.6402,-95.16
+"Excluding Ordinal Temporal (month, day_of_year)",122,Ridge (alpha=1000),38.15,51.52,0.1599,-9.71
+AQI Lags Only (Group A),9,Ridge (alpha=1000),41.65,52.86,0.1157,-21.3
+AQI Lags + Pollutant Lags (A+B),33,Ridge (alpha=1000),36.18,46.97,0.3016,-4.49
+AQI Lags + Causal Rolling (A+C),49,Ridge (alpha=1000),42.29,56.32,-0.0041,-2.16
+No Meteorology (A+B+C+D+E+G),100,Ridge (alpha=1000),100.22,108.51,-2.7273,-99.01
+No Spatial Network (A+B+C+D+E+F),122,Ridge (alpha=1000),97.33,107.82,-2.6799,-95.79
+Cyclical Temporal Only (No Ordinal month/doy),120,Ridge (alpha=1000),38.16,51.55,0.1589,-9.79

@@ -24,11 +24,11 @@ FEATURE ENGINEERING        (Completed - Phase 5)
         ↓
 BASELINE BENCHMARKING      (Completed - Phase 5)
         ↓
-VERSIONED ML DATASETS & COLAB PIPELINE (Completed - Phase 6 Prep)
+VERSIONED ML DATASETS      (Completed - Phase 6 Prep)
         ↓
-AQI & PM2.5 FORECASTING    <-- (We are here - Phase 6 Training)
+MULTI-HORIZON FORECASTING  (Completed - Phase 6 / 6B)
         ↓
-RISK CLASSIFICATION
+RISK CLASSIFICATION        <-- (We are here - Phase 7)
         ↓
 CAUSAL / POLICY ANALYSIS
         ↓
@@ -43,7 +43,11 @@ DASHBOARD / DEPLOYMENT
 - **Data Integrity & Traceability:** Bad sensor readings gracefully nullify only the corrupted metric and record a JSON quality-control flag (`qc_flags`), keeping the valid measurements in the row intact. Every single record traces back to its source file.
 - **Empirical Validation (EDA):** Phase 4 conducted a deep SQL-first statistical analysis across all stations, validating strong spatial synchronization ($r \ge 0.92$), diurnal bimodal rhythms, autoregressive lag dynamics ($r \approx 0.998$), and meteorological forcing (temperature/humidity/wind) that inform our feature engineering strategy.
 - **Causal Feature Engineering & Baseline Benchmarking:** Phase 5 constructed a 124-feature tabular dataset across 7 feature groups with zero temporal leakage, audited 1h, 6h, and 24h forecasting horizons, established heuristic baselines, and quantified feature predictive hierarchies.
-- **Hybrid Local-Cloud ML Pipeline:** Phase 6 establishes a clean separation between local feature engineering / dataset export and Google Colab model training. Versioned Parquet datasets (`air_quality_ml_{1h,6h,24h}_v1.parquet`) are exported locally with SHA-256 integrity checksums, and high-throughput model training / hyperparameter optimization runs in a dedicated Colab notebook (`notebooks/phase_6_colab_training.ipynb`).
+- **Hybrid Local-Cloud ML Pipeline (Phase 6 / 6B):** Phase 6 and 6B established a robust separation between local feature engineering and cloud-based model training. Models were rigorously benchmarked across 1h, 6h, and 24h horizons on out-of-sample winter test data:
+  - **1-Hour Forecast:** Tuned LightGBM ($\text{MAE} = 2.29$) beating Naive Persistence ($\text{MAE} = 2.40$).
+  - **6-Hour Forecast:** Tuned LightGBM ($\text{MAE} = 11.84$) beating Naive Persistence ($\text{MAE} = 14.73$).
+  - **24-Hour Forecast & Failure Diagnostics (Phase 6B):** Conducted exhaustive root-cause failure analysis of decision tree extrapolation limits and non-stationary feature routing. Deployed Regularized Ridge ($\alpha=1000$) on Groups A+B and Hybrid Persistence Ensembles ($\text{MAE} = 35.48, R^2 = 0.3123$) beating Naive Persistence ($\text{MAE} = 38.34, R^2 = 0.1848$) across 100% of Delhi monitoring stations.
+  - **Production Artifacts:** All production model pipelines serialized under `models/{1h,6h,24h}/` with dedicated Colab notebooks (`notebooks/phase_6_colab_training.ipynb`, `notebooks/phase_6b_24h_optimization.ipynb`).
 
 ## Infrastructure & Compute
 To ensure this repository remains ultra-lightweight and battery-friendly for local laptop development, we do **not** run compute-heavy model training locally or use Docker virtual machines. The entire database is a fully isolated, native PostgreSQL cluster running directly out of the `local_pg_data` folder on port `5433`, while ML model training, tuning, and ablations are offloaded to Google Colab.

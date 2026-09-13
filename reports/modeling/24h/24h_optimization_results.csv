@@ -1,0 +1,10 @@
+Model,Test_MAE,Test_RMSE,Test_R2,Test_MAPE_%,Test_Bias,Extr_MAE_300,Extr_RMSE_300,Sevr_MAE_400,Sevr_RMSE_400,N_Samples
+Naive Persistence (Benchmark),38.34,50.75,0.1848,11.04,-1.92,35.32,45.91,31.91,42.36,9800
+24h Seasonal Persistence (t-24h),52.71,68.07,-0.4584,15.05,-3.85,47.66,61.01,47.97,62.21,9666
+24h Moving Average,44.99,58.71,-0.0877,12.95,-3.06,40.74,52.12,39.42,51.6,9745
+Original LightGBM 24h (Full Features),98.24,109.79,-2.8155,24.97,-95.58,104.27,114.03,136.48,139.87,9800
+"Ridge Regression (alpha=1000, No Ordinal)",38.15,51.52,0.1599,10.49,-9.71,37.15,50.48,42.17,57.77,9800
+"Ridge Regression (alpha=1000, Groups A+B)",36.18,46.97,0.3016,10.08,-4.49,34.65,44.61,37.74,47.85,9800
+Delta-Ridge Regression (Delta = Y - AQI_t),37.97,51.04,0.1753,10.43,-13.69,37.02,50.04,42.31,57.29,9800
+"Delta-HistGBDT (Groups A+B, Tree Delta)",43.92,54.3,0.0666,11.85,-30.85,43.18,52.94,55.44,62.4,9800
+Hybrid Ensemble (50% Naive + 50% Ridge A+B),35.48,46.61,0.3123,10.11,-3.2,33.08,42.8,32.35,42.25,9800

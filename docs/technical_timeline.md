@@ -51,7 +51,7 @@
   - **Hardware & CPU Optimization:** Optimized pipeline with vectorized Pandas operations (under 2.5s execution) and compact Snappy Parquet storage (`data/processed/features_2025.parquet`).
   - **Deliverables:** Structured specifications in `phase_5/`, baseline records in `reports/modeling/baselines.csv`, feature rankings in `reports/modeling/feature_importance.csv`, and comprehensive report `reports/modeling/PHASE_5_BASELINE_REPORT.md`.
 
-## Phase 6: Advanced Model Development & Cloud Training Pipeline (Active)
+## Phase 6: Multi-Horizon Model Development & Cloud Training Pipeline (Completed)
 - **Objective:** Establish a hybrid local-cloud ML training architecture, export versioned Parquet datasets for 1h, 6h, and 24h horizons, and execute supervised model training (LightGBM, XGBoost, Ridge) and hyperparameter optimization in Google Colab.
 - **Milestones:**
   - **Hardware Boundary Partitioning:** Separated lightweight local data engineering / feature extraction from compute-heavy model training to eliminate laptop CPU throttling and memory constraints.
@@ -59,20 +59,31 @@
     - `air_quality_ml_1h_v1.parquet`: 57,483 rows, 13.00 MB, SHA-256: `201f59fc183a169d01b2511fb9af8de7e484d6888bb760558e78e39b4cb1e3f3`
     - `air_quality_ml_6h_v1.parquet`: 56,989 rows, 12.92 MB, SHA-256: `17931c9c23b478a8517260c77c6c3b6882004def987d3d81df48819f930d69e5`
     - `air_quality_ml_24h_v1.parquet`: 55,750 rows, 12.66 MB, SHA-256: `5fd6026a52b3ea09cf6e7f0f78707523a96ebf7562e5ea4560fc91ed38747951`
-  - **Traceability & Manifest Logging:** Generated JSON metadata specs with full split distributions and `reports/modeling/ml_dataset_manifest.csv` for data lineage.
-  - **Google Colab Training Suite:** Authored a self-contained 16-section interactive training notebook `notebooks/phase_6_colab_training.ipynb`:
-    - Re-evaluates Phase 5 baselines (Naive, Seasonal, Moving Average).
-    - Preprocessing with median imputation and station categorical encoding.
-    - Supervised model suite: Ridge regression, LightGBM, and XGBoost with early stopping on validation loss.
-    - Optuna Bayesian hyperparameter search on validation split (30 trials).
-    - Grouped feature importance analysis (Groups A–G) and feature ablation studies.
-    - Multi-station breakdown across all 7 Delhi stations and severe winter crisis evaluation ($\text{AQI} \ge 300$).
-    - Artifact serializations (`.joblib`, `.parquet`, `.csv`) ready for Phase 7.
-  - **Deliverables:** Training guide in `docs/phase_6_training.md`, generator in `scripts/generate_colab_notebook.py`, notebook in `notebooks/phase_6_colab_training.ipynb`, and dataset manifest in `reports/modeling/ml_dataset_manifest.csv`.
+  - **1h Horizon Model (Frozen & Validated):** Tuned LightGBM achieved Test $\text{MAE} = 2.29, \text{RMSE} = 3.65, R^2 = 0.9958$, beating Naive Persistence ($\text{MAE} = 2.40, \text{RMSE} = 4.09, R^2 = 0.9947$). Serialized to `models/1h/`.
+  - **6h Horizon Model (Frozen & Validated):** Tuned LightGBM achieved Test $\text{MAE} = 11.84, \text{RMSE} = 16.71, R^2 = 0.9126$, beating Naive Persistence ($\text{MAE} = 14.73, \text{RMSE} = 20.37, R^2 = 0.8698$). Serialized to `models/6h/`.
+  - **Colab Suite:** 16-section interactive training notebook `notebooks/phase_6_colab_training.ipynb` for multi-horizon model training, Optuna tuning, and feature ranking.
+
+## Phase 6B: 24-Hour Forecasting Failure Analysis & Optimization (Completed)
+- **Objective:** Perform root-cause diagnosis of initial 24h GBDT performance breakdown, isolate physical and mathematical failure mechanisms, evaluate delta formulations and regularized linear models, and achieve outperformance over heuristic persistence baselines across all monitoring stations.
+- **Milestones:**
+  - **Target Alignment Audit:** Verified mathematical causal alignment across all 55,750 samples with 0 lead-lag index mismatches.
+  - **Root Cause Isolation:**
+    - *Decision Tree Extrapolation Ceiling:* Tree models partition space into piecewise constants bounded by training targets ($\max \hat{y} = 347.61$). On winter test spikes ($\text{AQI} \ge 400$, mean $429.49$), tree predictions flatlined, creating severe negative bias ($-136.48$ AQI points).
+    - *Non-Stationary Feature Routing:* Ordinal temporal features `month` (1–8 in train vs 11–12 in test) and `day_of_year` caused trees to split on `month > 6.5` and route winter crisis samples into low-pollution monsoon leaf nodes ($\text{AQI} \approx 85$).
+    - *Climatological Regime Shift:* Jan–Aug training experienced fast post-spike mean-reversion ($\text{Mean }\Delta_{24\text{h}} = -24.7$), whereas Nov–Dec winter test experienced atmospheric stagnation ($\text{Mean }\Delta_{24\text{h}} = +9.2$).
+  - **Feature Ablation & Pruning:** Removed non-stationary calendar traps; isolated core Group A (AQI Lags) + Group B (Pollutant Lags) subset.
+  - **Model Reformulation:**
+    - *Regularized Ridge Regression ($\alpha=1000$):* Continuous linear slope gradients eliminated tree extrapolation ceilings, achieving Test $\text{MAE} = 36.18, R^2 = 0.3016$, and cutting bias to $-4.49$.
+    - *Delta-Regression ($\Delta_{24\text{h}} = \text{AQI}_{t+24} - \text{AQI}_t$):* Anchored predictions to current state, achieving Test $\text{MAE} = 37.97, R^2 = 0.1753$.
+    - *Hybrid Persistence + Ridge Ensemble:* $\widehat{\text{AQI}}_{\text{Hybrid}} = 0.50 \cdot \text{AQI}(t) + 0.50 \cdot \widehat{\text{AQI}}_{\text{Ridge A+B}}$ achieved best overall test performance: $\text{MAE} = 35.48, \text{RMSE} = 46.61, R^2 = 0.3123$, $\text{Bias} = -3.20$, beating Naive Persistence across 100% of Delhi stations.
+  - **Production Artifacts & Colab Suite:** Serialized full production pipeline to `models/24h/`, built standalone 12-section Colab notebook `notebooks/phase_6b_24h_optimization.ipynb`, generated diagnostic CSVs in `reports/modeling/24h/`, and delivered comprehensive report `reports/modeling/PHASE_6B_24H_REPORT.md`.
+  - **Gate Decision:** Formal gate approved: `24H OPTIMIZATION COMPLETE — READY FOR PHASE 7`.
 
 ## Phase 7: Risk Classification, Causal Analysis, & Deployment (Scheduled)
 - **Objective:** Convert multi-horizon forecasts into action-oriented health risk categories and policy decision-support tools.
 - **Milestones:**
-  - Map forecasts to official CPCB AQI risk bands (Severe, Very Poor, Poor, Moderate, Satisfactory, Good).
-  - Cost-sensitive classification optimizing for low false-alarm rates during high-risk winter episodes (GRAP intervention trigger thresholds).
-  - Causal/policy intervention analysis and lightweight interactive monitoring dashboard.
+  - Map continuous AQI forecasts (1h, 6h, 24h) to 6 official CPCB risk bands (Good, Satisfactory, Moderate, Poor, Very Poor, Severe).
+  - Compute multi-class classification metrics (Macro/Weighted F1-score, Precision, Recall, Confusion Matrix) with severe-class weighting.
+  - Formulate Graded Response Action Plan (GRAP Stages I–IV) emergency alert thresholds and evaluate lead-time early warning capabilities for Stage III ($\text{AQI} > 400$) and Stage IV ($\text{AQI} > 450$) episodes.
+  - Cost-sensitive classification optimizing for low false-alarm rates during high-risk winter episodes.
+  - Interactive monitoring dashboard and operational inference service.

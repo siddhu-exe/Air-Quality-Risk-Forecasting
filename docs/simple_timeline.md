@@ -34,11 +34,15 @@
   - **24-Hour Forecasts:** Persistence completely breaks down during the winter crisis ($\text{MAE} \approx 38.3, R^2 \approx 0.18$), proving that complex machine learning models with weather and spatial awareness are required for next-day forecasts.
   - **Leakage-Safe Data:** Verified mathematically that future data never leaks backward into the past.
 
-## Step 6: Dataset Versioning & Cloud Machine Learning Pipeline (In Progress)
-- **What we did:** To prevent burning up the laptop's CPU, we split our workflow between local data prep and cloud machine learning:
-  - **Local Preparation:** Packaged the 124 features into clean, versioned files for 1-hour, 6-hour, and 24-hour forecasting targets, complete with security checksums (SHA-256).
-  - **Google Colab Training Suite:** Built an interactive, 16-step training notebook in Google Colab that trains modern Machine Learning models (LightGBM, XGBoost, and Ridge Regression), automatically searches for the best settings (Optuna), measures which feature groups matter most, and checks how well models predict severe winter pollution spikes (>300 AQI).
-- **Result:** Versioned ML datasets ready in `data/processed/ml/` and Colab notebook ready in `notebooks/phase_6_colab_training.ipynb`.
+## Step 6: Multi-Horizon Forecasting & 24h Model Optimization (Done)
+- **What we did:** Trained and validated machine learning models across 1-hour, 6-hour, and 24-hour forecasting windows. Conducted deep root-cause failure investigations when models struggled with next-day winter forecasts:
+  - **1-Hour Forecast (Validated):** Tuned LightGBM model achieves an error of just **2.29 AQI points**, beating persistence (2.40).
+  - **6-Hour Forecast (Validated):** Tuned LightGBM achieves an error of **11.84 AQI points**, substantially outperforming persistence (14.73) and anticipating intra-day pollution shifts.
+  - **24-Hour Failure Root Cause & Breakthrough (Phase 6B):** 
+    - *Why Standard Trees Failed:* Decision trees cannot extrapolate beyond numbers they saw in training (capping predictions at 347 even when winter AQI soared above 450), and split on calendar months, mistaking winter crisis days for clean monsoon days.
+    - *The Fix:* We pruned non-stationary calendar traps and built a Regularized Linear Ridge model on core AQI and pollutant lags combined with a Hybrid Persistence Ensemble.
+    - *The Result:* Achieved an error of **35.48 AQI points** ($R^2 = 0.3123$), soundly beating Naive Persistence (38.34 AQI points) across **all 7 Delhi stations**.
+- **Result:** Complete multi-horizon forecasting suite verified, saved in `models/{1h,6h,24h}/`, and reproducible via Colab notebooks `notebooks/phase_6_colab_training.ipynb` and `notebooks/phase_6b_24h_optimization.ipynb`.
 
 ## Step 7: Risk Classification & Real-World Alerts (Next)
-- **Where we are heading:** Converting continuous forecasts into actionable health risk categories (e.g. CPCB AQI bands, GRAP emergency intervention stages) with false-alarm minimization.
+- **Where we are heading:** Converting continuous forecasts into actionable health risk categories (e.g. CPCB AQI bands, GRAP emergency intervention stages I–IV) with false-alarm minimization.
