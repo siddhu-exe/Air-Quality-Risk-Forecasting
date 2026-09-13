@@ -1,0 +1,8 @@
+Model,Split,Horizon,MAE,RMSE,R2,MAPE (%),Extr. MAE (>=300),Extr. RMSE (>=300),N_Samples
+Naive Persistence,test,24h,38.34,50.75,0.1848,11.04,35.32,45.91,9800
+24h Moving Average,test,24h,44.99,58.71,-0.0877,12.95,40.74,52.12,9745
+24h Seasonal Persistence,test,24h,52.71,68.07,-0.4584,15.05,47.66,61.01,9666
+LightGBM Tuned,Test,24h,98.24,109.79,-2.8155,24.97,104.27,114.03,9800
+LightGBM Regressor,Test,24h,102.86,118.13,-3.4175,26.1,109.08,122.69,9800
+XGBoost Regressor,Test,24h,118.03,133.56,-4.647,30.07,124.99,138.69,9800
+Ridge Regression,Test,24h,167.84,175.51,-8.7512,44.35,173.07,179.66,9800
