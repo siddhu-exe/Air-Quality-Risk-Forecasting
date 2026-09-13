@@ -14,13 +14,13 @@ DATABASE DESIGN
         ↓
 ETL / DATA CLEANING
         ↓
-POSTGRESQL CURATED DATA    <-- (We are here)
+POSTGRESQL CURATED DATA    (Completed - Phase 3)
         ↓
-DATA VALIDATION
+DATA VALIDATION            (Completed - Phase 3)
         ↓
-EDA (Exploratory Data Analysis)
+EDA (Exploratory Analysis) (Completed - Phase 4)
         ↓
-FEATURE ENGINEERING
+FEATURE ENGINEERING        <-- (We are here - Phase 5)
         ↓
 AQI FORECASTING
         ↓
@@ -32,10 +32,12 @@ DASHBOARD / DEPLOYMENT
 ```
 
 ## Where does the data come from?
-- **Primary Set (Delhi):** Station-level measurements containing distinct environmental pollutants (PM2.5, NOx, Ozone, etc.) and meteorological weather data at hourly resolution across 7 distinct sensors.
+- **Primary Set (Delhi):** Station-level measurements containing distinct environmental pollutants (PM2.5, NOx, Ozone, etc.) and meteorological weather data at hourly resolution across 7 distinct sensors (2023–2026). Over 162K hourly pollutant records and ~58K AQI values loaded.
 - **Secondary Set (Mumbai):** City-level AQI data reserved for future out-of-sample validation and external comparison. 
 
-## Architectural Philosophy
-Data integrity is paramount. If a sensor breaks and reports `PM10 = -999`, we do not throw away the entire row and lose the perfectly valid Temperature records for that hour. We gracefully NULL the broken cell and log the reason in a dedicated quality control database component. We trace every single row of data back to its original raw file source, meaning this entire architecture behaves identically to a secure, auditable, high-grade enterprise data warehouse.
+## Architectural & Analytical Philosophy
+- **Data Integrity & Traceability:** Bad sensor readings gracefully nullify only the corrupted metric and record a JSON quality-control flag (`qc_flags`), keeping the valid measurements in the row intact. Every single record traces back to its source file.
+- **Empirical Validation (EDA):** Phase 4 conducted a deep SQL-first statistical analysis across all stations, validating strong spatial synchronization ($r \ge 0.92$), diurnal bimodal rhythms, autoregressive lag dynamics ($r \approx 0.998$), and meteorological forcing (temperature/humidity/wind) that inform our feature engineering strategy.
+
 ## Infrastructure & Compute
-To ensure this repository remains ultra-lightweight and battery-friendly for local laptop development, we do **not** use Docker or heavy virtual machines. The entire database is a fully isolated, native PostgreSQL cluster running directly out of the `local_pg_data` folder. It uses virtually zero background resources and can be spun up or down instantly.
+To ensure this repository remains ultra-lightweight and battery-friendly for local laptop development, we do **not** use Docker or heavy virtual machines. The entire database is a fully isolated, native PostgreSQL cluster running directly out of the `local_pg_data` folder on port `5433`. It uses virtually zero background resources and can be spun up or down instantly.

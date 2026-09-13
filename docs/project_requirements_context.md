@@ -7,7 +7,7 @@ The project is an end-to-end air-quality risk forecasting system built using rea
 The system is intended to demonstrate a serious data-science/data-engineering workflow rather than simply training a model.
 The broad lifecycle is:
 RAW GOVERNMENT DATA ↓ DATA PROFILING ↓ DATABASE DESIGN ↓ ETL / DATA CLEANING ↓ POSTGRESQL CURATED DATA ↓ DATA VALIDATION ↓ EDA ↓ FEATURE ENGINEERING ↓ AQI FORECASTING ↓ RISK CLASSIFICATION ↓ CAUSAL / POLICY ANALYSIS ↓ DASHBOARD / DEPLOYMENT
-The current project stage is: ETL validated → ERD/database design completed → PostgreSQL setup is next.
+The current project stage is: PostgreSQL Setup & Ingestion (Phase 3) completed → EDA & Statistical Profiling (Phase 4) completed → **Feature Engineering & Baseline Modelling (Phase 5) is next**.
 
 ## 2. PRIMARY DATA SOURCE
 A. **CAAQMS raw data**: PRIMARY raw measurement dataset. Row-oriented CSV format. 1-hour resolution.
