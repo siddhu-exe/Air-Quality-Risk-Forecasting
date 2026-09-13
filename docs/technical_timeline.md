@@ -51,17 +51,28 @@
   - **Hardware & CPU Optimization:** Optimized pipeline with vectorized Pandas operations (under 2.5s execution) and compact Snappy Parquet storage (`data/processed/features_2025.parquet`).
   - **Deliverables:** Structured specifications in `phase_5/`, baseline records in `reports/modeling/baselines.csv`, feature rankings in `reports/modeling/feature_importance.csv`, and comprehensive report `reports/modeling/PHASE_5_BASELINE_REPORT.md`.
 
-## Phase 6: Advanced Model Development & Optimization (Current / Next)
-- **Objective:** Develop, optimize, and evaluate supervised forecasting models (Gradient Boosting, LightGBM, Random Forest, Ridge) across multi-horizon AQI and PM2.5 targets.
+## Phase 6: Advanced Model Development & Cloud Training Pipeline (Active)
+- **Objective:** Establish a hybrid local-cloud ML training architecture, export versioned Parquet datasets for 1h, 6h, and 24h horizons, and execute supervised model training (LightGBM, XGBoost, Ridge) and hyperparameter optimization in Google Colab.
 - **Milestones:**
-  - Train and tune multi-station regression models for 1h, 6h, and 24h forecasting horizons.
-  - Execute hyperparameter optimization and feature subset ablations.
-  - Evaluate against RMSE, MAE, MAPE, directional accuracy, and extreme episode error ($\text{AQI} \ge 300$).
-  - Export trained model artifacts and validation prediction matrices.
+  - **Hardware Boundary Partitioning:** Separated lightweight local data engineering / feature extraction from compute-heavy model training to eliminate laptop CPU throttling and memory constraints.
+  - **Versioned ML Dataset Pipeline:** Built `src/features/export_ml_datasets.py` exporting three leakage-audited Parquet datasets:
+    - `air_quality_ml_1h_v1.parquet`: 57,483 rows, 13.00 MB, SHA-256: `201f59fc183a169d01b2511fb9af8de7e484d6888bb760558e78e39b4cb1e3f3`
+    - `air_quality_ml_6h_v1.parquet`: 56,989 rows, 12.92 MB, SHA-256: `17931c9c23b478a8517260c77c6c3b6882004def987d3d81df48819f930d69e5`
+    - `air_quality_ml_24h_v1.parquet`: 55,750 rows, 12.66 MB, SHA-256: `5fd6026a52b3ea09cf6e7f0f78707523a96ebf7562e5ea4560fc91ed38747951`
+  - **Traceability & Manifest Logging:** Generated JSON metadata specs with full split distributions and `reports/modeling/ml_dataset_manifest.csv` for data lineage.
+  - **Google Colab Training Suite:** Authored a self-contained 16-section interactive training notebook `notebooks/phase_6_colab_training.ipynb`:
+    - Re-evaluates Phase 5 baselines (Naive, Seasonal, Moving Average).
+    - Preprocessing with median imputation and station categorical encoding.
+    - Supervised model suite: Ridge regression, LightGBM, and XGBoost with early stopping on validation loss.
+    - Optuna Bayesian hyperparameter search on validation split (30 trials).
+    - Grouped feature importance analysis (Groups A–G) and feature ablation studies.
+    - Multi-station breakdown across all 7 Delhi stations and severe winter crisis evaluation ($\text{AQI} \ge 300$).
+    - Artifact serializations (`.joblib`, `.parquet`, `.csv`) ready for Phase 7.
+  - **Deliverables:** Training guide in `docs/phase_6_training.md`, generator in `scripts/generate_colab_notebook.py`, notebook in `notebooks/phase_6_colab_training.ipynb`, and dataset manifest in `reports/modeling/ml_dataset_manifest.csv`.
 
-## Phase 7+: Risk Classification, Causal Analysis, & Deployment (Scheduled)
-- **Objective:** Convert forecasts into action-oriented health risk categories and decision-support tools.
+## Phase 7: Risk Classification, Causal Analysis, & Deployment (Scheduled)
+- **Objective:** Convert multi-horizon forecasts into action-oriented health risk categories and policy decision-support tools.
 - **Milestones:**
-  - Map forecasts to CPCB AQI risk bands (Severe, Very Poor, Poor, Moderate, Satisfactory, Good).
+  - Map forecasts to official CPCB AQI risk bands (Severe, Very Poor, Poor, Moderate, Satisfactory, Good).
   - Cost-sensitive classification optimizing for low false-alarm rates during high-risk winter episodes (GRAP intervention trigger thresholds).
-  - Causal/policy analysis and lightweight interactive monitoring dashboard.
+  - Causal/policy intervention analysis and lightweight interactive monitoring dashboard.

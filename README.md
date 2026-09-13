@@ -4,7 +4,7 @@ This repository houses the raw data and data engineering pipeline for the **Air 
 
 ## 🚀 Project Overview
 
-The project has completed **Phase 1–3 (ETL & Database Ingestion)**, **Phase 4 (Exploratory Data Analysis)**, and **Phase 5 (Feature Engineering & Baseline Modeling)**. Scattered raw air quality sensor data (continuous `.csv` outputs and wide-format `.xlsx` AQI files) are automatically parsed, standardized, and loaded into an idempotent PostgreSQL database schema. A comprehensive 124-feature tabular dataset across 7 feature groups has been constructed with zero temporal leakage, future forecasting targets ($h \in \{1\text{h}, 6\text{h}, 24\text{h}\}$) audited, heuristic baselines benchmarked, and feature predictive power quantified.
+The project has completed **Phase 1–3 (ETL & Database Ingestion)**, **Phase 4 (Exploratory Data Analysis)**, **Phase 5 (Feature Engineering & Baseline Modeling)**, and **Phase 6 Preparation (Versioned ML Datasets & Google Colab Pipeline)**. Scattered raw air quality sensor data (continuous `.csv` outputs and wide-format `.xlsx` AQI files) are automatically parsed, standardized, and loaded into an idempotent PostgreSQL database schema. A comprehensive 124-feature tabular dataset across 7 feature groups has been constructed with zero temporal leakage, future forecasting targets ($h \in \{1\text{h}, 6\text{h}, 24\text{h}\}$) audited, versioned ML datasets exported with SHA-256 integrity checksums, and a 16-section self-contained Google Colab training suite built to train, optimize, and evaluate supervised models (LightGBM, XGBoost, Ridge) without local CPU/GPU bottlenecks.
 
 ### Core Features Installed So Far
 1. **Automated Data Profiler**: A 100% read-only recursive scanner that checks for schema consistency, missingness, sentinel faults, and uncovers unique structures inside `.xlsx` documents.
@@ -12,6 +12,7 @@ The project has completed **Phase 1–3 (ETL & Database Ingestion)**, **Phase 4 
 3. **Production Database & Architecture**: Local PostgreSQL cluster configuration, comprehensive schemas with explicit foreign key constraints (`ON DELETE RESTRICT`), validation data checks, and automated backups (`pg_dump`). Fully populated with 105 raw files resulting in ~162K hourly pollution records and ~58K AQI rows for Delhi.
 4. **Exploratory Data Analysis (EDA)**: A comprehensive SQL-first statistical analysis generating 11 publication-quality visualizations and deep metric evaluations (spatial correlation, pollutant dynamics, missingness profiles, autocorrelation, severe episode tracking) to guide forecasting.
 5. **Feature Engineering & Baseline Modeling**: A leakage-safe tabular pipeline constructing 124 features across 7 groups (AQI lags, pollutant lags, causal rolling statistics, cyclical temporal features, IMD seasonality, meteorology, and leave-one-out spatial network features). Benchmarks Naive, Seasonal, and Moving Average baselines and ranks feature predictive power across 1h, 6h, and 24h horizons.
+6. **Versioned ML Datasets & Colab Training Suite**: Generates compressed Parquet ML matrices (`data/processed/ml/`) for 1h, 6h, and 24h horizons paired with cryptographic SHA-256 manifests. Integrates a 16-section interactive Google Colab notebook (`notebooks/phase_6_colab_training.ipynb`) enabling cloud-accelerated gradient boosting training, Optuna Bayesian tuning, feature ablation studies, and extreme episode error evaluations ($\text{AQI} \ge 300$).
 
 ---
 
@@ -23,13 +24,18 @@ The project has completed **Phase 1–3 (ETL & Database Ingestion)**, **Phase 4 
 ├── backups/                    # Database pg_dump binary backups
 ├── data/
 │   └── processed/
-│       └── features_2025.parquet # Clean 124-feature tabular matrix (57,946 rows)
+│       ├── features_2025.parquet # Clean 124-feature tabular matrix (57,946 rows)
+│       └── ml/                 # Versioned ML Parquet datasets & metadata JSONs
+│           ├── air_quality_ml_1h_v1.parquet (.json)
+│           ├── air_quality_ml_6h_v1.parquet (.json)
+│           └── air_quality_ml_24h_v1.parquet (.json)
 ├── docs/                       # Project documentation, timelines, and findings
 │   ├── overview.md
 │   ├── technical_timeline.md
 │   ├── simple_timeline.md
 │   ├── eda_findings.md
 │   ├── baseline_findings.md    # Phase 5 Baseline & Feature findings
+│   ├── phase_6_training.md     # Phase 6 Colab ML Training Guide
 │   └── llm_context.md
 ├── etl/                        # Pipeline execution logic
 │   ├── discover.py             # File discovery and metadata reading
@@ -40,6 +46,8 @@ The project has completed **Phase 1–3 (ETL & Database Ingestion)**, **Phase 4 
 │   ├── transform_aqi.py        # Openpyxl XLSX unpivoting
 │   ├── transform_caaqms.py     # Pandas read algorithms for Raw CSVs 
 │   └── validation.py           # Integrity checking (sentinels / bounds)
+├── notebooks/                  # Interactive experimentation & Cloud Training
+│   └── phase_6_colab_training.ipynb # 16-section Google Colab Training Notebook
 ├── Og Data/                    # Raw data (Organized by City -> Station)
 │   ├── Delhi data/
 │   └── Mumbai data/
@@ -60,11 +68,15 @@ The project has completed **Phase 1–3 (ETL & Database Ingestion)**, **Phase 4 
 │   └── modeling/               # Baseline benchmarks & feature rankings
 │       ├── baselines.csv       # Heuristic & ML baseline metrics
 │       ├── feature_importance.csv # Ranked feature correlations
+│       ├── ml_dataset_manifest.csv # Cryptographic SHA-256 ML dataset manifest
 │       └── PHASE_5_BASELINE_REPORT.md # Comprehensive Phase 5 report
+├── scripts/                    # Maintenance & generator utilities
+│   └── generate_colab_notebook.py # Builds phase_6_colab_training.ipynb
 ├── src/                        # Analysis and modeling source code
 │   ├── eda/                    # Modular EDA analysis & visualization scripts
-│   ├── features/               # Feature engineering pipelines
+│   ├── features/               # Feature engineering & dataset export
 │   │   ├── build_features.py   # 124-feature causal transformer
+│   │   ├── export_ml_datasets.py # Horizon Parquet & manifest exporter
 │   │   └── target_analysis.py  # Target coverage & availability audit
 │   └── models/                 # Forecasting models & evaluation suites
 │       ├── evaluate.py         # Standardized metrics (MAE, RMSE, R², Extreme MAE)
@@ -166,6 +178,17 @@ python3 src/models/baselines.py
 # Compute feature predictive correlations and group rankings
 python3 src/models/feature_analysis.py
 ```
+
+### 7. Export Versioned ML Datasets & Run Cloud ML Training (Phase 6)
+To export reproducible Parquet datasets with SHA-256 checksums and execute model training in Google Colab:
+```bash
+# Export versioned datasets for 1h, 6h, and 24h horizons (data/processed/ml/)
+python3 src/features/export_ml_datasets.py --version v1
+
+# Re-generate Colab notebook if generator script is updated
+python3 scripts/generate_colab_notebook.py
+```
+Open `notebooks/phase_6_colab_training.ipynb` in [Google Colab](https://colab.research.google.com), upload the desired dataset from `data/processed/ml/`, and execute end-to-end model training, hyperparameter optimization, and evaluation.
 
 ---
 

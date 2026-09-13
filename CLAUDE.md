@@ -58,19 +58,22 @@ Og Data/
 - **Phase 1-3:** ETL Pipeline, Data Quality Hardening, Idempotent PostgreSQL Ingestion.
 - **Phase 4:** Exploratory Data Analysis (EDA), Statistical Profiling, 11 Visualizations (`reports/eda/`).
 - **Phase 5:** Feature Engineering & Baseline Modeling (124 causal features, leakage audit, heuristic baselines, feature ranking).
+- **Phase 6 Preparation:** Exported versioned Parquet ML datasets (`air_quality_ml_{1h,6h,24h}_v1.parquet`), SHA-256 manifests, and Google Colab 16-section training notebook (`notebooks/phase_6_colab_training.ipynb`).
 
-## Suggested Next Steps (Phase 6: Advanced Model Development & Forecasting)
-We have successfully finished **Phase 5 (Feature Engineering & Baseline Modeling)**. The next stage is Phase 6:
+## Suggested Next Steps (Phase 6 Colab Training & Phase 7 Risk Classification)
+The repository is fully provisioned with versioned ML datasets and an interactive Colab training suite. Next steps:
 
-1. Developing and tuning multi-station supervised regression models (Gradient Boosting, LightGBM, Random Forest, Ridge) across 1h, 6h, and 24h horizons.
-2. Executing hyperparameter search, cross-station evaluations, and feature ablations.
-3. Benchmarking against Phase 5 heuristic baselines on test-set metrics (MAE, RMSE, $R^2$, MAPE, Extreme Episode Error $\text{AQI} \ge 300$).
-4. Exporting trained model artifacts and validation prediction matrices for downstream risk classification.
+1. Execute model training in Google Colab (`notebooks/phase_6_colab_training.ipynb`) to train LightGBM, XGBoost, and Ridge models across 1h, 6h, and 24h horizons.
+2. Run Optuna Bayesian hyperparameter search on the validation split.
+3. Quantify feature group importances (Groups A–G) and perform ablation experiments.
+4. Benchmark out-of-sample performance on the held-out winter crisis test set ($\text{AQI} \ge 300$).
+5. Export trained models and predictions for Phase 7 (CPCB AQI risk classification and GRAP emergency threshold alerts).
 
 ```
-src/features/    # Feature construction from DB (124 features)
-src/models/      # Baseline heuristics & ML forecasting architectures
-phase_5/         # Phase 5 formal specifications & audits
-models/          # Trained model artifacts / weights
-reports/modeling/# Forecast baselines, feature importances, and evaluation reports
+src/features/    # Feature engineering & ML dataset export (124 features)
+src/models/      # Baseline heuristics & evaluation metrics
+notebooks/       # Google Colab interactive training notebook (Phase 6)
+data/processed/ml/ # Versioned Parquet ML datasets (1h, 6h, 24h) & metadata JSONs
+reports/modeling/# Dataset manifest, baselines, and feature ranking reports
+docs/            # Technical timelines, architecture guides, and phase documentation
 ```

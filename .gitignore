@@ -51,6 +51,7 @@ local_pg.log
 Thumbs.db
 
 # Project Specific
+local_pg_data/
 # Note: Raw data usually shouldn't be version controlled if large.
 # If you want to stop tracking 'Og Data/', uncomment the line below
 # and run: git rm -r --cached "Og Data/"

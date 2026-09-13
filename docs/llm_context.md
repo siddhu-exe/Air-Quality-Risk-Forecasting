@@ -49,11 +49,21 @@ The PostgreSQL schema strictly implements **4 Core Tables** in a native user-spa
 4. **Feature Predictive Ranking:** Group A (mean $|r| = 0.930$) and Group G (mean $|r| = 0.890$) dominate short-term correlation; Group F (Meteorology) and Group E (Seasonality) provide critical variance for 24h forecasts.
 5. **Deliverables & Parquet Output:** 57,946 clean rows exported to `data/processed/features_2025.parquet`, baseline logs in `reports/modeling/baselines.csv`, and comprehensive report `reports/modeling/PHASE_5_BASELINE_REPORT.md`.
 
-## Upcoming Phase 6 Roadmap (Advanced Model Training & Forecasting)
-- **Models (`src/models/`):** Supervised gradient boosted trees (LightGBM, XGBoost), Random Forests, and regularized linear regressions trained for 1h, 6h, and 24h horizons across all 7 Delhi stations.
-- **Optimization & Evaluation:** Hyperparameter tuning, feature ablation studies, MAPE, RMSE, MAE, and extreme episode error ($\text{AQI} \ge 300$).
+## Phase 6 (Advanced Model Training & Cloud Pipeline) State
+1. **Hybrid Architecture:** Local machine handles PostgreSQL (port 5433), feature extraction, and Parquet export. Google Colab handles compute-heavy training, Optuna tuning, and ablations (`notebooks/phase_6_colab_training.ipynb`).
+2. **Versioned Datasets (`data/processed/ml/`):**
+   - `air_quality_ml_1h_v1.parquet`: 57,483 rows, 13.00 MB, SHA-256: `201f59fc183a169d01b2511fb9af8de7e484d6888bb760558e78e39b4cb1e3f3`
+   - `air_quality_ml_6h_v1.parquet`: 56,989 rows, 12.92 MB, SHA-256: `17931c9c23b478a8517260c77c6c3b6882004def987d3d81df48819f930d69e5`
+   - `air_quality_ml_24h_v1.parquet`: 55,750 rows, 12.66 MB, SHA-256: `5fd6026a52b3ea09cf6e7f0f78707523a96ebf7562e5ea4560fc91ed38747951`
+3. **Colab Training Pipeline:** 16-section self-contained notebook covering baseline reproduction, Ridge, LightGBM, XGBoost, Optuna Bayesian optimization, 7-group feature importances, feature ablation experiments, multi-station evaluations, and severe episode metrics ($\text{AQI} \ge 300$).
+4. **Zero-Leakage Test Policy:** Test set (Nov–Dec 2025, 90.8% extreme samples $\ge 300$) is strictly evaluated once after all validation tuning is complete.
+
+## Upcoming Phase 7 Roadmap (Risk Classification & Real-World Alerts)
+- **Classification:** Mapping forecasts to CPCB AQI bands (Severe, Very Poor, Poor, Moderate, Satisfactory, Good).
+- **Optimization:** Cost-sensitive classification to minimize false-alarms during peak winter pollution spikes and GRAP intervention triggers.
+- **Decision Support:** Policy impact evaluation and lightweight monitoring interface.
 
 ## Infrastructure Requirements
-- **NO DOCKER & NO GPU REQUIREMENT:** Lightweight, vectorized CPU computation only.
+- **NO LOCAL GPU / NO DOCKER:** Local operations are ultra-lightweight vectorized Pandas/PyArrow operations. Model training is isolated in Google Colab.
 - **Database Engine:** We run a completely native, local, user-space PostgreSQL cluster via `initdb` stored securely inside `./local_pg_data` on port `5433`.
-- **Start/Stop:** The environment is manually spun up via `pg_ctl -D local_pg_data start` to preserve battery and CPU when not actively ingesting data. 
+- **Start/Stop:** The database is manually spun up via `pg_ctl -D local_pg_data start` to preserve battery and CPU when not actively ingesting data. 

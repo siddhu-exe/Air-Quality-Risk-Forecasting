@@ -1,0 +1,4 @@
+horizon,dataset_name,filename,version,total_rows,train_rows,val_rows,test_rows,feature_count,target_column,filesize_mb,sha256_checksum,created_at
+1h,air_quality_ml_1h_v1,air_quality_ml_1h_v1.parquet,v1,57483,37676,9750,10057,124,target_aqi_1h,13.0,201f59fc183a169d01b2511fb9af8de7e484d6888bb760558e78e39b4cb1e3f3,2026-09-13T17:03:07.791181+00:00
+6h,air_quality_ml_6h_v1,air_quality_ml_6h_v1.parquet,v1,56989,37281,9710,9998,124,target_aqi_6h,12.92,17931c9c23b478a8517260c77c6c3b6882004def987d3d81df48819f930d69e5,2026-09-13T17:03:09.341819+00:00
+24h,air_quality_ml_24h_v1,air_quality_ml_24h_v1.parquet,v1,55750,36360,9590,9800,124,target_aqi_24h,12.66,5fd6026a52b3ea09cf6e7f0f78707523a96ebf7562e5ea4560fc91ed38747951,2026-09-13T17:03:11.483668+00:00
