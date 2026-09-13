@@ -1,0 +1,125 @@
+feature_name,group,dtype,non_null_count,missing_pct
+aqi_curr,Group A: Recent AQI Lags,float64,57946,0.0
+aqi_lag_1h,Group A: Recent AQI Lags,float64,57483,0.8
+aqi_lag_2h,Group A: Recent AQI Lags,float64,57357,1.02
+aqi_lag_3h,Group A: Recent AQI Lags,float64,57253,1.2
+aqi_lag_6h,Group A: Recent AQI Lags,float64,56989,1.65
+aqi_lag_12h,Group A: Recent AQI Lags,float64,56511,2.48
+aqi_lag_24h,Group A: Recent AQI Lags,float64,55750,3.79
+aqi_lag_48h,Group A: Recent AQI Lags,float64,55320,4.53
+aqi_lag_72h,Group A: Recent AQI Lags,float64,54945,5.18
+aqi_lag_168h,Group A: Recent AQI Lags,float64,54104,6.63
+pm25_curr,Group B: Pollutant Lags,float64,56123,3.15
+pm25_lag_1h,Group B: Pollutant Lags,float64,56187,3.04
+pm25_lag_6h,Group B: Pollutant Lags,float64,56390,2.69
+pm25_lag_12h,Group B: Pollutant Lags,float64,56475,2.54
+pm25_lag_24h,Group B: Pollutant Lags,float64,56162,3.08
+pm10_curr,Group B: Pollutant Lags,float64,55966,3.42
+pm10_lag_1h,Group B: Pollutant Lags,float64,56024,3.32
+pm10_lag_6h,Group B: Pollutant Lags,float64,56239,2.95
+pm10_lag_12h,Group B: Pollutant Lags,float64,56342,2.77
+pm10_lag_24h,Group B: Pollutant Lags,float64,56028,3.31
+no2_curr,Group B: Pollutant Lags,float64,57049,1.55
+no2_lag_1h,Group B: Pollutant Lags,float64,57083,1.49
+no2_lag_6h,Group B: Pollutant Lags,float64,57219,1.25
+no2_lag_12h,Group B: Pollutant Lags,float64,57290,1.13
+no2_lag_24h,Group B: Pollutant Lags,float64,57082,1.49
+nox_curr,Group B: Pollutant Lags,float64,57176,1.33
+nox_lag_1h,Group B: Pollutant Lags,float64,57207,1.28
+nox_lag_6h,Group B: Pollutant Lags,float64,57341,1.04
+nox_lag_12h,Group B: Pollutant Lags,float64,57407,0.93
+nox_lag_24h,Group B: Pollutant Lags,float64,57215,1.26
+so2_curr,Group B: Pollutant Lags,float64,54924,5.22
+so2_lag_1h,Group B: Pollutant Lags,float64,54959,5.15
+so2_lag_6h,Group B: Pollutant Lags,float64,55106,4.9
+so2_lag_12h,Group B: Pollutant Lags,float64,55197,4.74
+so2_lag_24h,Group B: Pollutant Lags,float64,54998,5.09
+co_curr,Group B: Pollutant Lags,float64,56903,1.8
+co_lag_1h,Group B: Pollutant Lags,float64,56936,1.74
+co_lag_6h,Group B: Pollutant Lags,float64,57084,1.49
+co_lag_12h,Group B: Pollutant Lags,float64,57145,1.38
+co_lag_24h,Group B: Pollutant Lags,float64,56955,1.71
+o3_curr,Group B: Pollutant Lags,float64,56528,2.45
+o3_lag_1h,Group B: Pollutant Lags,float64,56560,2.39
+o3_lag_6h,Group B: Pollutant Lags,float64,56705,2.14
+o3_lag_12h,Group B: Pollutant Lags,float64,56767,2.03
+o3_lag_24h,Group B: Pollutant Lags,float64,56585,2.35
+aqi_roll_mean_3h,Group C: Causal Rolling Statistics,float64,57946,0.0
+aqi_roll_std_3h,Group C: Causal Rolling Statistics,float64,57818,0.22
+aqi_roll_min_3h,Group C: Causal Rolling Statistics,float64,57946,0.0
+aqi_roll_max_3h,Group C: Causal Rolling Statistics,float64,57946,0.0
+pm25_roll_mean_3h,Group C: Causal Rolling Statistics,float64,57319,1.08
+pm25_roll_std_3h,Group C: Causal Rolling Statistics,float64,56639,2.26
+pm25_roll_min_3h,Group C: Causal Rolling Statistics,float64,57319,1.08
+pm25_roll_max_3h,Group C: Causal Rolling Statistics,float64,57319,1.08
+aqi_roll_mean_6h,Group C: Causal Rolling Statistics,float64,57758,0.32
+aqi_roll_std_6h,Group C: Causal Rolling Statistics,float64,57758,0.32
+aqi_roll_min_6h,Group C: Causal Rolling Statistics,float64,57758,0.32
+aqi_roll_max_6h,Group C: Causal Rolling Statistics,float64,57758,0.32
+pm25_roll_mean_6h,Group C: Causal Rolling Statistics,float64,57227,1.24
+pm25_roll_std_6h,Group C: Causal Rolling Statistics,float64,57227,1.24
+pm25_roll_min_6h,Group C: Causal Rolling Statistics,float64,57227,1.24
+pm25_roll_max_6h,Group C: Causal Rolling Statistics,float64,57227,1.24
+aqi_roll_mean_12h,Group C: Causal Rolling Statistics,float64,57512,0.75
+aqi_roll_std_12h,Group C: Causal Rolling Statistics,float64,57512,0.75
+aqi_roll_min_12h,Group C: Causal Rolling Statistics,float64,57512,0.75
+aqi_roll_max_12h,Group C: Causal Rolling Statistics,float64,57512,0.75
+pm25_roll_mean_12h,Group C: Causal Rolling Statistics,float64,57499,0.77
+pm25_roll_std_12h,Group C: Causal Rolling Statistics,float64,57499,0.77
+pm25_roll_min_12h,Group C: Causal Rolling Statistics,float64,57499,0.77
+pm25_roll_max_12h,Group C: Causal Rolling Statistics,float64,57499,0.77
+aqi_roll_mean_24h,Group C: Causal Rolling Statistics,float64,57076,1.5
+aqi_roll_std_24h,Group C: Causal Rolling Statistics,float64,57076,1.5
+aqi_roll_min_24h,Group C: Causal Rolling Statistics,float64,57076,1.5
+aqi_roll_max_24h,Group C: Causal Rolling Statistics,float64,57076,1.5
+pm25_roll_mean_24h,Group C: Causal Rolling Statistics,float64,57764,0.31
+pm25_roll_std_24h,Group C: Causal Rolling Statistics,float64,57764,0.31
+pm25_roll_min_24h,Group C: Causal Rolling Statistics,float64,57764,0.31
+pm25_roll_max_24h,Group C: Causal Rolling Statistics,float64,57764,0.31
+hour,Group D: Temporal & Cyclical,int32,57946,0.0
+day_of_week,Group D: Temporal & Cyclical,int32,57946,0.0
+month,Group D: Temporal & Cyclical,int32,57946,0.0
+day_of_year,Group D: Temporal & Cyclical,int32,57946,0.0
+is_weekend,Group D: Temporal & Cyclical,int64,57946,0.0
+sin_hour,Group D: Temporal & Cyclical,float64,57946,0.0
+cos_hour,Group D: Temporal & Cyclical,float64,57946,0.0
+sin_dow,Group D: Temporal & Cyclical,float64,57946,0.0
+cos_dow,Group D: Temporal & Cyclical,float64,57946,0.0
+sin_month,Group D: Temporal & Cyclical,float64,57946,0.0
+cos_month,Group D: Temporal & Cyclical,float64,57946,0.0
+sin_doy,Group D: Temporal & Cyclical,float64,57946,0.0
+cos_doy,Group D: Temporal & Cyclical,float64,57946,0.0
+is_winter,Group E: Seasonality Indicators,int64,57946,0.0
+is_summer,Group E: Seasonality Indicators,int64,57946,0.0
+is_monsoon,Group E: Seasonality Indicators,int64,57946,0.0
+is_post_monsoon,Group E: Seasonality Indicators,int64,57946,0.0
+temp_curr,Group F: Meteorology,float64,49194,15.1
+temp_lag_1h,Group F: Meteorology,float64,49226,15.05
+temp_lag_6h,Group F: Meteorology,float64,49370,14.8
+temp_lag_24h,Group F: Meteorology,float64,49239,15.03
+temp_roll_mean_6h,Group F: Meteorology,float64,49585,14.43
+temp_roll_mean_24h,Group F: Meteorology,float64,49755,14.14
+humidity_curr,Group F: Meteorology,float64,49190,15.11
+humidity_lag_1h,Group F: Meteorology,float64,49222,15.06
+humidity_lag_6h,Group F: Meteorology,float64,49367,14.81
+humidity_lag_24h,Group F: Meteorology,float64,49253,15.0
+humidity_roll_mean_6h,Group F: Meteorology,float64,49582,14.43
+humidity_roll_mean_24h,Group F: Meteorology,float64,49755,14.14
+wind_speed_curr,Group F: Meteorology,float64,48622,16.09
+wind_speed_lag_1h,Group F: Meteorology,float64,48651,16.04
+wind_speed_lag_6h,Group F: Meteorology,float64,48795,15.79
+wind_speed_lag_24h,Group F: Meteorology,float64,48655,16.03
+wind_speed_roll_mean_6h,Group F: Meteorology,float64,49425,14.71
+wind_speed_roll_mean_24h,Group F: Meteorology,float64,49675,14.27
+solar_rad_curr,Group F: Meteorology,float64,49181,15.13
+solar_rad_lag_1h,Group F: Meteorology,float64,49213,15.07
+solar_rad_lag_6h,Group F: Meteorology,float64,49358,14.82
+solar_rad_lag_24h,Group F: Meteorology,float64,49249,15.01
+solar_rad_roll_mean_6h,Group F: Meteorology,float64,49582,14.43
+solar_rad_roll_mean_24h,Group F: Meteorology,float64,49755,14.14
+network_max_aqi_lag_1h,Group G: Cross-Station Spatial,float64,57581,0.63
+network_min_aqi_lag_1h,Group G: Cross-Station Spatial,float64,57581,0.63
+network_mean_aqi_lag_1h,Group G: Cross-Station Spatial,float64,57946,0.0
+network_mean_pm25_lag_1h,Group G: Cross-Station Spatial,float64,57946,0.0
+top_neighbor_aqi_lag_1h,Group G: Cross-Station Spatial,float64,54791,5.44
+top_neighbor_pm25_lag_1h,Group G: Cross-Station Spatial,float64,55535,4.16

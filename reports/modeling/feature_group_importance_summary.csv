@@ -1,0 +1,22 @@
+horizon,group,num_features,mean_abs_r,max_abs_r
+1h,Group A: Recent AQI Lags,10,0.92949,0.9984
+1h,Group G: Cross-Station Spatial,6,0.8902666666666667,0.9577
+1h,Group C: Causal Rolling Statistics,32,0.772815625,0.9972
+1h,Group B: Pollutant Lags,35,0.43267714285714287,0.8117
+1h,Group E: Seasonality Indicators,4,0.41395,0.6277
+1h,Group F: Meteorology,24,0.20806666666666665,0.6541
+1h,Group D: Temporal & Cyclical,13,0.1715846153846154,0.7696
+24h,Group A: Recent AQI Lags,10,0.86668,0.9151
+24h,Group G: Cross-Station Spatial,6,0.8432166666666666,0.8895
+24h,Group C: Causal Rolling Statistics,32,0.7238,0.9124
+24h,Group E: Seasonality Indicators,4,0.415325,0.6309
+24h,Group B: Pollutant Lags,35,0.4125542857142857,0.7852
+24h,Group F: Meteorology,24,0.21030000000000001,0.6614
+24h,Group D: Temporal & Cyclical,13,0.1748769230769231,0.7673
+6h,Group A: Recent AQI Lags,10,0.91655,0.9861
+6h,Group G: Cross-Station Spatial,6,0.8899666666666667,0.9487
+6h,Group C: Causal Rolling Statistics,32,0.76988125,0.9837
+6h,Group B: Pollutant Lags,35,0.43545428571428574,0.8113
+6h,Group E: Seasonality Indicators,4,0.41425,0.6287
+6h,Group F: Meteorology,24,0.20950416666666669,0.6547
+6h,Group D: Temporal & Cyclical,13,0.1716769230769231,0.7689

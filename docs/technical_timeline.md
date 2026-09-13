@@ -39,15 +39,27 @@
   - **Meteorological Usability:** Validated Temperature ($r = -0.521$), Relative Humidity ($r = +0.272$), Wind Speed ($r = -0.158$, Spearman $\rho = -0.292$), and Solar Radiation ($r = -0.157$) for downstream models; excluded 100% missing Xylene and 56.6% missing Rainfall.
   - **Deliverables:** Generated 11-figure visual suite in `reports/eda/figures/`, comprehensive 12-section empirical report `reports/eda/EDA_REPORT.md`, summary CSVs in `reports/eda/`, and passed formal Gate Verdict to Phase 5.
 
-## Phase 5: Feature Engineering & Baseline Modelling (Current / Next)
-- **Objective:** Construct tabular feature matrices and train baseline/ML forecasting models for multi-horizon PM2.5 and AQI prediction.
+## Phase 5: Feature Engineering & Baseline Modelling (Completed)
+- **Objective:** Construct a leakage-safe tabular feature matrix across 7 feature groups, audit future forecasting targets ($h \in \{1\text{h}, 6\text{h}, 24\text{h}\}$), evaluate benchmark baselines across chronological partitions, and rank feature predictive power.
 - **Milestones:**
-  - Build feature extraction pipelines (`src/features/`): temporal lags (1–168h), rolling window aggregates (6h/24h mean/std/min/max), cyclical time encodings (sine/cosine for hour/month), and cross-station spatial neighbor features.
-  - Implement heuristic baselines (`src/models/`): Naive Persistence ($AQI(t) \approx AQI(t-1)$), 24h Seasonal Persistence, Rolling Climatological Mean.
-  - Implement supervised ML models: Ridge/Lasso, Random Forest, LightGBM/XGBoost for 1h, 6h, 12h, and 24h ahead forecasting.
-  - Evaluate against RMSE, MAE, and directional accuracy metrics.
+  - **Forecasting Target Definition & Audit:** Formalized lead targets $\text{AQI}(t+h)$ for 1h, 6h, and 24h horizons; confirmed high target availability (>99.2% for 1h, >98.3% for 6h, >96.2% for 24h) across 57,946 ground-truth records.
+  - **7-Group Feature Engineering Taxonomy:** Engineered 124 causal features spanning Recent AQI Lags (10), Multi-Pollutant Lags (35), Causal Trailing Rolling Stats (32), Temporal/Cyclical Encodings (13), IMD Seasonality (4), Usable Meteorology (24), and Spatial Network Signals (6).
+  - **Mathematical Leakage Audit:** Enforced trailing rolling windows $[t-W+1, t]$, positive lag shifts, leave-one-out spatial aggregation on $t-1$ observations, and 2024 historical warm-up buffer preservation to prevent cold-start boundary truncation.
+  - **Chronological 3-Way Partitioning:** Enforced non-overlapping splits: Train (Jan–Aug 2025, 67%), Validation (Sep–Oct 2025, 16.5%), and Test (Nov–Dec 2025, 16.5% - Peak Winter Crisis).
+  - **Baseline Benchmarking:** Evaluated Naive Persistence, 24h Seasonal Persistence, and 24h Moving Average baselines; discovered near-perfect persistence at 1h ($\text{MAE} \approx 2.40$), moderate degradation at 6h ($\text{MAE} \approx 12.72$), and total persistence collapse at 24h on the Winter test set ($\text{MAE} \approx 38.34, R^2 \approx 0.1848$).
+  - **Feature Ranking & Group Importance:** Quantified Pearson correlations across all 124 features, establishing that Group A (AQI Lags), Group G (Cross-Station Spatial), and Group C (Rolling Stats) carry highest predictive power, with Meteorology (Group F) and Seasonality (Group E) providing essential long-range variance.
+  - **Hardware & CPU Optimization:** Optimized pipeline with vectorized Pandas operations (under 2.5s execution) and compact Snappy Parquet storage (`data/processed/features_2025.parquet`).
+  - **Deliverables:** Structured specifications in `phase_5/`, baseline records in `reports/modeling/baselines.csv`, feature rankings in `reports/modeling/feature_importance.csv`, and comprehensive report `reports/modeling/PHASE_5_BASELINE_REPORT.md`.
 
-## Phase 6+: Risk Classification, Causal Analysis, & Deployment (Scheduled)
+## Phase 6: Advanced Model Development & Optimization (Current / Next)
+- **Objective:** Develop, optimize, and evaluate supervised forecasting models (Gradient Boosting, LightGBM, Random Forest, Ridge) across multi-horizon AQI and PM2.5 targets.
+- **Milestones:**
+  - Train and tune multi-station regression models for 1h, 6h, and 24h forecasting horizons.
+  - Execute hyperparameter optimization and feature subset ablations.
+  - Evaluate against RMSE, MAE, MAPE, directional accuracy, and extreme episode error ($\text{AQI} \ge 300$).
+  - Export trained model artifacts and validation prediction matrices.
+
+## Phase 7+: Risk Classification, Causal Analysis, & Deployment (Scheduled)
 - **Objective:** Convert forecasts into action-oriented health risk categories and decision-support tools.
 - **Milestones:**
   - Map forecasts to CPCB AQI risk bands (Severe, Very Poor, Poor, Moderate, Satisfactory, Good).

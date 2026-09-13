@@ -3,8 +3,8 @@
 **Purpose:** Read this file to instantly understand the repository structure, previous bug fixes, constraints, and current state of the Air Quality Risk Forecasting system. Do not change project direction or introduce ML technologies prematurely.
 
 ## Project Scope & Lifecycle
-**Lifecycle Pipeline:** RAW GOVERNMENT DATA -> DATA PROFILING -> DATABASE DESIGN -> ETL/DATA CLEANING -> POSTGRESQL -> DATA VALIDATION -> EDA -> FEATURE ENGINEERING -> AQI FORECASTING -> RISK CLASSIFICATION -> CAUSAL/POLICY ANALYSIS -> DASHBOARD.
-**Current Stage:** Phase 3 (DB Ingestion) Completed -> Phase 4 (Exploratory Data Analysis) Completed -> **Moving to Phase 5 (Feature Engineering & Baseline Modelling)**.
+**Lifecycle Pipeline:** RAW GOVERNMENT DATA -> DATA PROFILING -> DATABASE DESIGN -> ETL/DATA CLEANING -> POSTGRESQL -> DATA VALIDATION -> EDA -> FEATURE ENGINEERING -> BASELINE BENCHMARKING -> AQI FORECASTING -> RISK CLASSIFICATION -> CAUSAL/POLICY ANALYSIS -> DASHBOARD.
+**Current Stage:** Phase 3 (DB Ingestion) Completed -> Phase 4 (EDA) Completed -> Phase 5 (Feature Engineering & Baseline Benchmarking) Completed -> **Moving to Phase 6 (Advanced Model Training & Multi-Horizon Forecasting)**.
 
 ## Geographic Scope
 - **Primary:** Delhi (7 specific stations: Anand Vihar, Bawana, Dwarka-Sector 8, ITO, Jahangirpuri, Punjabi Bagh, R K Puram).
@@ -39,12 +39,21 @@ The PostgreSQL schema strictly implements **4 Core Tables** in a native user-spa
    - **Exclusions/Cautions:** Rainfall is sparse (56.6% missing); Xylene is 100% unpopulated; ITO station lacks meteorological sensors.
 6. **Visual & Analytical Deliverables:** 11-figure visual suite in `reports/eda/figures/`, comprehensive report `reports/eda/EDA_REPORT.md`, and modular scripts in `src/eda/`. Gate passed to Phase 5.
 
-## Upcoming Phase 5 Roadmap (Feature Engineering & Baseline Modelling)
-- **Features (`src/features/`):** Temporal lags (1h, 2h, 3h, 6h, 12h, 24h, 168h), rolling window statistics (6h/24h mean/std/min/max), cyclical temporal encodings (hour/month sin-cos), spatial neighbor signals.
-- **Models (`src/models/`):**
-  - Baselines: Naive Persistence ($AQI(t) \approx AQI(t-1)$), 24h Seasonal Persistence, Rolling Climatological Mean.
-  - ML Forecasting: Ridge/Lasso, Random Forest, LightGBM/XGBoost for 1–24h PM2.5 and AQI risk forecasting.
+## Phase 5 (Feature Engineering & Baselines) Key Findings
+1. **Feature Taxonomy (124 Features):** Engineered 124 causal features across 7 groups: Group A (10 AQI lags), Group B (35 multi-pollutant lags), Group C (32 causal rolling stats), Group D (13 temporal/cyclical), Group E (4 season indicators), Group F (24 meteo features), Group G (6 spatial network signals).
+2. **Strict Zero Leakage:** Enforced trailing windows $[t-W+1, t]$, positive lag offsets, and leave-one-out spatial network aggregates on $t-1$ observations. 2024 records used as warm-up buffer.
+3. **Baseline Breakdown by Horizon:**
+   - **1-Hour Horizon:** Naive Persistence achieves near-perfect tracking ($\text{MAE} \approx 2.40, R^2 \approx 0.995$) due to 24-hour moving buffer inertia in reported AQI.
+   - **6-Hour Horizon:** Persistence degrades ($\text{MAE} \approx 12.72, R^2 \approx 0.902$).
+   - **24-Hour Horizon:** Heuristic persistence collapses during winter test episodes ($\text{MAE} \approx 38.34, R^2 \approx 0.1848$), underscoring the necessity of multi-variate ML models with meteorology and spatial signals.
+4. **Feature Predictive Ranking:** Group A (mean $|r| = 0.930$) and Group G (mean $|r| = 0.890$) dominate short-term correlation; Group F (Meteorology) and Group E (Seasonality) provide critical variance for 24h forecasts.
+5. **Deliverables & Parquet Output:** 57,946 clean rows exported to `data/processed/features_2025.parquet`, baseline logs in `reports/modeling/baselines.csv`, and comprehensive report `reports/modeling/PHASE_5_BASELINE_REPORT.md`.
+
+## Upcoming Phase 6 Roadmap (Advanced Model Training & Forecasting)
+- **Models (`src/models/`):** Supervised gradient boosted trees (LightGBM, XGBoost), Random Forests, and regularized linear regressions trained for 1h, 6h, and 24h horizons across all 7 Delhi stations.
+- **Optimization & Evaluation:** Hyperparameter tuning, feature ablation studies, MAPE, RMSE, MAE, and extreme episode error ($\text{AQI} \ge 300$).
+
 ## Infrastructure Requirements
-- **NO DOCKER:** Due to strictly constrained laptop computational resources, Docker is prohibited.
+- **NO DOCKER & NO GPU REQUIREMENT:** Lightweight, vectorized CPU computation only.
 - **Database Engine:** We run a completely native, local, user-space PostgreSQL cluster via `initdb` stored securely inside `./local_pg_data` on port `5433`.
 - **Start/Stop:** The environment is manually spun up via `pg_ctl -D local_pg_data start` to preserve battery and CPU when not actively ingesting data. 

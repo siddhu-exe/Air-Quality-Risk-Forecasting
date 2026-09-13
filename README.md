@@ -4,13 +4,14 @@ This repository houses the raw data and data engineering pipeline for the **Air 
 
 ## 🚀 Project Overview
 
-The project has now successfully completed Phase 4 (Exploratory Data Analysis). Scattered raw air quality sensor data (COVID & post-COVID continuous `.csv` outputs and wide-format `.xlsx` AQI files) are automatically parsed, standardized, and loaded into an idempotent PostgreSQL database schema. We have subsequently generated a comprehensive statistical and visual profile of the data.
+The project has completed **Phase 1–3 (ETL & Database Ingestion)**, **Phase 4 (Exploratory Data Analysis)**, and **Phase 5 (Feature Engineering & Baseline Modeling)**. Scattered raw air quality sensor data (continuous `.csv` outputs and wide-format `.xlsx` AQI files) are automatically parsed, standardized, and loaded into an idempotent PostgreSQL database schema. A comprehensive 124-feature tabular dataset across 7 feature groups has been constructed with zero temporal leakage, future forecasting targets ($h \in \{1\text{h}, 6\text{h}, 24\text{h}\}$) audited, heuristic baselines benchmarked, and feature predictive power quantified.
 
 ### Core Features Installed So Far
 1. **Automated Data Profiler**: A 100% read-only recursive scanner that checks for schema consistency, missingness, sentinel faults, and uncovers unique structures inside `.xlsx` documents.
 2. **Idempotent ETL Pipeline**: A robust pipeline that maps non-standard features onto a canonical schema, sanitizes out-of-bounds physical properties, strips sentinels, and transforms wide AQI grids into standard relational row inserts. Connects to Postgres using `psycopg2` `execute_values` for high-throughput batch upserts with perfect idempotency.
-3. **Production Database & Architecture**: Local PostgreSQL cluster configuration, comprehensive schemas with explicit foreign key constraints (`ON DELETE RESTRICT`), validation data checks, and automated backups (`pg_dump`). Fully populated with 105 raw files resulting in ~162K hourly pollution records and ~57K AQI rows for Delhi.
-4. **Exploratory Data Analysis (EDA)**: A comprehensive SQL-first statistical analysis generating 11 publication-quality visualizations and deep metric evaluations (spatial correlation, pollutant dynamics, missingness profiles, autocorrelation, severe episode tracking) to guide Phase 5 forecasting.
+3. **Production Database & Architecture**: Local PostgreSQL cluster configuration, comprehensive schemas with explicit foreign key constraints (`ON DELETE RESTRICT`), validation data checks, and automated backups (`pg_dump`). Fully populated with 105 raw files resulting in ~162K hourly pollution records and ~58K AQI rows for Delhi.
+4. **Exploratory Data Analysis (EDA)**: A comprehensive SQL-first statistical analysis generating 11 publication-quality visualizations and deep metric evaluations (spatial correlation, pollutant dynamics, missingness profiles, autocorrelation, severe episode tracking) to guide forecasting.
+5. **Feature Engineering & Baseline Modeling**: A leakage-safe tabular pipeline constructing 124 features across 7 groups (AQI lags, pollutant lags, causal rolling statistics, cyclical temporal features, IMD seasonality, meteorology, and leave-one-out spatial network features). Benchmarks Naive, Seasonal, and Moving Average baselines and ranks feature predictive power across 1h, 6h, and 24h horizons.
 
 ---
 
@@ -20,6 +21,16 @@ The project has now successfully completed Phase 4 (Exploratory Data Analysis). 
 .
 ├── CLAUDE.md                   # AI Assistant / Workspace guidance rules
 ├── backups/                    # Database pg_dump binary backups
+├── data/
+│   └── processed/
+│       └── features_2025.parquet # Clean 124-feature tabular matrix (57,946 rows)
+├── docs/                       # Project documentation, timelines, and findings
+│   ├── overview.md
+│   ├── technical_timeline.md
+│   ├── simple_timeline.md
+│   ├── eda_findings.md
+│   ├── baseline_findings.md    # Phase 5 Baseline & Feature findings
+│   └── llm_context.md
 ├── etl/                        # Pipeline execution logic
 │   ├── discover.py             # File discovery and metadata reading
 │   ├── generate_mapping_report.py # Automated mapping reports
@@ -32,22 +43,33 @@ The project has now successfully completed Phase 4 (Exploratory Data Analysis). 
 ├── Og Data/                    # Raw data (Organized by City -> Station)
 │   ├── Delhi data/
 │   └── Mumbai data/
+├── phase_5/                    # Phase 5 formal specifications & audits
+│   ├── target_definition.md    # Target formulation & horizon availability
+│   ├── feature_specification.md# 124-feature schema & definitions
+│   ├── leakage_audit.md        # Zero-leakage mathematical audit
+│   ├── split_strategy.md       # Chronological split documentation
+│   └── experiments.md          # Baseline evaluation matrix & feature rankings
 ├── profiling/                  # Generated discovery reports 
 │   ├── profile_raw_data.py     # Automated read-only schema discovery scanner
 │   ├── profiling_summary.md    # Actionable 14-point narrative
 │   └── ...                     # (Other schema / gap finding CSVs)
-├── reports/                    # Output from validation, mapping, & EDA routines
+├── reports/                    # Output from validation, mapping, EDA, & Modeling
 │   ├── column_mapping_report.md
-│   └── eda/                    # Phase 4 EDA outputs
-│       ├── EDA_REPORT.md       # Comprehensive 12-section statistical report
-│       ├── figures/            # 11 Publication-quality visualizations (.png)
-│       └── *.csv               # Statistical summary tables & metrics
-├── src/                        # Analysis and processing source code
-│   └── eda/                    # Modular EDA analysis & visualization scripts
-│       ├── data_health_and_coverage.py
-│       ├── temporal_and_station_analysis.py
-│       ├── advanced_statistical_analysis.py
-│       └── generate_visualizations.py
+│   ├── eda/                    # Phase 4 EDA outputs (11 figures, EDA report)
+│   ├── features/               # Feature manifest & target availability CSVs
+│   └── modeling/               # Baseline benchmarks & feature rankings
+│       ├── baselines.csv       # Heuristic & ML baseline metrics
+│       ├── feature_importance.csv # Ranked feature correlations
+│       └── PHASE_5_BASELINE_REPORT.md # Comprehensive Phase 5 report
+├── src/                        # Analysis and modeling source code
+│   ├── eda/                    # Modular EDA analysis & visualization scripts
+│   ├── features/               # Feature engineering pipelines
+│   │   ├── build_features.py   # 124-feature causal transformer
+│   │   └── target_analysis.py  # Target coverage & availability audit
+│   └── models/                 # Forecasting models & evaluation suites
+│       ├── evaluate.py         # Standardized metrics (MAE, RMSE, R², Extreme MAE)
+│       ├── baselines.py        # Heuristic baseline benchmark suite
+│       └── feature_analysis.py # Feature correlation & group ranking engine
 ├── local_pg_data/              # Local PostgreSQL 16 cluster data directory (port 5433)
 └── sql/                        # Target database structural definitions
     ├── 001_create_tables.sql
@@ -127,6 +149,22 @@ python3 src/eda/data_health_and_coverage.py
 python3 src/eda/temporal_and_station_analysis.py
 python3 src/eda/advanced_statistical_analysis.py
 python3 src/eda/generate_visualizations.py
+```
+
+### 6. Run Feature Engineering & Baseline Benchmarks
+To build the 124-feature dataset, evaluate heuristic baselines, and compute feature importance rankings:
+```bash
+# Audit target availability across stations and horizons (1h, 6h, 24h)
+python3 src/features/target_analysis.py
+
+# Construct 124 causal features (saved to data/processed/features_2025.parquet)
+python3 src/features/build_features.py
+
+# Evaluate Naive, Seasonal, and Moving Average baselines across all splits
+python3 src/models/baselines.py
+
+# Compute feature predictive correlations and group rankings
+python3 src/models/feature_analysis.py
 ```
 
 ---

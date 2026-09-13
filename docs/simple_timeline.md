@@ -26,8 +26,16 @@
   - **Winter Crisis:** 123 severe pollution episodes (>400 AQI) occurred, clustered heavily in November through January.
   - **Memory/Persistence:** Today's AQI is strongly correlated with yesterday's AQI ($r \approx 0.998$), giving us strong baselines for forecasting.
 
-## Step 5: Feature Engineering & Building AI Models (Next)
-- **Where we are going next:** We are engineering predictive features (lagged readings, 24-hour rolling averages, weather drivers, cyclical time of day) and building baseline AI forecasting models to predict PM2.5 and AQI 1 to 24 hours in advance.
+## Step 5: Feature Engineering & Baseline Benchmarking (Done)
+- **What we did:** Created 124 mathematical features across 7 distinct groups (past hourly pollution readings, rolling averages, weather conditions, season flags, and citywide neighborhood signals). Tested simple benchmark forecasts (e.g. predicting current AQI continues unchanged).
+- **Key Findings:**
+  - **1-Hour Forecasts:** Predicting that current AQI stays unchanged is extremely accurate ($\text{MAE} \approx 2.4$), because official AQI is already a 24-hour moving average.
+  - **6-Hour Forecasts:** Persistence is moderately reliable ($\text{MAE} \approx 12.7$), but starts missing afternoon ozone spikes and night boundary layer collapses.
+  - **24-Hour Forecasts:** Persistence completely breaks down during the winter crisis ($\text{MAE} \approx 38.3, R^2 \approx 0.18$), proving that complex machine learning models with weather and spatial awareness are required for next-day forecasts.
+  - **Leakage-Safe Data:** Verified mathematically that future data never leaks backward into the past.
 
-## Step 6: Risk Classification & Real-World Alerts (Future)
+## Step 6: Advanced Model Training & Forecasting (Next)
+- **Where we are going next:** Training and tuning supervised machine learning models to forecast AQI and PM2.5 at 1h, 6h, and 24h horizons, outperforming simple persistence baselines during severe winter pollution spikes.
+
+## Step 7: Risk Classification & Real-World Alerts (Future)
 - **Where we are heading:** Converting continuous forecasts into actionable risk categories (e.g. GRAP stages, health warnings) with false-alarm minimization.

@@ -20,9 +20,11 @@ DATA VALIDATION            (Completed - Phase 3)
         ↓
 EDA (Exploratory Analysis) (Completed - Phase 4)
         ↓
-FEATURE ENGINEERING        <-- (We are here - Phase 5)
+FEATURE ENGINEERING        (Completed - Phase 5)
         ↓
-AQI FORECASTING
+BASELINE BENCHMARKING      (Completed - Phase 5)
+        ↓
+AQI & PM2.5 FORECASTING    <-- (We are here - Phase 6)
         ↓
 RISK CLASSIFICATION
         ↓
@@ -38,6 +40,7 @@ DASHBOARD / DEPLOYMENT
 ## Architectural & Analytical Philosophy
 - **Data Integrity & Traceability:** Bad sensor readings gracefully nullify only the corrupted metric and record a JSON quality-control flag (`qc_flags`), keeping the valid measurements in the row intact. Every single record traces back to its source file.
 - **Empirical Validation (EDA):** Phase 4 conducted a deep SQL-first statistical analysis across all stations, validating strong spatial synchronization ($r \ge 0.92$), diurnal bimodal rhythms, autoregressive lag dynamics ($r \approx 0.998$), and meteorological forcing (temperature/humidity/wind) that inform our feature engineering strategy.
+- **Causal Feature Engineering & Baseline Benchmarking:** Phase 5 constructed a 124-feature tabular dataset across 7 feature groups with zero temporal leakage, audited 1h, 6h, and 24h forecasting horizons, established heuristic baselines, and quantified feature predictive hierarchies.
 
 ## Infrastructure & Compute
 To ensure this repository remains ultra-lightweight and battery-friendly for local laptop development, we do **not** use Docker or heavy virtual machines. The entire database is a fully isolated, native PostgreSQL cluster running directly out of the `local_pg_data` folder on port `5433`. It uses virtually zero background resources and can be spun up or down instantly.

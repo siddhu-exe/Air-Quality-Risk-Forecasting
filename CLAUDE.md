@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is an evolving **air quality risk forecasting** project. It contains raw source data and a fully operational, idempotent Python ETL pipeline backing a reliable PostgreSQL database schema. The next upcoming phase is Phase 4: Exploratory Data Analysis (EDA). The data covers two Indian cities:
+This is an evolving **air quality risk forecasting** project. It contains raw source data, an idempotent Python ETL pipeline backing a reliable PostgreSQL database schema, comprehensive Phase 4 EDA, and a fully completed Phase 5 Feature Engineering and Baseline Modeling suite. The project is currently transitioning to **Phase 6: Advanced Model Development & Multi-Horizon Forecasting**. The data covers two Indian cities:
 
 - **Delhi**: Station-level hourly measurements from 7 DPCC/CPCB monitoring stations (2023–2026)
 - **Mumbai**: City-level hourly AQI data (Jan–Jul 2026)
@@ -47,26 +47,30 @@ Og Data/
 - Mumbai has **no raw pollutant CSV** — only city-level AQI Excel files; the initial commit had a Bandra Kurla Complex CSV that was removed in commit `c400b02`
 - Station operators: most Delhi stations are DPCC; ITO is CPCB — they may use different calibration standards
 
-## Established Tech Stack & DB State
-- Python: `pandas` for processing (`openpyxl` for Excel), `psycopg2` mapping tuples for batched database insertion.
+## Established Tech Stack & Data State
+- Python: `pandas`, `numpy`, `scikit-learn`, `psycopg2`, `pyarrow`
 - DB: PostgreSQL 16 hosted locally via `initdb` connecting on port 5433.
-- Load State: Currently contains 105 total source files, >160K `caaqms_hourly` observations, and ~57K `aqi_hourly` logs specifically representing Delhi.
+- Ingestion State: 105 total source files, >162K `caaqms_hourly` observations, and ~58K `aqi_hourly` logs.
+- Processed Feature Matrix: `data/processed/features_2025.parquet` (57,946 rows, 130 columns, 124 causal features across 7 groups).
+- Modeling Reports: `reports/modeling/baselines.csv`, `reports/modeling/feature_importance.csv`, `reports/modeling/PHASE_5_BASELINE_REPORT.md`.
 
-## Suggested Next Steps (Downstream Phase)
+## Completed Phases
+- **Phase 1-3:** ETL Pipeline, Data Quality Hardening, Idempotent PostgreSQL Ingestion.
+- **Phase 4:** Exploratory Data Analysis (EDA), Statistical Profiling, 11 Visualizations (`reports/eda/`).
+- **Phase 5:** Feature Engineering & Baseline Modeling (124 causal features, leakage audit, heuristic baselines, feature ranking).
 
-We have successfully finished **Phase 4 (Exploratory Data Analysis)**. The `src/eda/` scripts analyze the database structure, extracting temporal trends, spatial patterns, and pollutant relationships, generating a deep statistical report and visual suite in `reports/eda/`.
+## Suggested Next Steps (Phase 6: Advanced Model Development & Forecasting)
+We have successfully finished **Phase 5 (Feature Engineering & Baseline Modeling)**. The next stage is Phase 6:
 
-Next is Phase 5: Feature Engineering & Baseline Modelling. Based on EDA findings (like high lag-1 autocorrelation for AQI), we should focus on:
-
-1. Setting up short-term forecast baseline models (e.g., Persistence model where AQI(t) ≈ AQI(t-1)).
-2. Structuring machine learning pipelines to forecast PM2.5 (1–24 hours ahead) using meteorological drivers (Temp, Humidity, Wind), temporal cyclic features, and cross-station spatial inputs.
-
-Recommended structure to build next:
+1. Developing and tuning multi-station supervised regression models (Gradient Boosting, LightGBM, Random Forest, Ridge) across 1h, 6h, and 24h horizons.
+2. Executing hyperparameter search, cross-station evaluations, and feature ablations.
+3. Benchmarking against Phase 5 heuristic baselines on test-set metrics (MAE, RMSE, $R^2$, MAPE, Extreme Episode Error $\text{AQI} \ge 300$).
+4. Exporting trained model artifacts and validation prediction matrices for downstream risk classification.
 
 ```
-src/features/    # Feature construction from DB
-src/models/      # Baseline & ML forecasting models
-notebooks/       # Experimental sandbox
+src/features/    # Feature construction from DB (124 features)
+src/models/      # Baseline heuristics & ML forecasting architectures
+phase_5/         # Phase 5 formal specifications & audits
 models/          # Trained model artifacts / weights
-outputs/         # Forecast results and performance metrics
+reports/modeling/# Forecast baselines, feature importances, and evaluation reports
 ```
