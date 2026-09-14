@@ -58,7 +58,11 @@ Og Data/
 - **Phase 1-3:** ETL Pipeline, Data Quality Hardening, Idempotent PostgreSQL Ingestion.
 - **Phase 4:** Exploratory Data Analysis (EDA), Statistical Profiling, 11 Visualizations (`reports/eda/`).
 - **Phase 5:** Feature Engineering & Baseline Modeling (124 causal features, leakage audit, heuristic baselines, feature ranking).
-- **Phase 6 & 6B:** Multi-Horizon Forecasting & 24h Optimization Suite (1h LightGBM MAE 2.29, 6h LightGBM MAE 11.84, 24h Hybrid Persistence + Ridge MAE 35.48; failure diagnostics, delta formulation, and Colab notebooks `notebooks/phase_6_colab_training.ipynb` and `notebooks/phase_6b_24h_optimization.ipynb`).
+- **Phase 6 & 6B & 6C:** Multi-Horizon Forecasting & 24h Final Refinement Suite:
+  - 1h Tuned LightGBM: $\text{MAE} = 2.29, \text{RMSE} = 3.65, R^2 = 0.9958$ (beats Naive Persistence $\text{MAE} = 2.40$). **[FROZEN]**
+  - 6h Tuned LightGBM: $\text{MAE} = 11.84, \text{RMSE} = 16.71, R^2 = 0.9126$ (beats Naive Persistence $\text{MAE} = 14.73$). **[FROZEN]**
+  - 24h Refined 50/50 Hybrid Persistence + Ridge ($\alpha=1000$): $\text{MAE} = 34.11, \text{RMSE} = 44.80, R^2 = 0.3647, \text{MAPE} = 9.72\%$ (beats Naive Persistence $\text{MAE} = 38.34, R^2 = 0.1848$ by **+4.23 AQI points** across 100% of Delhi stations). Serialized to `models/24h/final/`.
+  - Notebooks: `notebooks/phase_6_colab_training.ipynb`, `notebooks/phase_6b_24h_optimization.ipynb`, `notebooks/phase_6c_24h_final_refinement.ipynb`.
 
 ## Suggested Next Steps (Phase 7: CPCB AQI Risk Classification & GRAP Policy Alerting)
 All forecasting horizons (1h, 6h, 24h) are validated and outperform heuristic baselines. Next steps:

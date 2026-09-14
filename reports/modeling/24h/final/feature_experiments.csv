@@ -1,0 +1,7 @@
+feature_set,num_features,val_ridge_mae,val_ridge_rmse,val_ridge_r2,val_hybrid_mae,val_hybrid_rmse,val_hybrid_r2,val_hybrid_extreme_mae,val_hybrid_severe_mae
+Set A (Base A+B),33,31.1947,42.289,0.8353,29.5906,41.1602,0.8439,38.0656,44.0508
+Set B (Set A + Multi-Day Rolling),40,30.6893,41.5626,0.8409,29.3011,40.7003,0.8474,37.9677,46.0561
+Set C (Set B + Multi-Day Lags/Deltas),50,30.3264,41.0914,0.8445,29.0061,40.3446,0.8501,37.4293,44.1493
+Set D (Set C + Spatial Network),54,30.5611,41.3065,0.8428,29.0028,40.2352,0.8509,37.3343,44.6541
+Set Refined (Curated 54 Feats),49,30.5995,41.3788,0.8423,29.0238,40.2607,0.8507,37.3791,44.7752
+Set E (Set D + Station Dummies),61,30.5258,41.4974,0.8414,28.9134,40.1253,0.8517,37.471,45.9379

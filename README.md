@@ -4,7 +4,7 @@ This repository houses the raw data and data engineering pipeline for the **Air 
 
 ## 🚀 Project Overview
 
-The project has completed **Phase 1–3 (ETL & Database Ingestion)**, **Phase 4 (Exploratory Data Analysis)**, **Phase 5 (Feature Engineering & Baseline Modeling)**, and **Phase 6 / 6B (Multi-Horizon Forecasting & 24h Optimization Suite)**. Scattered raw air quality sensor data (continuous `.csv` outputs and wide-format `.xlsx` AQI files) are automatically parsed, standardized, and loaded into an idempotent PostgreSQL database schema. A comprehensive 124-feature tabular dataset across 7 feature groups has been constructed with zero temporal leakage, future forecasting targets ($h \in \{1\text{h}, 6\text{h}, 24\text{h}\}$) audited, versioned ML datasets exported with SHA-256 integrity checksums, and multi-horizon models (LightGBM Tuned and Regularized Hybrid Persistence Ensembles) deployed and verified across all 7 Delhi stations.
+The project has completed **Phase 1–3 (ETL & Database Ingestion)**, **Phase 4 (Exploratory Data Analysis)**, **Phase 5 (Feature Engineering & Baseline Modeling)**, and **Phase 6 / 6B / 6C (Multi-Horizon Forecasting & 24h Final Refinement Suite)**. Scattered raw air quality sensor data (continuous `.csv` outputs and wide-format `.xlsx` AQI files) are automatically parsed, standardized, and loaded into an idempotent PostgreSQL database schema. A comprehensive 124-feature tabular dataset across 7 feature groups has been constructed with zero temporal leakage, future forecasting targets ($h \in \{1\text{h}, 6\text{h}, 24\text{h}\}$) audited, versioned ML datasets exported with SHA-256 integrity checksums, and multi-horizon models (LightGBM Tuned and Regularized Hybrid Persistence Ensembles) deployed and verified across all 7 Delhi stations.
 
 ### Core Features Installed So Far
 1. **Automated Data Profiler**: A 100% read-only recursive scanner that checks for schema consistency, missingness, sentinel faults, and uncovers unique structures inside `.xlsx` documents.
@@ -12,7 +12,11 @@ The project has completed **Phase 1–3 (ETL & Database Ingestion)**, **Phase 4 
 3. **Production Database & Architecture**: Local PostgreSQL cluster configuration, comprehensive schemas with explicit foreign key constraints (`ON DELETE RESTRICT`), validation data checks, and automated backups (`pg_dump`). Fully populated with 105 raw files resulting in ~162K hourly pollution records and ~58K AQI rows for Delhi.
 4. **Exploratory Data Analysis (EDA)**: A comprehensive SQL-first statistical analysis generating 11 publication-quality visualizations and deep metric evaluations (spatial correlation, pollutant dynamics, missingness profiles, autocorrelation, severe episode tracking) to guide forecasting.
 5. **Feature Engineering & Baseline Modeling**: A leakage-safe tabular pipeline constructing 124 features across 7 groups (AQI lags, pollutant lags, causal rolling statistics, cyclical temporal features, IMD seasonality, meteorology, and leave-one-out spatial network features). Benchmarks Naive, Seasonal, and Moving Average baselines and ranks feature predictive power across 1h, 6h, and 24h horizons.
-6. **Multi-Horizon Forecasting & 24h Failure Optimization (Phase 6 / 6B)**: Full multi-horizon benchmarking (1h LightGBM MAE = 2.29, 6h LightGBM MAE = 11.84, 24h Hybrid MAE = 35.48) with dedicated Google Colab training suites (`notebooks/phase_6_colab_training.ipynb`, `notebooks/phase_6b_24h_optimization.ipynb`), exhaustive mathematical failure diagnostics (tree extrapolation ceilings, non-stationary temporal traps, delta formulations), and serialization of production model weights.
+6. **Multi-Horizon Forecasting & 24h Final Refinement (Phase 6 / 6B / 6C)**: Full multi-horizon benchmarking:
+   - **1-Hour Horizon (Frozen):** Tuned LightGBM ($\text{MAE} = 2.29, \text{RMSE} = 3.65, R^2 = 0.9958$) beating Naive Persistence ($\text{MAE} = 2.40$).
+   - **6-Hour Horizon (Frozen):** Tuned LightGBM ($\text{MAE} = 11.84, \text{RMSE} = 16.71, R^2 = 0.9126$) beating Naive Persistence ($\text{MAE} = 14.73$).
+   - **24-Hour Horizon (Refined 50/50 Hybrid):** Regularized Ridge ($\alpha=1000$) with multi-day causal features (lags up to 168h, multi-day rolling statistics, spatial network signals) blended with Naive Persistence ($\text{MAE} = 34.11, \text{RMSE} = 44.80, R^2 = 0.3647, \text{MAPE} = 9.72\%$), outperforming Naive Persistence ($\text{MAE} = 38.34, R^2 = 0.1848$) by **+4.23 AQI points** across 100% of Delhi monitoring stations.
+   - **Artifacts & Tooling:** Production artifacts in `models/{1h,6h,24h}/` (final in `models/24h/final/`) and dedicated Colab suites (`notebooks/phase_6_colab_training.ipynb`, `notebooks/phase_6b_24h_optimization.ipynb`, `notebooks/phase_6c_24h_final_refinement.ipynb`).
 
 ---
 
@@ -37,6 +41,7 @@ The project has completed **Phase 1–3 (ETL & Database Ingestion)**, **Phase 4 
 │   ├── baseline_findings.md    # Phase 5 Baseline & Feature findings
 │   ├── phase_6_training.md     # Phase 6 Colab ML Training Guide
 │   ├── phase_6b_findings.md    # Phase 6B 24h Failure & Optimization findings
+│   ├── phase_6c_findings.md    # Phase 6C 24h Final Refinement findings
 │   └── llm_context.md
 ├── etl/                        # Pipeline execution logic
 │   ├── discover.py             # File discovery and metadata reading
@@ -49,13 +54,14 @@ The project has completed **Phase 1–3 (ETL & Database Ingestion)**, **Phase 4 
 │   └── validation.py           # Integrity checking (sentinels / bounds)
 ├── notebooks/                  # Interactive experimentation & Cloud Training
 │   ├── phase_6_colab_training.ipynb # 16-section Google Colab Multi-Horizon Training Notebook
-│   └── phase_6b_24h_optimization.ipynb # 12-section Google Colab 24h Optimization Notebook
+│   ├── phase_6b_24h_optimization.ipynb # 12-section Google Colab 24h Optimization Notebook
+│   └── phase_6c_24h_final_refinement.ipynb # 14-section Google Colab 24h Refinement Notebook
 ├── models/                     # Serialized production model artifacts
 │   ├── 1h/                     # 1-Hour LightGBM model pipeline
 │   ├── 6h/                     # 6-Hour LightGBM model pipeline
-│   └── 24h/                    # 24-Hour Ridge & Hybrid model pipelines
+│   └── 24h/                    # 24-Hour Ridge & Hybrid model pipelines (final in final/)
 ├── Og Data/                    # Raw data (Organized by City -> Station)
-│   ├── Delhi data/
+├── Delhi data/
 │   └── Mumbai data/
 ├── phase_5/                    # Phase 5 formal specifications & audits
 │   ├── target_definition.md    # Target formulation & horizon availability
@@ -76,16 +82,25 @@ The project has completed **Phase 1–3 (ETL & Database Ingestion)**, **Phase 4 
 │       ├── feature_importance.csv # Ranked feature correlations
 │       ├── ml_dataset_manifest.csv # Cryptographic SHA-256 ML dataset manifest
 │       ├── PHASE_5_BASELINE_REPORT.md # Comprehensive Phase 5 report
-│       ├── 24h/                # Phase 6B 24h failure diagnostics & benchmarks
+│       ├── 24h/                # Phase 6B & 6C 24h diagnostics, benchmarks & final predictions
 │       │   ├── 24h_failure_audit.csv
 │       │   ├── 24h_distribution_shift.csv
 │       │   ├── 24h_error_analysis.csv
 │       │   ├── 24h_feature_ablation.csv
-│       │   └── 24h_optimization_results.csv
+│       │   ├── 24h_optimization_results.csv
+│       │   ├── final/          # Phase 6C final benchmark CSVs & predictions.parquet
+│       │   │   ├── feature_experiments.csv
+│       │   │   ├── blend_weight_validation.csv
+│       │   │   ├── model_comparison.csv
+│       │   │   ├── station_evaluation.csv
+│       │   │   ├── aqi_range_evaluation.csv
+│       │   │   └── final_predictions.parquet
+│       │   └── PHASE_6C_24H_FINAL_REPORT.md # Comprehensive Phase 6C 24h final report
 │       └── PHASE_6B_24H_REPORT.md # Comprehensive Phase 6B 24h optimization report
 ├── scripts/                    # Maintenance & generator utilities
 │   ├── generate_colab_notebook.py # Builds phase_6_colab_training.ipynb
-│   └── generate_phase_6b_notebook.py # Builds phase_6b_24h_optimization.ipynb
+│   ├── generate_phase_6b_notebook.py # Builds phase_6b_24h_optimization.ipynb
+│   └── generate_phase_6c_notebook.py # Builds phase_6c_24h_final_refinement.ipynb
 ├── src/                        # Analysis and modeling source code
 │   ├── eda/                    # Modular EDA analysis & visualization scripts
 │   ├── features/               # Feature engineering & dataset export
@@ -203,6 +218,17 @@ python3 src/features/export_ml_datasets.py --version v1
 python3 scripts/generate_colab_notebook.py
 ```
 Open `notebooks/phase_6_colab_training.ipynb` in [Google Colab](https://colab.research.google.com), upload the desired dataset from `data/processed/ml/`, and execute end-to-end model training, hyperparameter optimization, and evaluation.
+
+### 8. Run 24-Hour Forecast Final Refinement (Phase 6C)
+To execute the multi-day causal feature engineering, validation parameter optimization, and out-of-sample winter test evaluation:
+```bash
+# Run the complete Phase 6C 24h refinement pipeline
+python3 src/models/phase_6c_refinement.py
+
+# Re-generate Phase 6C Colab notebook
+python3 scripts/generate_phase_6c_notebook.py
+```
+Artifacts are automatically exported to `models/24h/final/` and `reports/modeling/24h/final/`. Open `notebooks/phase_6c_24h_final_refinement.ipynb` for interactive cloud execution.
 
 ---
 

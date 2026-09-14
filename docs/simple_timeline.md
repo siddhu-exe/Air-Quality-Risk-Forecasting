@@ -44,5 +44,12 @@
     - *The Result:* Achieved an error of **35.48 AQI points** ($R^2 = 0.3123$), soundly beating Naive Persistence (38.34 AQI points) across **all 7 Delhi stations**.
 - **Result:** Complete multi-horizon forecasting suite verified, saved in `models/{1h,6h,24h}/`, and reproducible via Colab notebooks `notebooks/phase_6_colab_training.ipynb` and `notebooks/phase_6b_24h_optimization.ipynb`.
 
+## Step 6C: Final 24-Hour Forecast Refinement (Done)
+- **What we did:** Finalized and elevated the 24-hour forecasting model by adding multi-day causal tracking features (up to 7-day rolling statistics and spatial network signals) and optimizing blend weights strictly on the validation set.
+- **Key Results:**
+  - **Best-in-Class Winter Performance:** Achieved an error of **34.11 AQI points** ($R^2 = 0.3647, \text{MAPE} = 9.72\%$), outperforming Naive Persistence (38.34) by **+4.23 AQI points** and beating Phase 6B by **+1.37 AQI points**.
+  - **100% Station Superiority:** Outperformed persistence across all 7 Delhi stations (+2.47 to +5.22 AQI points).
+  - **Production Artifacts:** Saved all final models, feature scalers, imputers, schemas, and metadata to `models/24h/final/`, and interactive training notebook to `notebooks/phase_6c_24h_final_refinement.ipynb`.
+
 ## Step 7: Risk Classification & Real-World Alerts (Next)
 - **Where we are heading:** Converting continuous forecasts into actionable health risk categories (e.g. CPCB AQI bands, GRAP emergency intervention stages I–IV) with false-alarm minimization.

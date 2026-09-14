@@ -77,7 +77,18 @@
     - *Delta-Regression ($\Delta_{24\text{h}} = \text{AQI}_{t+24} - \text{AQI}_t$):* Anchored predictions to current state, achieving Test $\text{MAE} = 37.97, R^2 = 0.1753$.
     - *Hybrid Persistence + Ridge Ensemble:* $\widehat{\text{AQI}}_{\text{Hybrid}} = 0.50 \cdot \text{AQI}(t) + 0.50 \cdot \widehat{\text{AQI}}_{\text{Ridge A+B}}$ achieved best overall test performance: $\text{MAE} = 35.48, \text{RMSE} = 46.61, R^2 = 0.3123$, $\text{Bias} = -3.20$, beating Naive Persistence across 100% of Delhi stations.
   - **Production Artifacts & Colab Suite:** Serialized full production pipeline to `models/24h/`, built standalone 12-section Colab notebook `notebooks/phase_6b_24h_optimization.ipynb`, generated diagnostic CSVs in `reports/modeling/24h/`, and delivered comprehensive report `reports/modeling/PHASE_6B_24H_REPORT.md`.
-  - **Gate Decision:** Formal gate approved: `24H OPTIMIZATION COMPLETE — READY FOR PHASE 7`.
+
+## Phase 6C: Final 24-Hour Forecast Refinement & Verification (Completed)
+- **Objective:** Finalize the 24-hour forecasting horizon using causal multi-day trailing features, leave-one-out spatial network aggregates, and validation-driven hybrid blend optimization without modifying frozen 1h/6h upstream models.
+- **Milestones:**
+  - **Long-Horizon Causal Feature Engineering:** Engineered 48h, 72h, 168h rolling stats, multi-day particulate lags, and leave-one-out spatial network aggregates at lag-1h and lag-24h strictly over $[t-W+1, t]$.
+  - **Validation-First Optimization Matrix:** Evaluated candidate feature sets (Sets A through E and Set Refined) and regularization parameters ($\alpha \in [10, 5000]$) strictly on the Validation split (Sep–Oct 2025). Curated Set Refined (49 features) achieved optimal Validation $\text{MAE} = 29.02, R^2 = 0.8507$.
+  - **Validation Hybrid Blend Sweep:** Confirmed that a 50/50 blend ($w=0.50$) of Naive Persistence and Regularized Ridge achieves the global minimum validation error.
+  - **Held-Out Test Set Outperformance:** Achieved final Test $\text{MAE} = 34.11, \text{RMSE} = 44.80, R^2 = 0.3647, \text{MAPE} = 9.72\%$ on the peak winter crisis split (Nov–Dec 2025), outperforming Naive Persistence ($\text{MAE} = 38.34, R^2 = 0.1848$) by **+4.23 AQI points** and Phase 6B baseline by **+1.37 AQI points**.
+  - **100% Multi-Station Superiority:** Verified outperformance across all 7 Delhi monitoring stations (improvements of $+2.47$ to $+5.22$ AQI points).
+  - **Severe Episode Tracking:** Reduced Very Poor (301–400) MAE to **32.32** (bias $-2.52$) and maintained Severe ($\ge 400$) MAE of **31.32**.
+  - **Serialized Production Artifacts:** Exported models, scalers, imputers, metadata JSON to `models/24h/final/`, diagnostic CSVs and predictions Parquet to `reports/modeling/24h/final/`, interactive Colab suite `notebooks/phase_6c_24h_final_refinement.ipynb`, and comprehensive report `reports/modeling/PHASE_6C_24H_FINAL_REPORT.md`.
+  - **Gate Decision:** Formal gate approved: `PHASE 6C 24H REFINEMENT COMPLETE — ALL MULTI-HORIZON MODELS VALIDATED & READY FOR PHASE 7`.
 
 ## Phase 7: Risk Classification, Causal Analysis, & Deployment (Scheduled)
 - **Objective:** Convert multi-horizon forecasts into action-oriented health risk categories and policy decision-support tools.

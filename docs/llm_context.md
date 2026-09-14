@@ -4,7 +4,7 @@
 
 ## Project Scope & Lifecycle
 **Lifecycle Pipeline:** RAW GOVERNMENT DATA -> DATA PROFILING -> DATABASE DESIGN -> ETL/DATA CLEANING -> POSTGRESQL -> DATA VALIDATION -> EDA -> FEATURE ENGINEERING -> BASELINE BENCHMARKING -> MULTI-HORIZON FORECASTING -> RISK CLASSIFICATION -> CAUSAL/POLICY ANALYSIS -> DASHBOARD.
-**Current Stage:** Phase 3 (DB Ingestion) Completed -> Phase 4 (EDA) Completed -> Phase 5 (Feature Engineering & Baseline Benchmarking) Completed -> Phase 6 & 6B (Multi-Horizon Forecasting & 24h Optimization) Completed -> **Moving to Phase 7 (CPCB Risk Classification & GRAP Policy Alerting)**.
+**Current Stage:** Phase 3 (DB Ingestion) Completed -> Phase 4 (EDA) Completed -> Phase 5 (Feature Engineering & Baseline Benchmarking) Completed -> Phase 6, 6B & 6C (Multi-Horizon Forecasting & 24h Refinement) Completed -> **Moving to Phase 7 (CPCB Risk Classification & GRAP Policy Alerting)**.
 
 ## Geographic Scope
 - **Primary:** Delhi (7 specific stations: Anand Vihar, Bawana, Dwarka-Sector 8, ITO, Jahangirpuri, Punjabi Bagh, R K Puram).
@@ -49,24 +49,27 @@ The PostgreSQL schema strictly implements **4 Core Tables** in a native user-spa
 4. **Feature Predictive Ranking:** Group A (mean $|r| = 0.930$) and Group G (mean $|r| = 0.890$) dominate short-term correlation; Group F (Meteorology) and Group E (Seasonality) provide critical variance for 24h forecasts.
 5. **Deliverables & Parquet Output:** 57,946 clean rows exported to `data/processed/features_2025.parquet`, baseline logs in `reports/modeling/baselines.csv`, and comprehensive report `reports/modeling/PHASE_5_BASELINE_REPORT.md`.
 
-## Phase 6 & Phase 6B Multi-Horizon Forecasting & 24h Optimization Summary
+## Phase 6, 6B & 6C Multi-Horizon Forecasting & 24h Refinement Summary
 1. **Hybrid Architecture:** Local machine handles PostgreSQL (port 5433), feature extraction, and Parquet export. Google Colab handles compute-heavy training, Optuna tuning, and ablations.
 2. **Versioned Datasets (`data/processed/ml/`):**
    - `air_quality_ml_1h_v1.parquet`: 57,483 rows, 13.00 MB, SHA-256: `201f59fc183a169d01b2511fb9af8de7e484d6888bb760558e78e39b4cb1e3f3`
    - `air_quality_ml_6h_v1.parquet`: 56,989 rows, 12.92 MB, SHA-256: `17931c9c23b478a8517260c77c6c3b6882004def987d3d81df48819f930d69e5`
    - `air_quality_ml_24h_v1.parquet`: 55,750 rows, 12.66 MB, SHA-256: `5fd6026a52b3ea09cf6e7f0f78707523a96ebf7562e5ea4560fc91ed38747951`
-3. **Validated Horizon Models (Outperforming Persistence):**
+3. **Validated Horizon Models (All Outperforming Persistence on Peak Winter Test):**
    - **1-Hour (FROZEN):** Tuned LightGBM ($\text{MAE} = 2.29, \text{RMSE} = 3.65, R^2 = 0.9958$) vs Naive Persistence ($\text{MAE} = 2.40, \text{RMSE} = 4.09, R^2 = 0.9947$). Serialized in `models/1h/`.
    - **6-Hour (FROZEN):** Tuned LightGBM ($\text{MAE} = 11.84, \text{RMSE} = 16.71, R^2 = 0.9126$) vs Naive Persistence ($\text{MAE} = 14.73, \text{RMSE} = 20.37, R^2 = 0.8698$). Serialized in `models/6h/`.
-   - **24-Hour (Phase 6B Validated):** Hybrid Persistence + Regularized Ridge A+B ($\text{MAE} = 35.48, \text{RMSE} = 46.61, R^2 = 0.3123$) vs Naive Persistence ($\text{MAE} = 38.34, \text{RMSE} = 50.75, R^2 = 0.1848$). Serialized in `models/24h/`.
-4. **Phase 6B Root Cause Failure Discoveries:**
+   - **24-Hour (Phase 6C Final Refinement):** 50/50 Hybrid Persistence + Ridge ($\alpha=1000$) on 49 curated causal features ($\text{MAE} = 34.11, \text{RMSE} = 44.80, R^2 = 0.3647, \text{MAPE} = 9.72\%$) vs Naive Persistence ($\text{MAE} = 38.34, \text{RMSE} = 50.75, R^2 = 0.1848$). Serialized in `models/24h/final/`.
+4. **Phase 6B & 6C Mathematical & Physical Discoveries:**
    - *Tree Extrapolation Ceiling:* Tree step functions cap predictions at training target maximums ($\max \hat{y} = 347.61$). On winter crisis test samples ($\text{AQI} \ge 400$, mean $429.49$), this generated a $-136.48$ point underprediction bias.
    - *Non-Stationary Feature Overfitting:* Ordinal `month` and `day_of_year` routed winter test crisis samples into clean monsoon leaf nodes ($\text{AQI} \approx 85$). Pruning these features eliminated catastrophic test error.
-   - *Continuous Regularized Extrapolation:* Ridge regression ($\alpha=1000$) on Groups A+B provided continuous unbounded slope extrapolation, achieving $\text{MAE} = 36.18$, which blended with Naive Persistence yields $\text{MAE} = 35.48$.
+   - *Continuous Regularized Extrapolation:* Ridge regression ($\alpha=1000$) provides continuous unbounded slope extrapolation without clipping.
+   - *Long-Horizon Causal Feature Signals:* Adding multi-day particulate lags (48h–168h), multi-day trailing rolling stats (48h, 72h, 168h), and leave-one-out spatial network 24h signals improved validation MAE from 29.59 to **29.02** and test MAE from 35.48 to **34.11**, outperforming persistence across 100% of Delhi stations.
 5. **Notebooks & Reports:**
    - `notebooks/phase_6_colab_training.ipynb` (16-section Colab suite)
    - `notebooks/phase_6b_24h_optimization.ipynb` (12-section Colab suite)
-   - `reports/modeling/PHASE_6B_24H_REPORT.md` (Formal Gate Report)
+   - `notebooks/phase_6c_24h_final_refinement.ipynb` (14-section Colab suite)
+   - `reports/modeling/PHASE_6C_24H_FINAL_REPORT.md` (Formal Master Gate Report)
+   - `docs/phase_6c_findings.md` (Key findings summary)
 
 ## Upcoming Phase 7 Roadmap (Risk Classification & GRAP Policy Alerting)
 - **Classification:** Mapping continuous AQI forecasts into 6 official CPCB risk tiers (Good, Satisfactory, Moderate, Poor, Very Poor, Severe).
