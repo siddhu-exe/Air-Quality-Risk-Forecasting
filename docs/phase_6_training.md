@@ -167,22 +167,23 @@ Models are evaluated across five standardized statistical and operational metric
 
 ## 8. Final Validated Multi-Horizon Model Results
 
-Following extensive Colab training and Phase 6B 24h failure optimization, all three forecasting horizons have verified production models outperforming persistence:
+Following extensive Colab training, Phase 6B 24h failure optimization, and Phase 6C final refinement, all three forecasting horizons have verified production models outperforming persistence:
 
-| Horizon | Final Production Model | Test MAE | Test RMSE | Test $R^2$ | Test Extreme MAE ($\ge 300$) | Benchmark Status |
-| :---: | :--- | :---: | :---: | :---: | :---: | :--- |
-| **1h** | **LightGBM Tuned (All Features)** | **2.29** | **3.65** | **0.9958** | **2.12** | Beats Naive Persistence (2.40) |
-| **6h** | **LightGBM Tuned (All Features)** | **11.84** | **16.71** | **0.9126** | **11.08** | Beats Naive Persistence (14.73) |
-| **24h** | **Hybrid (50% Naive + 50% Ridge A+B)** | **35.48** | **46.61** | **0.3123** | **33.08** | Beats Naive Persistence (38.34) |
+| Horizon | Final Production Model | Test MAE | Test RMSE | Test $R^2$ | Test MAPE | Test Extreme MAE ($\ge 300$) | Benchmark Status |
+| :---: | :--- | :---: | :---: | :---: | :---: | :---: | :--- |
+| **1h** | **LightGBM Tuned (All Features)** | **2.29** | **3.65** | **0.9958** | **0.86%** | **2.12** | Beats Naive Persistence (2.40) **[FROZEN]** |
+| **6h** | **LightGBM Tuned (All Features)** | **11.84** | **16.71** | **0.9126** | **3.68%** | **11.08** | Beats Naive Persistence (14.73) **[FROZEN]** |
+| **24h** | **Refined Hybrid (50% Naive + 50% Ridge $\alpha=1000$)** | **34.11** | **44.80** | **0.3647** | **9.72%** | **31.87** | Beats Naive Persistence (38.34) by **+4.23 pts** **[FINAL]** |
 
-### Phase 6B 24-Hour Failure Analysis & Optimization Insights
+### Phase 6B & 6C 24-Hour Optimization & Refinement Insights
 - **Initial Tree Breakdown:** Standard GBDTs exhibited severe test failure ($\text{MAE} = 98.24, R^2 = -2.8155$) due to **tree extrapolation ceilings** (capping predictions at training maximums $\approx 347$ while test winter spikes exceeded $450$) and **non-stationary calendar overfitting** (`month > 6.5` splitting into monsoon leaves).
-- **Optimization Strategy:**
+- **Optimization & Refinement Strategy:**
   1. Pruned non-stationary ordinal features (`month`, `day_of_year`).
-  2. Isolated core predictive features to **Group A (AQI Lags)** and **Group B (Pollutant Lags)**.
-  3. Deployed **Regularized Ridge Regression ($\alpha=1000$)** offering continuous, unbounded linear extrapolation gradients ($\text{MAE} = 36.18, R^2 = 0.3016$).
-  4. Formulated the **Hybrid Persistence + Ridge Ensemble** ($\text{MAE} = 35.48, R^2 = 0.3123$), outperforming Naive Persistence across 100% of Delhi stations.
-- **Dedicated Colab Suite:** `notebooks/phase_6b_24h_optimization.ipynb` and formal report `reports/modeling/PHASE_6B_24H_REPORT.md`.
+  2. Isolated core predictive features and engineered causal multi-day features: multi-day particulate lags (48h–168h), multi-day trailing rolling statistics (48h, 72h, 168h), rate-of-change dynamics ($\Delta_{24\text{h}}, \Delta_{48\text{h}}, \Delta_{72\text{h}}$), and leave-one-out spatial network 24h signals.
+  3. Optimized feature sets strictly on the Validation split (Curated Set Refined: 49 features, Val MAE = 29.02).
+  4. Deployed **Regularized Ridge Regression ($\alpha=1000$)** offering continuous, unbounded linear extrapolation gradients.
+  5. Formulated the **Refined 50/50 Hybrid Persistence + Ridge Ensemble** ($\text{MAE} = 34.11, R^2 = 0.3647, \text{MAPE} = 9.72\%$), outperforming Naive Persistence across 100% of Delhi stations (+2.47 to +5.22 AQI points).
+- **Dedicated Colab Suites:** `notebooks/phase_6b_24h_optimization.ipynb`, `notebooks/phase_6c_24h_final_refinement.ipynb`, and formal reports `reports/modeling/PHASE_6B_24H_REPORT.md` and `reports/modeling/PHASE_6C_24H_FINAL_REPORT.md`.
 
 ---
 
@@ -191,6 +192,6 @@ Following extensive Colab training and Phase 6B 24h failure optimization, all th
 Colab training and optimization produce the following structured artifacts for Phase 7 (Risk Classification & GRAP Policy Alerting):
 - **1-Hour Artifacts:** `models/1h/` (Tuned LightGBM pipeline & evaluation logs).
 - **6-Hour Artifacts:** `models/6h/` (Tuned LightGBM pipeline & evaluation logs).
-- **24-Hour Artifacts:** `models/24h/` (`ridge_ab_24h_model.joblib`, `scaler_ab_24h.joblib`, `imputer_ab_24h.joblib`, `feature_names_ab.joblib`, and `predictions_24h_optimized.parquet`).
-- **Reports:** `reports/modeling/24h/` diagnostic CSVs, `reports/modeling/ml_dataset_manifest.csv`, `reports/modeling/PHASE_5_BASELINE_REPORT.md`, and `reports/modeling/PHASE_6B_24H_REPORT.md`.
+- **24-Hour Artifacts:** `models/24h/final/` (`24h_final_model.joblib`, `scaler_final_24h.joblib`, `imputer_final_24h.joblib`, `feature_names_final.joblib`, `24h_final_metadata.json`, and `final_predictions.parquet`).
+- **Reports:** `reports/modeling/24h/final/` diagnostic CSVs, `reports/modeling/ml_dataset_manifest.csv`, `reports/modeling/PHASE_5_BASELINE_REPORT.md`, `reports/modeling/PHASE_6B_24H_REPORT.md`, and `reports/modeling/PHASE_6C_24H_FINAL_REPORT.md`.
 
