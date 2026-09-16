@@ -51,5 +51,16 @@
   - **100% Station Superiority:** Outperformed persistence across all 7 Delhi stations (+2.47 to +5.22 AQI points).
   - **Production Artifacts:** Saved all final models, feature scalers, imputers, schemas, and metadata to `models/24h/final/`, and interactive training notebook to `notebooks/phase_6c_24h_final_refinement.ipynb`.
 
-## Step 7: Risk Classification & Real-World Alerts (Next)
-- **Where we are heading:** Converting continuous forecasts into actionable health risk categories (e.g. CPCB AQI bands, GRAP emergency intervention stages I–IV) with false-alarm minimization.
+## Step 7: Risk Classification & Real-World Alerts (Done)
+- **What we did:** Converted numerical AQI forecasts into official government health risk categories (CPCB 6-tier system: Good, Satisfactory, Moderate, Poor, Very Poor, Severe) and emergency action stages (CAQM GRAP Stages I–IV). Evaluated how reliably forecasts give advance notice before severe pollution crises hit.
+- **Key Results:**
+  - **Zero Critical Misses:** At every single horizon (1h, 6h, and 24h), the system achieved a **0.000% critical miss rate** — it never dangerously predicts clean/moderate air when a severe emergency actually occurs.
+  - **1-Hour Immediate Alerting:** Near-perfect precision (Macro F1 = **0.945**, Severe Recall = **98.4%**), acting as an instant, zero-lag verification.
+  - **6-Hour Intra-Day Warning:** High operational reliability (Macro F1 = **0.657**, Severe Recall = **83.2%**), capturing morning-to-afternoon shifts.
+  - **24-Hour Policy Window & Early Warning:** Successfully detects **93.2%** of hazardous stagnation events (Very Poor + Severe) and provides an average advance warning of **17.4 hours** (over 55% of crises flagged $\ge 6$ hours in advance), giving city authorities crucial time to enforce anti-pollution measures.
+- **Result:** Classification framework fully audited and frozen in `reports/classification/PHASE_7_FINAL_AUDIT.md`.
+
+## Step 8: Production Deployment, Real-Time Inference & Dashboard (Next)
+- **Where we are heading:** 
+  - Building a real-time automated inference pipeline that ingests new hourly station data, computes features, generates multi-horizon predictions, and assigns GRAP alerts.
+  - Developing a lightweight REST API (FastAPI) and interactive dashboard (Streamlit) for live map visualizations, trend forecasting, and policy intervention tracking across Delhi.

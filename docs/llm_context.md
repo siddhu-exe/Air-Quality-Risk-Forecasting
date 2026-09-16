@@ -4,7 +4,7 @@
 
 ## Project Scope & Lifecycle
 **Lifecycle Pipeline:** RAW GOVERNMENT DATA -> DATA PROFILING -> DATABASE DESIGN -> ETL/DATA CLEANING -> POSTGRESQL -> DATA VALIDATION -> EDA -> FEATURE ENGINEERING -> BASELINE BENCHMARKING -> MULTI-HORIZON FORECASTING -> RISK CLASSIFICATION -> CAUSAL/POLICY ANALYSIS -> DASHBOARD.
-**Current Stage:** Phase 3 (DB Ingestion) Completed -> Phase 4 (EDA) Completed -> Phase 5 (Feature Engineering & Baseline Benchmarking) Completed -> Phase 6, 6B & 6C (Multi-Horizon Forecasting & 24h Refinement) Completed -> **Moving to Phase 7 (CPCB Risk Classification & GRAP Policy Alerting)**.
+**Current Stage:** Phase 3 (DB Ingestion) Completed -> Phase 4 (EDA) Completed -> Phase 5 (Feature Engineering & Baseline Benchmarking) Completed -> Phase 6, 6B & 6C (Multi-Horizon Forecasting & 24h Refinement) Completed -> Phase 7 (CPCB Risk Classification & GRAP Policy Alerting) Completed -> **Moving to Phase 8 (Production Deployment, Real-Time Inference & Dashboard Integration)**.
 
 ## Geographic Scope
 - **Primary:** Delhi (7 specific stations: Anand Vihar, Bawana, Dwarka-Sector 8, ITO, Jahangirpuri, Punjabi Bagh, R K Puram).
@@ -71,11 +71,26 @@ The PostgreSQL schema strictly implements **4 Core Tables** in a native user-spa
    - `reports/modeling/PHASE_6C_24H_FINAL_REPORT.md` (Formal Master Gate Report)
    - `docs/phase_6c_findings.md` (Key findings summary)
 
-## Upcoming Phase 7 Roadmap (Risk Classification & GRAP Policy Alerting)
-- **Classification:** Mapping continuous AQI forecasts into 6 official CPCB risk tiers (Good, Satisfactory, Moderate, Poor, Very Poor, Severe).
-- **Metric Evaluation:** Multi-class classification metrics (Macro/Weighted F1, Recall, Precision, Confusion Matrices) with high weighting on Severe crisis accuracy.
-- **Emergency Alerting:** GRAP Stage I–IV threshold alerting simulation and lead-time early warning quantification.
-- **Interactive Monitoring Dashboard:** Deployment of real-time monitoring and inference pipeline.
+## Phase 7 CPCB Risk Classification & GRAP Alerting Summary (Completed & Frozen)
+1. **Deterministic Mapping:** Converted frozen Phase 6 continuous forecasts into 6 CPCB tiers (Good, Satisfactory, Moderate, Poor, Very Poor, Severe) and 4 CAQM GRAP Stages (I–IV) with zero data leakage.
+2. **Key Metric Milestones (Nov–Dec 2025 Test Split):**
+   - **1-Hour Horizon:** Macro F1 = `0.9446`, Weighted Kappa = `0.9827`, Ordinal MAE = `0.0146`, Severe Recall = `98.36%`, Critical Miss Rate = `0.000%`.
+   - **6-Hour Horizon:** Macro F1 = `0.6565`, Weighted Kappa = `0.8664`, Ordinal MAE = `0.1098`, Severe Recall = `83.18%`, Critical Miss Rate = `0.000%`.
+   - **24-Hour Horizon:** Macro F1 = `0.3386`, Weighted Kappa = `0.5178`, Ordinal MAE = `0.3710`, Severe Recall = `61.08%`, Very Poor+ Recall = `93.22%`, Critical Miss Rate = `0.000%`.
+3. **Episode Early Warning & Lead Time:** Audited 260 crisis episodes across all 7 Delhi stations. 24h model delivers a **74.4% hit rate** with an average advance warning lead time of **17.36 hours** (55.8% providing $\ge 6\text{h}$ actionable advance warning).
+4. **Public Health Safety:** Verified strict **0.000% Critical Miss Rate** across all horizons and stations (zero Severe events predicted as Moderate or below).
+5. **Phase 7 Artifacts:**
+   - `src/models/phase_7_classification.py` (Discretization, metric calculations, episode lead-time auditing)
+   - `reports/classification/metrics/multiclass_metrics_comparison.csv`
+   - `reports/classification/episodes/grap_episode_lead_times.csv`
+   - `reports/classification/{1h,6h,24h}/classified_predictions.parquet`
+   - `reports/classification/PHASE_7_FINAL_AUDIT.md` (15-dimension master audit, frozen)
+
+## Upcoming Phase 8 Roadmap (Production Deployment, Real-Time Inference & Dashboard Integration)
+- **Real-Time Inference Engine:** Automated pipeline consuming streaming/new hourly data, computing 124 causal features, generating multi-horizon predictions, and assigning CPCB / GRAP risk tiers in real-time.
+- **REST API Serving Layer:** FastAPI endpoints exposing station metadata, multi-horizon forecasts, and GRAP emergency advisories.
+- **Interactive Monitoring Dashboard:** Streamlit/Dash application displaying Delhi-wide geospatial AQI heatmaps, station-level multi-horizon forecast curves, risk tier distributions, and active GRAP policy interventions.
+- **Alert Webhook Dispatcher:** Threshold-triggered notification webhooks alerting municipal stakeholders when projected AQI exceeds GRAP Stage III/IV levels.
 
 ## Infrastructure Requirements
 - **NO LOCAL GPU / NO DOCKER:** Local operations are ultra-lightweight vectorized Pandas/PyArrow operations. Model training is isolated in Google Colab.

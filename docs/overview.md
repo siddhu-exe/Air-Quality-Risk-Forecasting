@@ -28,11 +28,9 @@ VERSIONED ML DATASETS      (Completed - Phase 6 Prep)
         ↓
 MULTI-HORIZON FORECASTING  (Completed - Phase 6 / 6B / 6C)
         ↓
-RISK CLASSIFICATION        <-- (We are here - Phase 7)
+RISK CLASSIFICATION        (Completed - Phase 7)
         ↓
-CAUSAL / POLICY ANALYSIS
-        ↓
-DASHBOARD / DEPLOYMENT
+PRODUCTION & DEPLOYMENT    <-- (We are here - Phase 8)
 ```
 
 ## Where does the data come from?
@@ -48,6 +46,12 @@ DASHBOARD / DEPLOYMENT
   - **6-Hour Forecast (Frozen):** Tuned LightGBM ($\text{MAE} = 11.84, R^2 = 0.9126$) beating Naive Persistence ($\text{MAE} = 14.73$).
   - **24-Hour Forecast & Refinement (Phase 6B & 6C):** Conducted exhaustive root-cause failure analysis of decision tree extrapolation limits and non-stationary feature routing. Engineered causal multi-day trailing features (lags up to 168h, multi-day rolling statistics, spatial network signals) and optimized a 50/50 Hybrid Persistence + Ridge ($\alpha=1000$) Ensemble. Achieved final Test $\text{MAE} = 34.11, \text{RMSE} = 44.80, R^2 = 0.3647, \text{MAPE} = 9.72\%$, beating Naive Persistence ($\text{MAE} = 38.34, R^2 = 0.1848$) by **+4.23 AQI points** across 100% of Delhi monitoring stations.
   - **Production Artifacts:** All production model pipelines serialized under `models/{1h,6h,24h}/` (with Phase 6C final models in `models/24h/final/`) with dedicated Colab notebooks (`notebooks/phase_6_colab_training.ipynb`, `notebooks/phase_6b_24h_optimization.ipynb`, `notebooks/phase_6c_24h_final_refinement.ipynb`).
+- **Risk Classification & GRAP Policy Alerting (Phase 7 Completed):** Converted continuous multi-horizon predictions into 6 CPCB discrete risk categories (Good through Severe) and 4 CAQM GRAP emergency policy stages (I–IV) with zero data leakage:
+  - **1-Hour Horizon:** Macro F1 = 0.945, Weighted Kappa = 0.983, Ordinal MAE = 0.015, Severe Recall = 98.36%, Critical Miss Rate = 0.000%.
+  - **6-Hour Horizon:** Macro F1 = 0.657, Weighted Kappa = 0.866, Ordinal MAE = 0.110, Severe Recall = 83.18%, Critical Miss Rate = 0.000%.
+  - **24-Hour Horizon:** Macro F1 = 0.339, Weighted Kappa = 0.518, Ordinal MAE = 0.371, Severe Recall = 61.08%, Very Poor+ Recall = 93.22%, Critical Miss Rate = 0.000%.
+  - **Early Warning & Actionable Lead Time:** Audited across 260 crisis episodes; the 24h model achieves a **74.4% hit rate** with an average advance warning of **17.36 hours** (55.8% providing $\ge 6\text{h}$ actionable lead time) for Severe episodes, providing policy makers with essential mobilization windows.
+  - **Artifacts:** Code in `src/models/phase_7_classification.py`, full classification outputs in `reports/classification/`, and audit sealed in `reports/classification/PHASE_7_FINAL_AUDIT.md`.
 
 ## Infrastructure & Compute
 To ensure this repository remains ultra-lightweight and battery-friendly for local laptop development, we do **not** run compute-heavy model training locally or use Docker virtual machines. The entire database is a fully isolated, native PostgreSQL cluster running directly out of the `local_pg_data` folder on port `5433`, while ML model training, tuning, and ablations are offloaded to Google Colab.

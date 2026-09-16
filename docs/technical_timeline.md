@@ -90,11 +90,26 @@
   - **Serialized Production Artifacts:** Exported models, scalers, imputers, metadata JSON to `models/24h/final/`, diagnostic CSVs and predictions Parquet to `reports/modeling/24h/final/`, interactive Colab suite `notebooks/phase_6c_24h_final_refinement.ipynb`, and comprehensive report `reports/modeling/PHASE_6C_24H_FINAL_REPORT.md`.
   - **Gate Decision:** Formal gate approved: `PHASE 6C 24H REFINEMENT COMPLETE — ALL MULTI-HORIZON MODELS VALIDATED & READY FOR PHASE 7`.
 
-## Phase 7: Risk Classification, Causal Analysis, & Deployment (Scheduled)
-- **Objective:** Convert multi-horizon forecasts into action-oriented health risk categories and policy decision-support tools.
+## Phase 7: CPCB AQI Risk Classification & GRAP Policy Alerting (Completed)
+- **Objective:** Map continuous multi-horizon regression predictions to official discrete CPCB risk categories and CAQM GRAP emergency policy stages, evaluate ordinal and severe-class metrics, and quantify advance early-warning lead times for pollution episodes with zero data leakage.
 - **Milestones:**
-  - Map continuous AQI forecasts (1h, 6h, 24h) to 6 official CPCB risk bands (Good, Satisfactory, Moderate, Poor, Very Poor, Severe).
-  - Compute multi-class classification metrics (Macro/Weighted F1-score, Precision, Recall, Confusion Matrix) with severe-class weighting.
-  - Formulate Graded Response Action Plan (GRAP Stages I–IV) emergency alert thresholds and evaluate lead-time early warning capabilities for Stage III ($\text{AQI} > 400$) and Stage IV ($\text{AQI} > 450$) episodes.
-  - Cost-sensitive classification optimizing for low false-alarm rates during high-risk winter episodes.
-  - Interactive monitoring dashboard and operational inference service.
+  - **Deterministic CPCB & GRAP Mapping:** Implemented deterministic discretization into 6 CPCB categories (Good $0–50$, Satisfactory $51–100$, Moderate $101–200$, Poor $201–300$, Very Poor $301–400$, Severe $401–500+$) using `np.digitize(aqi, [51, 101, 201, 301, 401])`, and 4 CAQM GRAP Stages (Stage I $201–300$, Stage II $301–400$, Stage III $401–450$, Stage IV $>450$).
+  - **Zero-Leakage Out-of-Sample Evaluation:** Evaluated strictly on the frozen Phase 6 Nov–Dec 2025 Test Split across all 7 Delhi stations ($N=10,057$ for 1h, $N=9,998$ for 6h, $N=9,800$ for 24h).
+  - **Multi-Class & Ordinal Performance:**
+    - **1h Horizon:** Macro F1 = `0.9446`, Weighted Kappa = `0.9827`, Ordinal MAE = `0.0146`, Severe Recall = `98.36%`.
+    - **6h Horizon:** Macro F1 = `0.6565`, Weighted Kappa = `0.8664`, Ordinal MAE = `0.1098`, Severe Recall = `83.18%`.
+    - **24h Horizon:** Macro F1 = `0.3386`, Weighted Kappa = `0.5178`, Ordinal MAE = `0.3710`, Severe Recall = `61.08%`, Very Poor+ Recall = `93.22%`.
+  - **Public Health Safety Guarantee:** Achieved a strict **0.000% Critical Miss Rate** across all three forecasting horizons and all 7 monitoring stations (zero Severe events forecasted as Moderate or below).
+  - **Episode Lead-Time Early Warning Audit:**
+    - Clustered consecutive Severe exceedances ($\text{AQI} \ge 401$) per station with $\le 3\text{h}$ intra-episode gap bridging (260 total episode evaluations).
+    - 24h model delivered a **74.4% detection hit rate** on Severe crisis episodes with a mean advance warning lead time of **17.36 hours** (55.8% providing $\ge 6\text{h}$ actionable advance notice).
+  - **Deliverables & Deliverable Auditing:** Core classification pipeline `src/models/phase_7_classification.py`, classified Parquet predictions in `reports/classification/{1h,6h,24h}/`, episode log `reports/classification/episodes/grap_episode_lead_times.csv`, and comprehensive 15-dimension audit report `reports/classification/PHASE_7_FINAL_AUDIT.md`.
+  - **Gate Decision:** Formal gate approved: `PHASE 7 CLASSIFICATION AUDIT PASSED (100% COMPLIANCE) — FROZEN & READY FOR PHASE 8`.
+
+## Phase 8: Production Deployment, Real-Time Inference & Dashboard Integration (Scheduled)
+- **Objective:** Transition multi-horizon models and classification logic into an operational real-time production system with an automated inference engine, REST API, interactive monitoring dashboard, and alert dispatcher.
+- **Milestones:**
+  - **Operational Real-Time Inference Engine:** Ingest incoming hourly station feeds, construct 124 causal tabular features dynamically, invoke multi-horizon models (1h/6h LightGBM, 24h Hybrid Ensemble), and generate CPCB / GRAP risk classifications.
+  - **REST API Serving Layer:** Develop FastAPI backend endpoints exposing `/api/v1/stations`, `/api/v1/forecast/{station_id}`, `/api/v1/alerts/grap`, and `/api/v1/health`.
+  - **Interactive Dashboard:** Build a comprehensive UI (e.g. Streamlit or Dash) displaying live Delhi AQI geospatial heatmaps, multi-horizon trend charts with confidence bounds, station-level CPCB risk distributions, and active GRAP regulatory advisories.
+  - **Automated Alerting & Webhooks:** Implement threshold-triggered notification webhooks alerting stakeholders upon projected GRAP Stage III/IV activations.
