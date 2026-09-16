@@ -63,15 +63,21 @@ Og Data/
   - 6h Tuned LightGBM: $\text{MAE} = 11.84, \text{RMSE} = 16.71, R^2 = 0.9126$ (beats Naive Persistence $\text{MAE} = 14.73$). **[FROZEN]**
   - 24h Refined 50/50 Hybrid Persistence + Ridge ($\alpha=1000$): $\text{MAE} = 34.11, \text{RMSE} = 44.80, R^2 = 0.3647, \text{MAPE} = 9.72\%$ (beats Naive Persistence $\text{MAE} = 38.34, R^2 = 0.1848$ by **+4.23 AQI points** across 100% of Delhi stations). Serialized to `models/24h/final/`.
   - Notebooks: `notebooks/phase_6_colab_training.ipynb`, `notebooks/phase_6b_24h_optimization.ipynb`, `notebooks/phase_6c_24h_final_refinement.ipynb`.
+- **Phase 7:** CPCB AQI Risk Classification & GRAP Policy Alerting:
+  - Discretized continuous predictions into 6 CPCB categories (Good, Satisfactory, Moderate, Poor, Very Poor, Severe) and 4 CAQM GRAP Stages (I-IV).
+  - 1h Horizon: Macro F1 = 0.9446, W-Kappa = 0.9827, Ordinal MAE = 0.0146, Severe Recall = 98.36%, Critical Miss Rate = 0.000%.
+  - 6h Horizon: Macro F1 = 0.6565, W-Kappa = 0.8664, Ordinal MAE = 0.1098, Severe Recall = 83.18%, Critical Miss Rate = 0.000%.
+  - 24h Horizon: Macro F1 = 0.3386, W-Kappa = 0.5178, Ordinal MAE = 0.3710, Severe Recall = 61.08%, Very Poor+ Recall = 93.22%, Critical Miss Rate = 0.000%.
+  - GRAP Staging & Early Warning: 24h model delivers 17.36h mean advance warning lead time for Severe crisis episodes with 74.4% hit rate (55.8% providing >=6h actionable warning).
+  - Code & Audit: `src/models/phase_7_classification.py`, `reports/classification/PHASE_7_FINAL_AUDIT.md`. **[FROZEN]**
 
-## Suggested Next Steps (Phase 7: CPCB AQI Risk Classification & GRAP Policy Alerting)
-All forecasting horizons (1h, 6h, 24h) are validated and outperform heuristic baselines. Next steps:
+## Suggested Next Steps (Phase 8: Production Deployment, Real-Time Inference & Dashboard Integration)
+With forecasting and policy risk classification validated and audited across all horizons (1h, 6h, 24h), the system is ready for Phase 8:
 
-1. Map forecasted continuous AQI values into 6 official CPCB risk tiers (Good, Satisfactory, Moderate, Poor, Very Poor, Severe).
-2. Compute multi-class classification metrics (F1-score, Precision, Recall, Confusion Matrix) with severe-class weighting.
-3. Formulate Graded Response Action Plan (GRAP Stages I–IV) emergency alert thresholds.
-4. Measure lead-time early warning capabilities for Stage III (AQI > 400) and Stage IV (AQI > 450) episodes.
-5. Export classification reports and alert simulation logs.
+1. **Real-Time Inference Pipeline:** Build an operational inference engine that consumes streaming / newly ingested hourly station data, generates multi-horizon predictions, and assigns CPCB / GRAP risk alerts in real-time.
+2. **REST API & Serving Layer:** Develop FastAPI/Flask endpoints serving real-time station metrics, multi-horizon forecasts, and emergency GRAP stage advisories.
+3. **Interactive Dashboard:** Build an intuitive user-facing dashboard (e.g. Streamlit, Dash, or web UI) displaying live AQI maps, temporal trend forecasts, risk tier distributions, and active GRAP policy interventions across Delhi stations.
+4. **Automated Alerting & Notification Dispatcher:** Implement notification webhooks/alerts triggered when forecasted AQI crosses GRAP Stage III/IV thresholds.
 
 ```
 src/features/    # Feature engineering & ML dataset export (124 features)
