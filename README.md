@@ -42,24 +42,49 @@ Metrics evaluated out-of-sample on the peak winter crisis split across all 7 Del
 
 ```text
 .
-├── CLAUDE.md                   # AI Assistant / Workspace guidance rules
+├── .streamlit/                 # Streamlit configuration (headless mode, telemetry settings)
+├── app.py                      # Root entrypoint for Streamlit Community Cloud deployment
+├── dashboard/                  # Streamlit evaluation dashboard & visualization app
 ├── data/
 │   ├── processed/features_2025.parquet # Clean 124-feature tabular matrix 
 │   └─ ml/                      # Versioned ML Parquet datasets & metadata JSONs
 ├── docs/                       # Internal working notes and technical details
-├── etl/                        # Pipeline execution logic (discover, map, load, transform)
+├── etl/                        # Pipeline execution logic (discover, map, load, transform, verify)
 ├── notebooks/                  # Interactive experimentation & Cloud Training
 ├── models/                     # Serialized production model artifacts
-├── Og Data/                    # Raw local data directories (Delhi / Mumbai)
-├── phase_5/                    # Formal specifications & audits
 ├── profiling/                  # Discovery scripts and schema scanners
-├── reports/                    # Output from validation, EDA, models & metrics
+├── reports/                    # Validation, EDA, feature specs, models & metrics
+│   ├── causal/                 # Econometric Diwali firecracker policy analysis
+│   ├── classification/         # CPCB/GRAP metrics & cost-aware threshold analysis
+│   ├── eda/                    # Exploratory data analysis figures & statistics
+│   ├── modeling/               # Multi-horizon baseline benchmarks & feature importance
+│   ├── phase5_features/        # Feature engineering & target specifications
+│   └── phase7_classification/  # CPCB classification & GRAP alert specifications
 ├── scripts/                    # Utilities to generate Colab notebooks
 ├── src/                        # Analysis and modeling source codebase
-├── local_pg_data/              # Local PostgreSQL 16 cluster directory (port 5433)
-└── sql/                        # Target database structured definitions
+├── sql/                        # Canonical database migrations & schema definitions
+└── tests/                      # Validation, timestamp boundary, and DB smoke tests
 ```
 *(Detailed timeline, contextual LLM, and per-phase working notes are housed in the `docs/` folder.)*
+
+## 📊 Interactive Evaluation Dashboard (Streamlit)
+
+The project includes an interactive evaluation dashboard deployable to Streamlit Community Cloud or local development:
+
+```bash
+streamlit run app.py
+# or
+streamlit run dashboard/app.py
+```
+
+* **Headless Default:** Configured via `.streamlit/config.toml` (`headless = true`) to prevent unwanted automated browser popping upon startup.
+* **Architecture:** Operates on zero-latency precomputed static Parquet and CSV snapshots (`reports/classification/`, `reports/causal/`) eliminating live database dependencies for deployment.
+* **5 Structured Focus Tabs:**
+  1. **Overview:** Snapshot of 7 Delhi stations alongside the headline 24h benchmark metric.
+  2. **Forecasts:** Interactive 1h/6h/24h lead forecasts against actuals with empirical MAE uncertainty ribbons ($\pm 2.29, \pm 11.84, \pm 34.11$).
+  3. **Diwali Policy Finding:** Econometric Interrupted Time Series regression coefficients, placebo falsification, and $\text{SO}_2/\text{PM}_{2.5}$ combustion tracer dynamics.
+  4. **Risk Threshold:** Interactive Precision-Recall trade-off explorer allowing public health cost ratio adjustments (1:1 to 20:1) with live operating point updates.
+  5. **Methodology:** Data architecture overview, model specifications, deployment limitations, and links to full analytical reports.
 
 ## 🛠️ Quickstart
 
@@ -87,7 +112,7 @@ POSTGRES_PASSWORD=your_secure_password
 Executes ETL logic to load data into the Production Database seamlessly tracking source lineage and idempotency.
 ```bash
 python3 etl/run_full_load.py     # Full production load (All Delhi 105 files)
-python3 verify_full_load.py      # Validation
+python3 etl/verify_full_load.py  # Validation
 ```
 
 **4. Feature Engineering & ML Pre-processing**

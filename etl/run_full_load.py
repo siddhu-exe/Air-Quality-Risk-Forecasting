@@ -140,7 +140,7 @@ def main():
             print("Rolling back and halting production load to preserve integrity.")
 
             # Save manifest so far
-            with open(PROJECT_DIR / "full_load_report.json", "w") as f:
+            with open(Path(__file__).resolve().parent / "full_load_report.json", "w") as f:
                 json.dump(stats_report, f, indent=2)
 
             sys.exit(1)
@@ -150,7 +150,7 @@ def main():
     conn.close()
 
     # Save complete manifest
-    with open(PROJECT_DIR / "full_load_report.json", "w") as f:
+    with open(Path(__file__).resolve().parent / "full_load_report.json", "w") as f:
         json.dump(stats_report, f, indent=2)
 
     print("\n=== FULL PRODUCTION ETL LOAD COMPLETED SUCCESSFULLY ===")

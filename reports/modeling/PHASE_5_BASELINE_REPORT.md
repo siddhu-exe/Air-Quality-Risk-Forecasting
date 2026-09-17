@@ -199,11 +199,11 @@ All Phase 5 components were explicitly engineered for constrained hardware envir
 
 | Deliverable Type | Path / Location | Description |
 | :--- | :--- | :--- |
-| **Target Specifications** | `phase_5/target_definition.md` | Mathematical problem formulation and horizon availability audit. |
-| **Feature Specifications** | `phase_5/feature_specification.md` | Complete documentation of 124 engineered feature definitions. |
-| **Leakage Audit** | `phase_5/leakage_audit.md` | Rigorous causal verification and zero-leakage proof. |
-| **Split Strategy** | `phase_5/split_strategy.md` | Chronological 3-way partition design and distribution rationale. |
-| **Experimental Design** | `phase_5/experiments.md` | Baseline benchmark results and feature correlation rankings. |
+| **Target Specifications** | `reports/phase5_features/target_definition.md` | Mathematical problem formulation and horizon availability audit. |
+| **Feature Specifications** | `reports/phase5_features/feature_specification.md` | Complete documentation of 124 engineered feature definitions. |
+| **Leakage Audit** | `reports/phase5_features/leakage_audit.md` | Rigorous causal verification and zero-leakage proof. |
+| **Split Strategy** | `reports/phase5_features/split_strategy.md` | Chronological 3-way partition design and distribution rationale. |
+| **Experimental Design** | `reports/phase5_features/experiments.md` | Baseline benchmark results and feature correlation rankings. |
 | **Feature Pipeline Code** | `src/features/build_features.py` | Idempotent feature construction script connecting PostgreSQL to Parquet. |
 | **Target Analysis Code** | `src/features/target_analysis.py` | Target availability calculation and monthly coverage audits. |
 | **Evaluation Metrics Code** | `src/models/evaluate.py` | Standardized evaluation metric calculations. |
