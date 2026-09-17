@@ -1,4 +1,4 @@
-# Phase 5 Baseline Benchmarking & Feature Ranking Findings
+# [INTERNAL WORKING NOTE] # Phase 5 Baseline Benchmarking & Feature Ranking Findings
 
 *This document summarizes the core empirical and engineering results from Phase 5 (Feature Engineering & Baseline Modeling).*
 

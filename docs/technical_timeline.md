@@ -1,4 +1,4 @@
-# Technical Timeline
+# [INTERNAL WORKING NOTE] Technical Timeline
 
 *A chronological log of engineering, data science, and architectural milestones.*
 
@@ -45,7 +45,7 @@
   - **Forecasting Target Definition & Audit:** Formalized lead targets $\text{AQI}(t+h)$ for 1h, 6h, and 24h horizons; confirmed high target availability (>99.2% for 1h, >98.3% for 6h, >96.2% for 24h) across 57,946 ground-truth records.
   - **7-Group Feature Engineering Taxonomy:** Engineered 124 causal features spanning Recent AQI Lags (10), Multi-Pollutant Lags (35), Causal Trailing Rolling Stats (32), Temporal/Cyclical Encodings (13), IMD Seasonality (4), Usable Meteorology (24), and Spatial Network Signals (6).
   - **Mathematical Leakage Audit:** Enforced trailing rolling windows $[t-W+1, t]$, positive lag shifts, leave-one-out spatial aggregation on $t-1$ observations, and 2024 historical warm-up buffer preservation to prevent cold-start boundary truncation.
-  - **Chronological 3-Way Partitioning:** Enforced non-overlapping splits: Train (Jan–Aug 2025, 67%), Validation (Sep–Oct 2025, 16.5%), and Test (Nov–Dec 2025, 16.5% - Peak Winter Crisis).
+  - **Chronological 3-Way Partitioning:** Enforced non-overlapping splits: Train (Jan–Aug 2025, ~65.5%), Validation (Sep–Oct 2025, ~17.0%), and Test (Nov–Dec 2025, ~17.5% - Peak Winter Crisis).
   - **Baseline Benchmarking:** Evaluated Naive Persistence, 24h Seasonal Persistence, and 24h Moving Average baselines; discovered near-perfect persistence at 1h ($\text{MAE} \approx 2.40$), moderate degradation at 6h ($\text{MAE} \approx 12.72$), and total persistence collapse at 24h on the Winter test set ($\text{MAE} \approx 38.34, R^2 \approx 0.1848$).
   - **Feature Ranking & Group Importance:** Quantified Pearson correlations across all 124 features, establishing that Group A (AQI Lags), Group G (Cross-Station Spatial), and Group C (Rolling Stats) carry highest predictive power, with Meteorology (Group F) and Seasonality (Group E) providing essential long-range variance.
   - **Hardware & CPU Optimization:** Optimized pipeline with vectorized Pandas operations (under 2.5s execution) and compact Snappy Parquet storage (`data/processed/features_2025.parquet`).
@@ -59,8 +59,8 @@
     - `air_quality_ml_1h_v1.parquet`: 57,483 rows, 13.00 MB, SHA-256: `201f59fc183a169d01b2511fb9af8de7e484d6888bb760558e78e39b4cb1e3f3`
     - `air_quality_ml_6h_v1.parquet`: 56,989 rows, 12.92 MB, SHA-256: `17931c9c23b478a8517260c77c6c3b6882004def987d3d81df48819f930d69e5`
     - `air_quality_ml_24h_v1.parquet`: 55,750 rows, 12.66 MB, SHA-256: `5fd6026a52b3ea09cf6e7f0f78707523a96ebf7562e5ea4560fc91ed38747951`
-  - **1h Horizon Model (Frozen & Validated):** Tuned LightGBM achieved Test $\text{MAE} = 2.29, \text{RMSE} = 3.65, R^2 = 0.9958$, beating Naive Persistence ($\text{MAE} = 2.40, \text{RMSE} = 4.09, R^2 = 0.9947$). Serialized to `models/1h/`.
-  - **6h Horizon Model (Frozen & Validated):** Tuned LightGBM achieved Test $\text{MAE} = 11.84, \text{RMSE} = 16.71, R^2 = 0.9126$, beating Naive Persistence ($\text{MAE} = 14.73, \text{RMSE} = 20.37, R^2 = 0.8698$). Serialized to `models/6h/`.
+  - **1h Horizon Model:** Tuned LightGBM achieved Test $\text{MAE} = 2.29, \text{RMSE} = 3.65, R^2 = 0.9958$, beating Naive Persistence ($\text{MAE} = 2.40, \text{RMSE} = 4.09, R^2 = 0.9947$). Serialized to `models/1h/`.
+  - **6h Horizon Model:** Tuned LightGBM achieved Test $\text{MAE} = 11.84, \text{RMSE} = 16.71, R^2 = 0.9126$, beating Naive Persistence ($\text{MAE} = 14.73, \text{RMSE} = 20.37, R^2 = 0.8698$). Serialized to `models/6h/`.
   - **Colab Suite:** 16-section interactive training notebook `notebooks/phase_6_colab_training.ipynb` for multi-horizon model training, Optuna tuning, and feature ranking.
 
 ## Phase 6B: 24-Hour Forecasting Failure Analysis & Optimization (Completed)
@@ -88,23 +88,21 @@
   - **100% Multi-Station Superiority:** Verified outperformance across all 7 Delhi monitoring stations (improvements of $+2.47$ to $+5.22$ AQI points).
   - **Severe Episode Tracking:** Reduced Very Poor (301–400) MAE to **32.32** (bias $-2.52$) and maintained Severe ($\ge 400$) MAE of **31.32**.
   - **Serialized Production Artifacts:** Exported models, scalers, imputers, metadata JSON to `models/24h/final/`, diagnostic CSVs and predictions Parquet to `reports/modeling/24h/final/`, interactive Colab suite `notebooks/phase_6c_24h_final_refinement.ipynb`, and comprehensive report `reports/modeling/PHASE_6C_24H_FINAL_REPORT.md`.
-  - **Gate Decision:** Formal gate approved: `PHASE 6C 24H REFINEMENT COMPLETE — ALL MULTI-HORIZON MODELS VALIDATED & READY FOR PHASE 7`.
 
 ## Phase 7: CPCB AQI Risk Classification & GRAP Policy Alerting (Completed)
 - **Objective:** Map continuous multi-horizon regression predictions to official discrete CPCB risk categories and CAQM GRAP emergency policy stages, evaluate ordinal and severe-class metrics, and quantify advance early-warning lead times for pollution episodes with zero data leakage.
 - **Milestones:**
   - **Deterministic CPCB & GRAP Mapping:** Implemented deterministic discretization into 6 CPCB categories (Good $0–50$, Satisfactory $51–100$, Moderate $101–200$, Poor $201–300$, Very Poor $301–400$, Severe $401–500+$) using `np.digitize(aqi, [51, 101, 201, 301, 401])`, and 4 CAQM GRAP Stages (Stage I $201–300$, Stage II $301–400$, Stage III $401–450$, Stage IV $>450$).
-  - **Zero-Leakage Out-of-Sample Evaluation:** Evaluated strictly on the frozen Phase 6 Nov–Dec 2025 Test Split across all 7 Delhi stations ($N=10,057$ for 1h, $N=9,998$ for 6h, $N=9,800$ for 24h).
+  - **Zero-Leakage Out-of-Sample Evaluation:** Evaluated strictly on the Phase 6 Nov–Dec 2025 Test Split across all 7 Delhi stations ($N=10,057$ for 1h, $N=9,998$ for 6h, $N=9,800$ for 24h).
   - **Multi-Class & Ordinal Performance:**
     - **1h Horizon:** Macro F1 = `0.9446`, Weighted Kappa = `0.9827`, Ordinal MAE = `0.0146`, Severe Recall = `98.36%`.
     - **6h Horizon:** Macro F1 = `0.6565`, Weighted Kappa = `0.8664`, Ordinal MAE = `0.1098`, Severe Recall = `83.18%`.
     - **24h Horizon:** Macro F1 = `0.3386`, Weighted Kappa = `0.5178`, Ordinal MAE = `0.3710`, Severe Recall = `61.08%`, Very Poor+ Recall = `93.22%`.
-  - **Public Health Safety Guarantee:** Achieved a strict **0.000% Critical Miss Rate** across all three forecasting horizons and all 7 monitoring stations (zero Severe events forecasted as Moderate or below).
+  - **Observed Critical Miss Rate:** 0.000% across all three forecasting horizons and all 7 monitoring stations on the held-out test split (zero Severe events forecasted as Moderate or below).
   - **Episode Lead-Time Early Warning Audit:**
     - Clustered consecutive Severe exceedances ($\text{AQI} \ge 401$) per station with $\le 3\text{h}$ intra-episode gap bridging (260 total episode evaluations).
     - 24h model delivered a **74.4% detection hit rate** on Severe crisis episodes with a mean advance warning lead time of **17.36 hours** (55.8% providing $\ge 6\text{h}$ actionable advance notice).
-  - **Deliverables & Deliverable Auditing:** Core classification pipeline `src/models/phase_7_classification.py`, classified Parquet predictions in `reports/classification/{1h,6h,24h}/`, episode log `reports/classification/episodes/grap_episode_lead_times.csv`, and comprehensive 15-dimension audit report `reports/classification/PHASE_7_FINAL_AUDIT.md`.
-  - **Gate Decision:** Formal gate approved: `PHASE 7 CLASSIFICATION AUDIT PASSED (100% COMPLIANCE) — FROZEN & READY FOR PHASE 8`.
+  - **Deliverables:** Core classification pipeline `src/models/phase_7_classification.py`, classified Parquet predictions in `reports/classification/{1h,6h,24h}/`, episode log `reports/classification/episodes/grap_episode_lead_times.csv`, and comprehensive audit report `reports/classification/PHASE_7_FINAL_AUDIT.md`.
 
 ## Phase 8: Production Deployment, Real-Time Inference & Dashboard Integration (Scheduled)
 - **Objective:** Transition multi-horizon models and classification logic into an operational real-time production system with an automated inference engine, REST API, interactive monitoring dashboard, and alert dispatcher.

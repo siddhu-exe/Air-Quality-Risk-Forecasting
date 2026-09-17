@@ -1,6 +1,6 @@
-# LLM Context: Project Architecture & State
+# [INTERNAL WORKING NOTE] LLM Context: Project Architecture & State
 
-**Purpose:** Read this file to instantly understand the repository structure, previous bug fixes, constraints, and current state of the Air Quality Risk Forecasting system. Do not change project direction or introduce ML technologies prematurely.
+**Purpose:** Internal reference note on repository structure, previous bug fixes, constraints, and state of the Air Quality Risk Forecasting system.
 
 ## Project Scope & Lifecycle
 **Lifecycle Pipeline:** RAW GOVERNMENT DATA -> DATA PROFILING -> DATABASE DESIGN -> ETL/DATA CLEANING -> POSTGRESQL -> DATA VALIDATION -> EDA -> FEATURE ENGINEERING -> BASELINE BENCHMARKING -> MULTI-HORIZON FORECASTING -> RISK CLASSIFICATION -> CAUSAL/POLICY ANALYSIS -> DASHBOARD.
@@ -56,9 +56,10 @@ The PostgreSQL schema strictly implements **4 Core Tables** in a native user-spa
    - `air_quality_ml_6h_v1.parquet`: 56,989 rows, 12.92 MB, SHA-256: `17931c9c23b478a8517260c77c6c3b6882004def987d3d81df48819f930d69e5`
    - `air_quality_ml_24h_v1.parquet`: 55,750 rows, 12.66 MB, SHA-256: `5fd6026a52b3ea09cf6e7f0f78707523a96ebf7562e5ea4560fc91ed38747951`
 3. **Validated Horizon Models (All Outperforming Persistence on Peak Winter Test):**
-   - **1-Hour (FROZEN):** Tuned LightGBM ($\text{MAE} = 2.29, \text{RMSE} = 3.65, R^2 = 0.9958$) vs Naive Persistence ($\text{MAE} = 2.40, \text{RMSE} = 4.09, R^2 = 0.9947$). Serialized in `models/1h/`.
-   - **6-Hour (FROZEN):** Tuned LightGBM ($\text{MAE} = 11.84, \text{RMSE} = 16.71, R^2 = 0.9126$) vs Naive Persistence ($\text{MAE} = 14.73, \text{RMSE} = 20.37, R^2 = 0.8698$). Serialized in `models/6h/`.
+   - **1-Hour:** Tuned LightGBM ($\text{MAE} = 2.29, \text{RMSE} = 3.65, R^2 = 0.9958$) vs Naive Persistence ($\text{MAE} = 2.40, \text{RMSE} = 4.09, R^2 = 0.9947$). Serialized in `models/1h/`.
+   - **6-Hour:** Tuned LightGBM ($\text{MAE} = 11.84, \text{RMSE} = 16.71, R^2 = 0.9126$) vs Naive Persistence ($\text{MAE} = 14.73, \text{RMSE} = 20.37, R^2 = 0.8698$). Serialized in `models/6h/`.
    - **24-Hour (Phase 6C Final Refinement):** 50/50 Hybrid Persistence + Ridge ($\alpha=1000$) on 49 curated causal features ($\text{MAE} = 34.11, \text{RMSE} = 44.80, R^2 = 0.3647, \text{MAPE} = 9.72\%$) vs Naive Persistence ($\text{MAE} = 38.34, \text{RMSE} = 50.75, R^2 = 0.1848$). Serialized in `models/24h/final/`.
+   - *Provenance:* 1h and 6h LightGBM hyperparameters tuned via Optuna (20 trials) on validation split. 24h Ridge $\alpha=1000$ and 50/50 blend ratio were initial assumptions in Phase 6B, validated via parameter sweep and 21-point grid search on validation split in Phase 6C.
 4. **Phase 6B & 6C Mathematical & Physical Discoveries:**
    - *Tree Extrapolation Ceiling:* Tree step functions cap predictions at training target maximums ($\max \hat{y} = 347.61$). On winter crisis test samples ($\text{AQI} \ge 400$, mean $429.49$), this generated a $-136.48$ point underprediction bias.
    - *Non-Stationary Feature Overfitting:* Ordinal `month` and `day_of_year` routed winter test crisis samples into clean monsoon leaf nodes ($\text{AQI} \approx 85$). Pruning these features eliminated catastrophic test error.
@@ -71,20 +72,20 @@ The PostgreSQL schema strictly implements **4 Core Tables** in a native user-spa
    - `reports/modeling/PHASE_6C_24H_FINAL_REPORT.md` (Formal Master Gate Report)
    - `docs/phase_6c_findings.md` (Key findings summary)
 
-## Phase 7 CPCB Risk Classification & GRAP Alerting Summary (Completed & Frozen)
-1. **Deterministic Mapping:** Converted frozen Phase 6 continuous forecasts into 6 CPCB tiers (Good, Satisfactory, Moderate, Poor, Very Poor, Severe) and 4 CAQM GRAP Stages (I–IV) with zero data leakage.
+## Phase 7 CPCB Risk Classification & GRAP Alerting Summary (Completed)
+1. **Deterministic Mapping:** Converted Phase 6 continuous forecasts into 6 CPCB tiers (Good, Satisfactory, Moderate, Poor, Very Poor, Severe) and 4 CAQM GRAP Stages (I–IV) with zero data leakage.
 2. **Key Metric Milestones (Nov–Dec 2025 Test Split):**
    - **1-Hour Horizon:** Macro F1 = `0.9446`, Weighted Kappa = `0.9827`, Ordinal MAE = `0.0146`, Severe Recall = `98.36%`, Critical Miss Rate = `0.000%`.
    - **6-Hour Horizon:** Macro F1 = `0.6565`, Weighted Kappa = `0.8664`, Ordinal MAE = `0.1098`, Severe Recall = `83.18%`, Critical Miss Rate = `0.000%`.
    - **24-Hour Horizon:** Macro F1 = `0.3386`, Weighted Kappa = `0.5178`, Ordinal MAE = `0.3710`, Severe Recall = `61.08%`, Very Poor+ Recall = `93.22%`, Critical Miss Rate = `0.000%`.
 3. **Episode Early Warning & Lead Time:** Audited 260 crisis episodes across all 7 Delhi stations. 24h model delivers a **74.4% hit rate** with an average advance warning lead time of **17.36 hours** (55.8% providing $\ge 6\text{h}$ actionable advance warning).
-4. **Public Health Safety:** Verified strict **0.000% Critical Miss Rate** across all horizons and stations (zero Severe events predicted as Moderate or below).
+4. **Public Health Safety:** Verified **0.000% Critical Miss Rate** across all horizons and stations in held-out test data (zero Severe events predicted as Moderate or below).
 5. **Phase 7 Artifacts:**
    - `src/models/phase_7_classification.py` (Discretization, metric calculations, episode lead-time auditing)
    - `reports/classification/metrics/multiclass_metrics_comparison.csv`
    - `reports/classification/episodes/grap_episode_lead_times.csv`
    - `reports/classification/{1h,6h,24h}/classified_predictions.parquet`
-   - `reports/classification/PHASE_7_FINAL_AUDIT.md` (15-dimension master audit, frozen)
+   - `reports/classification/PHASE_7_FINAL_AUDIT.md` (15-dimension master audit)
 
 ## Upcoming Phase 8 Roadmap (Production Deployment, Real-Time Inference & Dashboard Integration)
 - **Real-Time Inference Engine:** Automated pipeline consuming streaming/new hourly data, computing 124 causal features, generating multi-horizon predictions, and assigning CPCB / GRAP risk tiers in real-time.

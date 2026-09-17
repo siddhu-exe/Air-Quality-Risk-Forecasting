@@ -1,4 +1,4 @@
-# Phase 6C Final 24-Hour Forecast Refinement Findings
+# [INTERNAL WORKING NOTE] # Phase 6C Final 24-Hour Forecast Refinement Findings
 
 *This document summarizes the core empirical, architectural, and mathematical findings from Phase 6C (Final 24h Forecast Refinement).*
 
@@ -9,9 +9,9 @@
 In Phase 6C, the 24-hour forecasting horizon underwent comprehensive refinement through the integration of causal multi-day trailing features, leave-one-out spatial network aggregates, and validation-driven hybrid blend optimization.
 
 ### Master Horizon Summary Across All 3 Horizons
-- **1-Hour Model (LightGBM Tuned):** $\text{MAE} = 2.29, \text{RMSE} = 3.65, R^2 = 0.9958$ (Beats Naive Persistence $\text{MAE} = 2.40$). **[FROZEN]**
-- **6-Hour Model (LightGBM Tuned):** $\text{MAE} = 11.84, \text{RMSE} = 16.71, R^2 = 0.9126$ (Beats Naive Persistence $\text{MAE} = 14.73$). **[FROZEN]**
-- **24-Hour Model (Refined Hybrid Ensemble):** $\text{MAE} = 34.11, \text{RMSE} = 44.80, R^2 = 0.3647, \text{MAPE} = 9.72\%$ (Beats Naive Persistence $\text{MAE} = 38.34, R^2 = 0.1848$ and Phase 6B Baseline $\text{MAE} = 35.48$). **[COMPLETE & PRODUCTION READY]**
+- **1-Hour Model (LightGBM Tuned):** $\text{MAE} = 2.29, \text{RMSE} = 3.65, R^2 = 0.9958$ (Naive Persistence $\text{MAE} = 2.40$)
+- **6-Hour Model (LightGBM Tuned):** $\text{MAE} = 11.84, \text{RMSE} = 16.71, R^2 = 0.9126$ (Naive Persistence $\text{MAE} = 14.73$)
+- **24-Hour Model (Refined Hybrid Ensemble):** $\text{MAE} = 34.11, \text{RMSE} = 44.80, R^2 = 0.3647, \text{MAPE} = 9.72\%$ (Naive Persistence $\text{MAE} = 38.34, R^2 = 0.1848$; Phase 6B Baseline $\text{MAE} = 35.48$)
 
 ---
 
@@ -36,8 +36,8 @@ All hyperparameter tuning, feature group ablation, and blend weights were optimi
 - **Set Refined (49 Feats - Curated High-Signal):** Val Hybrid $\text{MAE} = \mathbf{29.02}, R^2 = \mathbf{0.8507}$
 
 ### B. Regularization & Blend Optimization
-- **Ridge Regularization ($\alpha=1000$):** Selected for maximum slope stability and continuous extrapolation.
-- **Hybrid Blend Ratio ($w=0.50$):** Exactly 50% Naive Persistence $\text{AQI}(t) + 50\%$ Ridge Forecast $\widehat{\text{AQI}}_{\text{Ridge}}(t+24\text{h})$ minimized validation error and stabilized predictions against extreme spikes.
+- **Ridge Regularization ($\alpha=1000$):** Validated via hyperparameter sweep over $\alpha \in [10, 50, 100, 250, 500, 1000, 2000, 5000]$ on the validation split (Sep–Oct 2025). The initial $\alpha=1000$ choice from Phase 6B was confirmed as optimal for validation MAE.
+- **Hybrid Blend Ratio ($w=0.50$):** Validated via grid search across 21 points evenly spaced between 0.0 and 1.0 (i.e., `np.linspace(0.0, 1.0, 21)`) on the validation split (Sep–Oct 2025). The 50/50 blend from Phase 6B was confirmed as the minimum validation MAE.
 
 ---
 
@@ -85,12 +85,6 @@ Evaluated on 9,800 peak winter test samples (Nov–Dec 2025):
 
 ---
 
-## 7. Gate Decision
+## 7. Conclusion
 
-```text
-================================================================================
-FINAL GATE DECISION:
-PHASE 6C 24H REFINEMENT COMPLETE — ALL MULTI-HORIZON MODELS VALIDATED
-PROCEED TO PHASE 7: CPCB RISK CLASSIFICATION & GRAP POLICY ALERTING
-================================================================================
-```
+Phase 6C integrated multi-day causal features (48h–168h lags, rolling statistics, leave-one-out spatial network signals) and validation-driven optimization to produce the final 24h Hybrid Ensemble. The model achieves MAE 34.11 (R² 0.3647, MAPE 9.72%) on the held-out peak winter test set, outperforming Naive Persistence by +4.23 AQI points and Phase 6B baseline by +1.37 AQI points across 100% of Delhi stations. All three horizons (1h, 6h, 24h) are validated and ready for Phase 7 CPCB risk classification and GRAP policy alerting.

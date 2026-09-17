@@ -1,7 +1,7 @@
-# Phase 7 Findings: CPCB Risk Classification & GRAP Alerting
+# [INTERNAL WORKING NOTE] # Phase 7 Findings: CPCB Risk Classification & GRAP Alerting
 
 **Document Version:** 1.0  
-**Status:** FINAL — Fully Audited & Frozen  
+**Status:** Finalized  
 **Date:** September 17, 2026  
 
 ---
@@ -36,8 +36,8 @@ Because standard metrics typically dilute the performance of minority extreme cl
 | 24h | 0.669 | 0.611 | 0.739 | 0.932 | 0.000 |
 
 **Insights:**
-1. **Critical Misses Assured:** At all horizons (including 24h), the `critical_miss_rate` is strictly **0.0**. The model *never* incorrectly down-plays an actual Severe episode as Moderate or Good.
-2. **Very Poor Buffer:** If we expand our risk bucket to include "Very Poor and above" (GRAP Stage II+), the 24h model recall jumps significantly to **93.2%**. This implies the model consistently recognizes severe air stagnation accurately, even if it occasionally misjudges the precise numerical category threshold (e.g., predicting 380 instead of 405).
+1. **Observed Critical Miss Rate:** At all horizons (including 24h), the `critical_miss_rate` is **0.0** on the held-out test set. The model does not incorrectly down-play an actual Severe episode as Moderate or Good in the evaluation data.
+2. **Very Poor Buffer:** Expanding the risk bucket to "Very Poor and above" (GRAP Stage II+) raises 24h recall to **93.2%**. The model consistently recognizes severe air stagnation accurately, even when it occasionally misjudges the precise category threshold (e.g., predicting 380 instead of 405).
 
 ---
 
@@ -62,7 +62,7 @@ The 2024 GRAP revision heavily prioritizes forecast-based, proactive mobilizatio
 | 24h | 86 | 64 | 74.4 | 17.4 | 48 (55.8%) |
 
 **Insights:**
-- **Inherent Tradeoff:** The 24h model acts perfectly as the policy long-fuse. With an average lead time of roughly **17.4 hours**, it provides early operational visibility that 1h/6h models naturally cannot, capturing actionable windows >=6h ahead for 55.8% of crises.
+- **Inherent Tradeoff:** The 24h model serves as the policy long-fuse. With an average lead time of roughly **17.4 hours**, it provides early operational visibility that 1h/6h models naturally cannot, capturing actionable windows >=6h ahead for 55.8% of crises.
 - 1h and 6h models function best as high-confidence secondary confirmations.
 
 ---
@@ -79,12 +79,10 @@ The precision decay is measurable (Ordinal MAE expands from 0.01 to 0.37), prima
 Yes. For instance, predicting 395 instead of 405 technically counts as a Miss for the Severe class, drastically inflating the 24h Severe False Negative rate. However, looking at the combined `vpoor_plus_recall` (93.2% for 24h), the system effectively identifies the generalized physical high-risk state with extremely high competency. 
 
 **RQ4: Is the 24h prediction artifact robust enough for proactive (2024) GRAP enforcement?**  
-It natively provides 17+ hours of reliable notice (hit rate **74.4%**), satisfying the exact intended operation framework of proactive 24h staging.
+It natively provides 17+ hours of reliable notice (hit rate **74.4%**, 55.8% of episodes with >=6h actionable warning), aligning with the proactive 24h staging objective.
 
 ---
 
-## 5. Phase 7 Verdict
+## 5. Conclusion
 
-The categorization engine successfully parses the multi-horizon numerical continuous array out into actionable, compliant alerting layers. The operational trade-off is clearly validated computationally: the 24h model buys vital mobilization time at the cost of slight border precision, while the 1h model guarantees execution reality.
-
-**VERDICT: PHASE 7 CLASSIFICATION PASSED.** Data and model insights are ready for user consumption.
+The categorization engine maps the multi-horizon continuous regression outputs into CPCB risk categories and CAQM GRAP stages with zero data leakage. The 24h model provides operational early warning (mean 17.4h lead time, 55.8% of episodes with ≥6h actionable notice) at the cost of reduced border precision (Severe recall 61.1%). The 1h model provides near-perfect category alignment (Macro F1 0.94). Critical miss rate is 0.0% on the held-out test set across all horizons.

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is an evolving **air quality risk forecasting** project. It contains raw source data, an idempotent Python ETL pipeline backing a reliable PostgreSQL database schema, comprehensive Phase 4 EDA, and a fully completed Phase 5 Feature Engineering and Baseline Modeling suite. The project is currently transitioning to **Phase 6: Advanced Model Development & Multi-Horizon Forecasting**. The data covers two Indian cities:
+This is an evolving **air quality risk forecasting** project. It contains raw source data, an idempotent Python ETL pipeline backing a reliable PostgreSQL database schema, comprehensive Phase 4 EDA, Phase 5 Feature Engineering, multi-horizon forecasting (Phases 6, 6B, 6C), and CPCB/GRAP risk classification (Phase 7). The project is currently transitioning to **Phase 8: Production Deployment, Real-Time Inference & Dashboard Integration**. The data covers two Indian cities:
 
 - **Delhi**: Station-level hourly measurements from 7 DPCC/CPCB monitoring stations (2023–2026)
 - **Mumbai**: City-level hourly AQI data (Jan–Jul 2026)
@@ -59,8 +59,8 @@ Og Data/
 - **Phase 4:** Exploratory Data Analysis (EDA), Statistical Profiling, 11 Visualizations (`reports/eda/`).
 - **Phase 5:** Feature Engineering & Baseline Modeling (124 causal features, leakage audit, heuristic baselines, feature ranking).
 - **Phase 6 & 6B & 6C:** Multi-Horizon Forecasting & 24h Final Refinement Suite:
-  - 1h Tuned LightGBM: $\text{MAE} = 2.29, \text{RMSE} = 3.65, R^2 = 0.9958$ (beats Naive Persistence $\text{MAE} = 2.40$). **[FROZEN]**
-  - 6h Tuned LightGBM: $\text{MAE} = 11.84, \text{RMSE} = 16.71, R^2 = 0.9126$ (beats Naive Persistence $\text{MAE} = 14.73$). **[FROZEN]**
+  - 1h Tuned LightGBM: $\text{MAE} = 2.29, \text{RMSE} = 3.65, R^2 = 0.9958$ (beats Naive Persistence $\text{MAE} = 2.40$).
+  - 6h Tuned LightGBM: $\text{MAE} = 11.84, \text{RMSE} = 16.71, R^2 = 0.9126$ (beats Naive Persistence $\text{MAE} = 14.73$).
   - 24h Refined 50/50 Hybrid Persistence + Ridge ($\alpha=1000$): $\text{MAE} = 34.11, \text{RMSE} = 44.80, R^2 = 0.3647, \text{MAPE} = 9.72\%$ (beats Naive Persistence $\text{MAE} = 38.34, R^2 = 0.1848$ by **+4.23 AQI points** across 100% of Delhi stations). Serialized to `models/24h/final/`.
   - Notebooks: `notebooks/phase_6_colab_training.ipynb`, `notebooks/phase_6b_24h_optimization.ipynb`, `notebooks/phase_6c_24h_final_refinement.ipynb`.
 - **Phase 7:** CPCB AQI Risk Classification & GRAP Policy Alerting:
@@ -69,7 +69,7 @@ Og Data/
   - 6h Horizon: Macro F1 = 0.6565, W-Kappa = 0.8664, Ordinal MAE = 0.1098, Severe Recall = 83.18%, Critical Miss Rate = 0.000%.
   - 24h Horizon: Macro F1 = 0.3386, W-Kappa = 0.5178, Ordinal MAE = 0.3710, Severe Recall = 61.08%, Very Poor+ Recall = 93.22%, Critical Miss Rate = 0.000%.
   - GRAP Staging & Early Warning: 24h model delivers 17.36h mean advance warning lead time for Severe crisis episodes with 74.4% hit rate (55.8% providing >=6h actionable warning).
-  - Code & Audit: `src/models/phase_7_classification.py`, `reports/classification/PHASE_7_FINAL_AUDIT.md`. **[FROZEN]**
+  - Code & Audit: `src/models/phase_7_classification.py`, `reports/classification/PHASE_7_FINAL_AUDIT.md`.
 
 ## Suggested Next Steps (Phase 8: Production Deployment, Real-Time Inference & Dashboard Integration)
 With forecasting and policy risk classification validated and audited across all horizons (1h, 6h, 24h), the system is ready for Phase 8:

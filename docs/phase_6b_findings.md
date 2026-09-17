@@ -1,4 +1,4 @@
-# Phase 6B 24-Hour Forecasting Failure Analysis & Optimization Findings
+# [INTERNAL WORKING NOTE] # Phase 6B 24-Hour Forecasting Failure Analysis & Optimization Findings
 
 *This document summarizes the core failure diagnosis, mathematical findings, and optimization results from Phase 6B (24h Forecasting Optimization).*
 
@@ -7,8 +7,8 @@
 ## 1. Executive Summary & Problem Context
 
 During initial Phase 6 multi-horizon benchmarking on the peak winter test split (Nov–Dec 2025):
-- **1-Hour Model (LightGBM Tuned):** $\text{MAE} = 2.29, R^2 = 0.9958$ (Outperformed Naive Persistence $\text{MAE} = 2.40$). **[FROZEN]**
-- **6-Hour Model (LightGBM Tuned):** $\text{MAE} = 11.84, R^2 = 0.9126$ (Outperformed Naive Persistence $\text{MAE} = 14.73$). **[FROZEN]**
+- **1-Hour Model (LightGBM Tuned):** $\text{MAE} = 2.29, R^2 = 0.9958$ (Outperformed Naive Persistence $\text{MAE} = 2.40$). ****
+- **6-Hour Model (LightGBM Tuned):** $\text{MAE} = 11.84, R^2 = 0.9126$ (Outperformed Naive Persistence $\text{MAE} = 14.73$). ****
 - **24-Hour Initial GBDT:** $\text{MAE} = 98.24, \text{RMSE} = 109.79, R^2 = -2.8155, \text{Bias} = -95.58$ vs Naive Persistence $\text{MAE} = 38.34, \text{RMSE} = 50.75, R^2 = 0.1848, \text{Bias} = -1.92$.
 
 Phase 6B conducted an exhaustive mathematical, statistical, and empirical investigation into the 24h failure, isolated the exact root causes, and developed winning regularized linear and hybrid ensemble models that outperform persistence across all 7 Delhi stations.
@@ -54,6 +54,8 @@ Anchors predictions to Naive Persistence when $\widehat{\Delta} = 0$, achieving 
 
 ### C. Winning Production Model: Hybrid Persistence + Ridge Ensemble
 $$\widehat{\text{AQI}}_{\text{Hybrid}}(t+24\text{h}) = 0.50 \cdot \text{AQI}(t) + 0.50 \cdot \widehat{\text{AQI}}_{\text{Ridge A+B}}(t+24\text{h})$$
+
+**Parameter Provenance:** The $\alpha=1000$ Ridge regularization and the 50/50 blend weight were initially chosen as operational defaults in Phase 6B to address the tree extrapolation ceiling and anchor predictions to current-state persistence. These choices were later independently validated in Phase 6C via a hyperparameter sweep over $\alpha \in [10, 50, 100, 250, 500, 1000, 2000, 5000]$ and a 21-point blend weight grid search over $[0.0, 1.0]$ on the validation split (Sep–Oct 2025), confirming both selections.
 
 ---
 
@@ -104,12 +106,6 @@ The winning Hybrid Ensemble outperforms Naive Persistence across every single De
 
 ---
 
-## 7. Gate Decision
+## 7. Conclusion
 
-```text
-================================================================================
-FINAL GATE DECISION:
-24H OPTIMIZATION COMPLETE — READY FOR PHASE 7
-================================================================================
-```
-All three horizons (1h, 6h, 24h) are validated and frozen, fully prepared for CPCB risk classification and GRAP emergency intervention alerting in Phase 7.
+Phase 6B isolated the root causes of 24h GBDT failure (tree extrapolation ceiling, non-stationary feature routing, climatological regime shift) and developed a winning Hybrid Persistence + Ridge Ensemble (MAE 35.48, R² 0.3123) that outperforms Naive Persistence across all 7 Delhi stations. This set the stage for Phase 6C's final refinement with multi-day causal features and validation-driven optimization.
