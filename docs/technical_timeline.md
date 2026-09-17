@@ -118,10 +118,24 @@
   - **Combustion Chemistry vs Inversion:** Hourly telemetry demonstrated acute 6–12h combustion pulses on Diwali night ($\text{PM}_{2.5}$ surging 8.0x to $960.7\ \mu\text{g/m}^3$ in 2025 and 5.6x to $612.9\ \mu\text{g/m}^3$ in 2024; $\text{SO}_2$ chemical tracer surging 5.3x–7.9x to $74\text{--}80\ \mu\text{g/m}^3$). Emissions dispersed within 18–24 hours; multi-week winter degradation is driven by PBL compression (<300m), thermal inversion, calm winds (<0.8 m/s), and transboundary crop residue burning.
   - **Deliverables:** Analytical pipeline `src/analysis/diwali_causal_analysis.py`, regression summary `reports/causal/regression_models_summary.csv`, hourly spike summary `reports/causal/hourly_spike_comparison.csv`, 4 publication-grade figures in `reports/causal/figures/`, master report `reports/causal/diwali_ban_causal_analysis.md`, and internal note `docs/causal_findings.md`.
 
-## Phase 8: Production Deployment, Real-Time Inference & Dashboard Integration (Scheduled)
-- **Objective:** Transition multi-horizon models and classification logic into an operational real-time production system with an automated inference engine, REST API, interactive monitoring dashboard, and alert dispatcher.
+## Phase 8: Production Deployment, Real-Time Inference, Dashboard & Kaggle Dataset Package (Completed & Active)
+- **Objective:** Transition multi-horizon models, classification logic, and empirical policy findings into an operational user-facing interface, package curated public datasets for community research, and design the real-time inference roadmap.
 - **Milestones:**
-  - **Operational Real-Time Inference Engine:** Ingest incoming hourly station feeds, construct 124 causal tabular features dynamically, invoke multi-horizon models (1h/6h LightGBM, 24h Hybrid Ensemble), and generate CPCB / GRAP risk classifications.
-  - **REST API Serving Layer:** Develop FastAPI backend endpoints exposing `/api/v1/stations`, `/api/v1/forecast/{station_id}`, `/api/v1/alerts/grap`, and `/api/v1/health`.
-  - **Interactive Dashboard:** Build a comprehensive UI (e.g. Streamlit or Dash) displaying live Delhi AQI geospatial heatmaps, multi-horizon trend charts with confidence bounds, station-level CPCB risk distributions, and active GRAP regulatory advisories.
-  - **Automated Alerting & Webhooks:** Implement threshold-triggered notification webhooks alerting stakeholders upon projected GRAP Stage III/IV activations.
+  - **Interactive Streamlit Evaluation Dashboard:**
+    - Developed a responsive 5-tab web dashboard (`dashboard/app.py` with root entrypoint `app.py` deployable to Streamlit Community Cloud).
+    - *Tab 1 (Overview):* Live station snapshots, current AQI gauge indicators, recent trends, and headline multi-horizon metrics.
+    - *Tab 2 (Forecasts):* Interactive actual vs predicted multi-horizon (1h, 6h, 24h) time-series overlays with statutory CPCB tier bands and CAQM GRAP action stages.
+    - *Tab 3 (Diwali Policy Finding):* Econometric replay of the Diwali firecracker ban vs winter meteorological inversion, including chemical tracer surge curves and placebo falsification plots.
+    - *Tab 4 (Risk Threshold):* Real-time cost-sensitive threshold simulator enabling users to dynamically adjust public health loss ratios ($C_{\text{FN}} / C_{\text{FP}}$), visual precision-recall curves, and trade-off matrices.
+    - *Tab 5 (Methodology):* Full PostgreSQL schema diagram, pipeline flowchart, and frozen model evaluation tables.
+  - **Curated Public Kaggle Dataset Package:**
+    - Exported 220,042 validated hourly observations across 7 Delhi monitoring stations (`etl/export_kaggle_dataset.py`) into sanitized CSVs (`caaqms_hourly.csv`, `aqi_hourly.csv`, `stations.csv`, `source_files.csv`, `column_metadata.csv`).
+    - Stripped all internal database IDs, local host machine paths, and intermediate ML features.
+    - Verified data integrity with automated test suite (`tests/validate_kaggle_export.py`).
+    - Published comprehensive dataset documentation and column dictionary in `kaggle/README.md` and `reports/kaggle/KAGGLE_DATASET_PREPARATION.md`.
+  - **Kaggle Quickstart & EDA Notebook:**
+    - Authored reproducible, beginner-friendly quickstart notebook (`notebooks/kaggle_delhi_air_quality_quickstart.ipynb`) demonstrating data loading, schema inspection, station comparison, diurnal rhythms, and AQI distributions.
+  - **Future Roadmap (Live Streaming & API Serving):**
+    - Automated worker polling live CPCB telemetry streaming into PostgreSQL.
+    - FastAPI backend endpoints exposing `/api/v1/forecast/{station_id}` and `/api/v1/alerts/grap`.
+    - Automated alert dispatcher webhooks for GRAP Stage III/IV activations.

@@ -3,8 +3,8 @@
 **Purpose:** Internal reference note on repository structure, previous bug fixes, constraints, and state of the Air Quality Risk Forecasting system.
 
 ## Project Scope & Lifecycle
-**Lifecycle Pipeline:** RAW GOVERNMENT DATA -> DATA PROFILING -> DATABASE DESIGN -> ETL/DATA CLEANING -> POSTGRESQL -> DATA VALIDATION -> EDA -> FEATURE ENGINEERING -> BASELINE BENCHMARKING -> MULTI-HORIZON FORECASTING -> RISK CLASSIFICATION -> CAUSAL/POLICY ANALYSIS -> DASHBOARD.
-**Current Stage:** Phase 3 (DB Ingestion) Completed -> Phase 4 (EDA) Completed -> Phase 5 (Feature Engineering & Baseline Benchmarking) Completed -> Phase 6, 6B & 6C (Multi-Horizon Forecasting & 24h Refinement) Completed -> Phase 7 (CPCB Risk Classification & GRAP Policy Alerting) Completed -> **Moving to Phase 8 (Production Deployment, Real-Time Inference & Dashboard Integration)**.
+**Lifecycle Pipeline:** RAW GOVERNMENT DATA -> DATA PROFILING -> DATABASE DESIGN -> ETL/DATA CLEANING -> POSTGRESQL -> DATA VALIDATION -> EDA -> FEATURE ENGINEERING -> BASELINE BENCHMARKING -> MULTI-HORIZON FORECASTING -> RISK CLASSIFICATION -> CAUSAL/POLICY ANALYSIS -> DASHBOARD & KAGGLE DATASET PACKAGE.
+**Current Stage:** Phase 3 (DB Ingestion) Completed -> Phase 4 (EDA) Completed -> Phase 5 (Feature Engineering & Baseline Benchmarking) Completed -> Phase 6, 6B & 6C (Multi-Horizon Forecasting & 24h Refinement) Completed -> Phase 7 (CPCB Risk Classification & GRAP Policy Alerting) Completed -> **Phase 8 (Interactive Streamlit Dashboard & Public Kaggle Dataset Package) Completed**. Next engineering roadmap: Live streaming telemetry ingestion & FastAPI serving layer.
 
 ## Geographic Scope
 - **Primary:** Delhi (7 specific stations: Anand Vihar, Bawana, Dwarka-Sector 8, ITO, Jahangirpuri, Punjabi Bagh, R K Puram).
@@ -117,11 +117,22 @@ The PostgreSQL schema strictly implements **4 Core Tables** in a native user-spa
    - Summary CSVs: `reports/causal/regression_models_summary.csv`, `reports/causal/hourly_spike_comparison.csv`
    - Figures: `reports/causal/figures/` (01–04)
 
-## Upcoming Phase 8 Roadmap (Production Deployment, Real-Time Inference & Dashboard Integration)
-- **Real-Time Inference Engine:** Automated pipeline consuming streaming/new hourly data, computing 124 causal features, generating multi-horizon predictions, and assigning CPCB / GRAP risk tiers in real-time.
-- **REST API Serving Layer:** FastAPI endpoints exposing station metadata, multi-horizon forecasts, and GRAP emergency advisories.
-- **Interactive Monitoring Dashboard:** Streamlit/Dash application displaying Delhi-wide geospatial AQI heatmaps, station-level multi-horizon forecast curves, risk tier distributions, and active GRAP policy interventions.
-- **Alert Webhook Dispatcher:** Threshold-triggered notification webhooks alerting municipal stakeholders when projected AQI exceeds GRAP Stage III/IV levels.
+## Phase 8: Interactive Streamlit Dashboard & Public Kaggle Dataset Package (Completed)
+1. **Interactive Streamlit Evaluation Dashboard:**
+   - Multi-tab application (`dashboard/app.py`, root `app.py`) deployable to Streamlit Community Cloud.
+   - Features 5 tabs: Overview (live station telemetry and gauge metrics), Forecasts (interactive actual vs predicted time-series overlays with CPCB/GRAP tiers across 1h, 6h, 24h horizons), Diwali Policy Finding (econometric replay, combustion tracer surges, and placebo tests), Risk Threshold (dynamic cost-sensitive threshold simulator), and Methodology (relational schema, pipeline flowchart, and model benchmarks).
+   - Zero-latency static snapshot parquet caching configured via `.streamlit/config.toml` (headless mode).
+2. **Public Kaggle Tabular Dataset Export:**
+   - 220,042 validated hourly observations across 7 Delhi stations exported to standard CSVs (`caaqms_hourly.csv`, `aqi_hourly.csv`, `stations.csv`, `source_files.csv`, `column_metadata.csv`).
+   - Stripped all internal database IDs, local host machine paths, and intermediate ML features.
+   - Package validated via `tests/validate_kaggle_export.py` and documented in `reports/kaggle/KAGGLE_DATASET_PREPARATION.md`.
+3. **Kaggle Quickstart & EDA Notebook:**
+   - Authored reproducible `.ipynb` notebook (`notebooks/kaggle_delhi_air_quality_quickstart.ipynb`) demonstrating data inspection, timestamp conversion, station comparison, diurnal rhythms, and AQI distributions.
+
+## Upcoming Production Roadmap (Live Ingestion & FastAPI Serving)
+- **Live Real-Time Ingestion Engine:** Automated polling workers streaming live CPCB telemetry directly into PostgreSQL.
+- **REST API Serving Layer:** FastAPI backend endpoints exposing `/api/v1/stations`, `/api/v1/forecast/{station_id}`, and `/api/v1/alerts/grap`.
+- **Automated Alert Webhook Dispatcher:** Triggering notification webhooks when forecasted AQI crosses GRAP Stage III/IV levels.
 
 ## Infrastructure Requirements
 - **NO LOCAL GPU / NO DOCKER:** Local operations are ultra-lightweight vectorized Pandas/PyArrow operations. Model training is isolated in Google Colab.
