@@ -80,11 +80,21 @@ The PostgreSQL schema strictly implements **4 Core Tables** in a native user-spa
    - **24-Hour Horizon:** Macro F1 = `0.3386`, Weighted Kappa = `0.5178`, Ordinal MAE = `0.3710`, Severe Recall = `61.08%`, Very Poor+ Recall = `93.22%`, Critical Miss Rate = `0.000%`.
 3. **Episode Early Warning & Lead Time:** Audited 260 crisis episodes across all 7 Delhi stations. 24h model delivers a **74.4% hit rate** with an average advance warning lead time of **17.36 hours** (55.8% providing $\ge 6\text{h}$ actionable advance warning).
 4. **Public Health Safety:** Verified **0.000% Critical Miss Rate** across all horizons and stations in held-out test data (zero Severe events predicted as Moderate or below).
-5. **Phase 7 Artifacts:**
+5. **Cost-Aware Threshold Optimization (24h Horizon):**
+   - Evaluated asymmetric cost ratio (5:1 missed hazardous vs false alarm).
+   - Fixed statutory CPCB breakpoint ($\tau=401$) has 61.08% Recall and 38.92% Miss Rate due to Ridge shrinkage.
+   - Minimizing expected cost shifts threshold down to $\tau^* = 341.5$ AQI, increasing Severe Recall to **95.71%** (reducing missed crisis hours from 1,568 down to 173, an 89.0% reduction), with expected cost dropping 62.97%.
+   - 93.6% of false alarms at $\tau^*=341.5$ occur in actual "Very Poor" air ($301–400$ AQI) and 0.0% in Moderate or better air.
+6. **Phase 7 Artifacts:**
    - `src/models/phase_7_classification.py` (Discretization, metric calculations, episode lead-time auditing)
+   - `src/analysis/cost_aware_threshold_analysis.py` (Cost-aware threshold optimization & PR curves)
    - `reports/classification/metrics/multiclass_metrics_comparison.csv`
+   - `reports/classification/metrics/cost_optimal_thresholds_summary.csv`
+   - `reports/classification/metrics/threshold_operating_points_comparison.csv`
    - `reports/classification/episodes/grap_episode_lead_times.csv`
    - `reports/classification/{1h,6h,24h}/classified_predictions.parquet`
+   - `reports/classification/cost_aware_threshold_analysis.md` (Cost-sensitive optimization report)
+   - `reports/classification/figures/` (01–04)
    - `reports/classification/PHASE_7_FINAL_AUDIT.md` (15-dimension master audit)
 
 ## Econometric Causal Analysis: Delhi Diwali Firecracker Ban vs Seasonal Inversion
