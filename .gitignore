@@ -45,3 +45,7 @@ Thumbs.db
 .quirq/
 .xo/
 .claude/
+
+# Kaggle dataset packaging directory (untracked, local-only export)
+/kaggle/
+
