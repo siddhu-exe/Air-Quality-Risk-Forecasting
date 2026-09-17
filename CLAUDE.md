@@ -70,6 +70,12 @@ Og Data/
   - 24h Horizon: Macro F1 = 0.3386, W-Kappa = 0.5178, Ordinal MAE = 0.3710, Severe Recall = 61.08%, Very Poor+ Recall = 93.22%, Critical Miss Rate = 0.000%.
   - GRAP Staging & Early Warning: 24h model delivers 17.36h mean advance warning lead time for Severe crisis episodes with 74.4% hit rate (55.8% providing >=6h actionable warning).
   - Code & Audit: `src/models/phase_7_classification.py`, `reports/classification/PHASE_7_FINAL_AUDIT.md`.
+- **Econometric Causal Analysis:** Delhi Diwali Firecracker Ban Policy vs Seasonal Inversion:
+  - Parallel pre-trends test strongly rejected (+20.38 pts/day, p < 0.001) due to autumn-to-winter meteorological transition.
+  - Interrupted Time Series level shift is -10.59 AQI points (p = 0.425, 95% CI: [-36.61, +15.43]), statistically indistinguishable from zero.
+  - In-time placebo test confirms naive pre/post shifts capture seasonal drift (+24.26 pts, p < 0.001).
+  - Hourly combustion tracers (SO2 surging 5.3x–7.9x to 74–80 µg/m³; PM2.5 to 960.7 µg/m³) show acute 6–12h pulse with return to trajectory within 18–24h; multi-week winter degradation is driven by planetary boundary layer inversion (<300m) and meteorological stagnation.
+  - Deliverables: `src/analysis/diwali_causal_analysis.py`, `reports/causal/diwali_ban_causal_analysis.md`, `docs/causal_findings.md`, `reports/causal/figures/`.
 
 ## Suggested Next Steps (Phase 8: Production Deployment, Real-Time Inference & Dashboard Integration)
 With forecasting and policy risk classification validated and audited across all horizons (1h, 6h, 24h), the system is ready for Phase 8:

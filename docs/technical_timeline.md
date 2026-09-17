@@ -104,6 +104,20 @@
     - 24h model delivered a **74.4% detection hit rate** on Severe crisis episodes with a mean advance warning lead time of **17.36 hours** (55.8% providing $\ge 6\text{h}$ actionable advance notice).
   - **Deliverables:** Core classification pipeline `src/models/phase_7_classification.py`, classified Parquet predictions in `reports/classification/{1h,6h,24h}/`, episode log `reports/classification/episodes/grap_episode_lead_times.csv`, and comprehensive audit report `reports/classification/PHASE_7_FINAL_AUDIT.md`.
 
+## Econometric Causal Analysis: Delhi Diwali Firecracker Ban vs Seasonal Inversion (Completed)
+- **Objective:** Evaluate whether the Delhi firecracker ban policy during Diwali (2023, 2024, 2025) produced a measurable causal reduction in ambient AQI, examining potential external controls, testing identification assumptions, and estimating econometric specifications.
+- **Milestones:**
+  - **Regulatory Status & Control Constraints:** Confirmed Delhi's complete blanket ban across 2023, 2024, and 2025 vs Mumbai's permitted status. Identified repository data constraint: Mumbai records are unpopulated for 2023–2025 (only Jan–Jul 2026 available), precluding external Difference-in-Differences and motivating internal quasi-experimental controls.
+  - **Pre-Trends Rejection:** Evaluated pre-Diwali trends over 14 days ($H_0: \beta_{\text{pre}} = 0$). Identified severe violation: Delhi AQI escalated at $+20.38$ pts/day ($p < 0.001, R^2 = 0.770$), rising from 69.8 to 334.3 due to synoptic autumn-to-winter meteorological transitions.
+  - **Econometric Modeling Suite:** Estimated 5 specifications with cluster-robust standard errors:
+    - *Model 1 (Naive OLS):* $\beta = +135.57$ ($p < 0.001$), confounded by pre-existing seasonal trajectory.
+    - *Model 2 (Station Fixed Effects):* $\beta = +136.35$ ($p < 0.001$).
+    - *Model 3 (Meteo Controls + FE):* $\beta = +114.53$ ($p < 0.001$).
+    - *Model 4 (Interrupted Time Series):* Accounting for pre-existing slope and meteorology, immediate post-Diwali level shift is $\beta = -10.59$ AQI points ($\text{SE} = 13.28, p = 0.425, 95\%\text{ CI: } [-36.61, +15.43]$), statistically indistinguishable from zero.
+    - *Model 5 (Placebo Falsification):* In-time placebo test on a non-event date 30 days prior (Sep 20, 2025) yields $\beta = +24.26$ ($p < 0.001$), confirming that naive pre/post shifts reflect seasonal cooling rather than policy impact.
+  - **Combustion Chemistry vs Inversion:** Hourly telemetry demonstrated acute 6–12h combustion pulses on Diwali night ($\text{PM}_{2.5}$ surging 8.0x to $960.7\ \mu\text{g/m}^3$ in 2025 and 5.6x to $612.9\ \mu\text{g/m}^3$ in 2024; $\text{SO}_2$ chemical tracer surging 5.3x–7.9x to $74\text{--}80\ \mu\text{g/m}^3$). Emissions dispersed within 18–24 hours; multi-week winter degradation is driven by PBL compression (<300m), thermal inversion, calm winds (<0.8 m/s), and transboundary crop residue burning.
+  - **Deliverables:** Analytical pipeline `src/analysis/diwali_causal_analysis.py`, regression summary `reports/causal/regression_models_summary.csv`, hourly spike summary `reports/causal/hourly_spike_comparison.csv`, 4 publication-grade figures in `reports/causal/figures/`, master report `reports/causal/diwali_ban_causal_analysis.md`, and internal note `docs/causal_findings.md`.
+
 ## Phase 8: Production Deployment, Real-Time Inference & Dashboard Integration (Scheduled)
 - **Objective:** Transition multi-horizon models and classification logic into an operational real-time production system with an automated inference engine, REST API, interactive monitoring dashboard, and alert dispatcher.
 - **Milestones:**

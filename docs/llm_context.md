@@ -87,6 +87,26 @@ The PostgreSQL schema strictly implements **4 Core Tables** in a native user-spa
    - `reports/classification/{1h,6h,24h}/classified_predictions.parquet`
    - `reports/classification/PHASE_7_FINAL_AUDIT.md` (15-dimension master audit)
 
+## Econometric Causal Analysis: Delhi Diwali Firecracker Ban vs Seasonal Inversion
+1. **Quasi-Experimental Design & Pre-Trends Violation:**
+   - Evaluated $\pm 14$-day window around Diwali 2025 (Oct 20, 2025) across all 7 Delhi stations.
+   - Pre-Diwali pre-trends test ($H_0: \beta_{\text{pre}} = 0$) strongly rejected: daily AQI escalated at $+20.38$ pts/day ($p < 0.001, R^2 = 0.770$) prior to Diwali due to seasonal autumn-to-winter meteorological transition.
+   - Mumbai 2023–2025 control data unpopulated in repository (Jan–Jul 2026 only), precluding external DiD and necessitating within-city quasi-experimental controls.
+2. **Master Econometric Regressions (Cluster-Robust SEs by Station):**
+   - *Naive OLS / Station FE:* $\beta \approx +135\text{--}+136$ ($p < 0.001$), confounded by pre-existing seasonal upward drift.
+   - *Meteorological Controls:* $\beta = +114.53$ ($p < 0.001$).
+   - *Interrupted Time Series (ITS):* Controls for pre-existing slope, post-treatment slope divergence, weather, and station FE. Level shift is $\beta = -10.59$ AQI points ($\text{SE} = 13.28, p = 0.425, 95\%\text{ CI: } [-36.61, +15.43]$), statistically indistinguishable from zero.
+   - *In-Time Placebo Falsification:* Non-event date 30 days prior (Sep 20, 2025) yields pseudo-treatment $\beta = +24.26$ ($p < 0.001$), proving naive pre/post estimates capture seasonal drift.
+3. **Chemical Tracers & Physical Inversion Dynamics:**
+   - Acute Diwali night spike observed: $\text{PM}_{2.5}$ peaked at $960.7\ \mu\text{g/m}^3$ (8.0x baseline) in 2025 and $612.9\ \mu\text{g/m}^3$ in 2024; $\text{SO}_2$ tracer spiked 5.3x–7.9x to $74\text{--}80\ \mu\text{g/m}^3$, confirming short-term ban non-compliance.
+   - Spikes dispersed within 18–24 hours; sustained multi-week winter degradation is driven by PBL compression (<300m), thermal inversion, calm winds (<0.8 m/s), and transboundary stubble burning.
+4. **Causal Deliverables:**
+   - Pipeline: `src/analysis/diwali_causal_analysis.py`
+   - Master Report: `reports/causal/diwali_ban_causal_analysis.md`
+   - Working Note: `docs/causal_findings.md`
+   - Summary CSVs: `reports/causal/regression_models_summary.csv`, `reports/causal/hourly_spike_comparison.csv`
+   - Figures: `reports/causal/figures/` (01–04)
+
 ## Upcoming Phase 8 Roadmap (Production Deployment, Real-Time Inference & Dashboard Integration)
 - **Real-Time Inference Engine:** Automated pipeline consuming streaming/new hourly data, computing 124 causal features, generating multi-horizon predictions, and assigning CPCB / GRAP risk tiers in real-time.
 - **REST API Serving Layer:** FastAPI endpoints exposing station metadata, multi-horizon forecasts, and GRAP emergency advisories.
