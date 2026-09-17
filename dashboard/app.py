@@ -175,7 +175,7 @@ with st.sidebar:
 # =============================================================================
 st.title("Delhi Air Quality Risk Forecasting & Policy Alerting")
 st.markdown(
-    "Continuous multi-horizon air quality forecasting, econometric policy evaluation, and asymmetric risk classification across Delhi's CAAQMS monitoring network. "
+    "Multi-horizon air quality forecasting backtest, econometric policy evaluation, and asymmetric risk classification across Delhi's CAAQMS monitoring network. "
     "[GitHub Repository ↗](https://github.com/Siddharth23052005/Air-quality-risk-forecasting)"
 )
 
@@ -198,10 +198,10 @@ tab_overview, tab_forecasts, tab_diwali, tab_risk, tab_methodology = st.tabs([
 with tab_overview:
     # 1. One-line value hook
     st.markdown(
-        "**Real-time air quality snapshot across all 7 Delhi stations alongside validated 24-hour predictive lead performance.**"
+        "**Station AQI snapshot at the conclusion of the held-out test split (Dec 31, 2025) alongside validated 24-hour predictive lead performance.**"
     )
 
-    # 2. 7-station current AQI snapshot (clean, tier only, native st.dataframe with column configuration)
+    # 2. 7-station AQI snapshot (clean, tier only, native st.dataframe with column configuration)
     latest_ts = df_1h['timestamp'].max()
     df_latest = df_1h[df_1h['timestamp'] == latest_ts].copy().sort_values('station_name')
 
@@ -211,7 +211,7 @@ with tab_overview:
         cpcb_name, _, _ = get_cpcb_tier(aqi_val)
         table_data.append({
             "Monitoring Station": r['station_name'],
-            "Current AQI": aqi_val,
+            "Recorded AQI (Dec 31, 2025)": aqi_val,
             "CPCB Risk Tier": cpcb_name
         })
 
@@ -220,7 +220,7 @@ with tab_overview:
         df_table,
         column_config={
             "Monitoring Station": st.column_config.TextColumn("Monitoring Station"),
-            "Current AQI": st.column_config.NumberColumn("Current AQI", format="%d"),
+            "Recorded AQI (Dec 31, 2025)": st.column_config.NumberColumn("Recorded AQI (Dec 31, 2025)", format="%d"),
             "CPCB Risk Tier": st.column_config.TextColumn("CPCB Risk Tier"),
         },
         hide_index=True,
@@ -242,7 +242,7 @@ with tab_overview:
 with tab_forecasts:
     # 2-3 sentence plain-language summary
     st.markdown(r"""
-    Multi-horizon regression models predict future AQI at **1-hour**, **6-hour**, and **24-hour** lead times across all 7 Delhi monitoring stations.
+    Evaluated on the held-out peak winter test set (Nov–Dec 2025), multi-horizon regression models forecast future AQI at **1-hour**, **6-hour**, and **24-hour** lead times across all 7 Delhi monitoring stations.
     Model uncertainty is explicitly represented by shaded error ribbons based on empirical out-of-sample Mean Absolute Error ($\pm 2.29$ for 1h, $\pm 11.84$ for 6h, and $\pm 34.11$ for 24h).
     The 24-hour hybrid ensemble combines regularized continuous Ridge regression with persistence to maintain unbounded extrapolation during peak winter pollution episodes.
     """)
@@ -256,7 +256,11 @@ with tab_forecasts:
     with f_col2:
         time_window_choice = st.selectbox(
             "Time Horizon Window",
-            ["Latest 72 Hours", "Past 14 Days", "Full Peak Winter Test Window (Nov–Dec 2025)"],
+            [
+                "Final 72h of Test Split (Dec 28–31, 2025)",
+                "Final 14 Days of Test Split (Dec 18–31, 2025)",
+                "Full Peak Winter Test Set (Nov 01 – Dec 31, 2025)"
+            ],
             index=0,
             key="forecast_window"
         )
@@ -290,9 +294,9 @@ with tab_forecasts:
 
     # Filter time range
     max_time = df_plot_source['timestamp'].max()
-    if time_window_choice == "Latest 72 Hours":
+    if "72h" in time_window_choice:
         df_plot = df_plot_source[df_plot_source['timestamp'] >= max_time - pd.Timedelta(hours=72)].copy()
-    elif time_window_choice == "Past 14 Days":
+    elif "14 Days" in time_window_choice:
         df_plot = df_plot_source[df_plot_source['timestamp'] >= max_time - pd.Timedelta(days=14)].copy()
     else:
         df_plot = df_plot_source.copy()
@@ -347,6 +351,7 @@ with tab_forecasts:
     )
 
     st.plotly_chart(fig_forecast)
+    st.caption("Model evaluated on historical held-out data (Nov–Dec 2025 test split, N=9,800) — not a live feed. The model never saw this data during training.")
 
     # Supporting details inside collapsed expanders
     with st.expander("See station sub-sample error metrics & model parameters", expanded=False):
@@ -621,6 +626,13 @@ with tab_methodology:
     Discretized risk alerts and asymmetric threshold optimization align technical machine learning output with CAQM GRAP public health intervention mandates.
     """)
 
+    st.info(
+        "**System Architecture & Deployment Scope:** This dashboard operates as a portfolio backtest and evaluation system "
+        "using static historical CAAQMS datasets (2023–2026), rather than a live streaming deployment. Operational real-time "
+        "forecasting would require wiring an active ingestion feed (such as CPCB CCR portal scraping or the AQICN API) into the "
+        "existing 124-feature causal pipeline to serve live rolling predictions. This is a stated architectural limitation."
+    )
+
     # Architecture Overview Cards
     c1, c2 = st.columns(2)
     with c1:
@@ -676,4 +688,4 @@ with tab_methodology:
 # Footer
 # =============================================================================
 st.markdown("---")
-st.caption("Delhi Air Quality Risk Forecasting System • Streamlit Cloud Deployment • Continuous Ambient Air Quality Monitoring Network (DPCC/CPCB)")
+st.caption("Delhi Air Quality Risk Forecasting System • Historical Backtest & Policy Evaluation • Continuous Ambient Air Quality Monitoring Network (DPCC/CPCB)")
