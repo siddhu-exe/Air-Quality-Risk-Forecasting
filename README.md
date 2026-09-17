@@ -36,7 +36,7 @@ Metrics evaluated out-of-sample on the peak winter crisis split across all 7 Del
 
 * **Modest 24-Hour Skill**: At 24 hours, the R² is 0.36. While this outperforms both seasonal and heuristic baselines representing real predictive skill (and guarantees a 0% critical miss rate for predicting severe events as moderate), the variance explained is modest. 
 * **No Cost-Aware Threshold Tuning**: The classifier maps continuous predictions to ordinal bins using zero-leakage scalar edges. No cost-aware threshold shifting has been applied to balance specific recall/precision trade-offs for early alert policies.
-* **Causal Scope**: Currently restricted to trailing network aggregates and meteorological observation lags rather than broader external policy interventions or point-source emission modeling.
+* **Causal Scope & Policy Analysis**: A quasi-experimental causal analysis of the Delhi Diwali firecracker ban ([reports/causal/diwali_ban_causal_analysis.md](reports/causal/diwali_ban_causal_analysis.md)) confirms that pre-Diwali pre-trends were sharply non-parallel (+20.38 pts/day, p < 0.001) due to autumn-to-winter meteorological transitions. Controlling for pre-trends in an Interrupted Time Series specification reduces the immediate level shift to -10.59 AQI points (p = 0.425, 95% CI: [-36.61, +15.43]), indicating that multi-week air quality degradation is driven by planetary boundary layer inversion rather than policy failure or persistent emissions. External DiD against Mumbai was precluded by data coverage (Mumbai data in the repo spans Jan–Jul 2026 only).
 
 ## 📁 Repository Map
 
