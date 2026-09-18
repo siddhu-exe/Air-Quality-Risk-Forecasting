@@ -6,7 +6,7 @@ This project forecasts air quality across Delhi 1 to 24 hours in advance and eva
 
 - **Interactive Dashboard:** Run locally with `streamlit run app.py` (deployable to Streamlit Community Cloud)
 - **Public Kaggle Dataset:** [Delhi Air Quality Monitoring Dataset (2023–2026)](https://www.kaggle.com/datasets/siddharthdongardive/delhi-air-quality-monitoring-dataset-2023-2026)
-- **GitHub Repository:** [https://github.com/Siddharth23052005/Air-quality-risk-forecasting](https://github.com/Siddharth23052005/Air-quality-risk-forecasting)
+- **GitHub Repository:** [https://github.com/Siddharth23052005/Air-quality-risk-forecasting](https://github.com/siddhu-exe/Air-quality-risk-forecasting)
 
 ---
 
