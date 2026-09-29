@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{"on-primary-fixed":"#002113","tertiary":"#ffb2b7","on-error":"#690005","primary-fixed":"#6ffbbe","tertiary-container":"#ff7886","tertiary-fixed-dim":"#ffb2b7","surface-container-low":"#0d1c2d","on-secondary":"#472a00","on-primary":"#003824","secondary-fixed":"#ffddb8","tertiary-fixed":"#ffdadb","on-secondary-container":"#5b3800","on-surface":"#d4e4fa","on-surface-variant":"#bbcabf","on-primary-fixed-variant":"#005236","on-secondary-fixed-variant":"#653e00","surface-bright":"#2c3a4c","secondary":"#ffb95f","inverse-primary":"#006c49","outline-variant":"#3c4a42","on-tertiary-fixed":"#40000d","surface":"#051424","surface-variant":"#273647","on-tertiary":"#67001b","inverse-surface":"#d4e4fa","on-tertiary-fixed-variant":"#92002a","surface-container-lowest":"#010f1f","on-background":"#d4e4fa","surface-container":"#122131","background":"#051424","error-container":"#93000a","surface-container-high":"#1c2b3c","surface-tint":"#4edea3","error":"#ffb4ab","on-primary-container":"#00422b","secondary-fixed-dim":"#ffb95f","inverse-on-surface":"#233143","on-error-container":"#ffdad6","outline":"#86948a","primary-fixed-dim":"#4edea3","primary-container":"#10b981","secondary-container":"#ee9800","on-secondary-fixed":"#2a1700","surface-dim":"#051424","on-tertiary-container":"#780021","primary":"#4edea3","surface-container-highest":"#273647"},borderRadius:{"DEFAULT":"0.125rem","lg":"0.25rem","xl":"0.5rem","full":"0.75rem"},spacing:{"margin":"1rem","gutter-desktop":"1.25rem","gutter":"1rem","space-xs":"0.25rem","space-lg":"1rem","space-2xs":"0.125rem","space-md":"0.75rem","space-2xl":"2rem","space-xl":"1.5rem","space-sm":"0.5rem","margin-desktop":"1.5rem"},fontFamily:{"body-md":["Inter"],"label-caps":["Inter"],"headline-lg":["Inter"],"headline-sm":["Inter"],"headline-xl-mobile":["Inter"],"label-code":["JetBrains Mono"],"metric-display":["JetBrains Mono"],"body-lg":["Inter"],"body-sm":["Inter"],"headline-xl":["Inter"]},fontSize:{"body-md":["0.875rem",{"lineHeight":"1.25rem","fontWeight":"400"}],"label-caps":["0.6875rem",{"lineHeight":"0.875rem","letterSpacing":"0.06em","fontWeight":"600"}],"headline-lg":["1.5rem",{"lineHeight":"2rem","letterSpacing":"-0.02em","fontWeight":"600"}],"headline-sm":["1.125rem",{"lineHeight":"1.5rem","letterSpacing":"-0.01em","fontWeight":"500"}],"headline-xl-mobile":["1.75rem",{"lineHeight":"2.25rem","letterSpacing":"-0.02em","fontWeight":"600"}],"label-code":["0.75rem",{"lineHeight":"1rem","letterSpacing":"0.02em","fontWeight":"500"}],"metric-display":["2rem",{"lineHeight":"2.25rem","letterSpacing":"-0.03em","fontWeight":"700"}],"body-lg":["1rem",{"lineHeight":"1.5rem","fontWeight":"400"}],"body-sm":["0.75rem",{"lineHeight":"1rem","fontWeight":"400"}],"headline-xl":["2.25rem",{"lineHeight":"2.75rem","letterSpacing":"-0.025em","fontWeight":"600"}]}}}};</script></head><body class="bg-surface font-body-md text-on-surface antialiased"><header class="fixed top-0 left-0 right-0 z-50 bg-surface-container-lowest/95 backdrop-blur-md shadow-[0_1px_8px_rgba(0,0,0,0.4)]"><div class="h-16 w-full px-margin-desktop flex items-center justify-between gap-space-lg"><div class="flex items-center gap-space-md shrink-0"><img alt="AuraPulse Air Quality AI Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1UQdr5xyr13RwCqtOjytbCGFvzuQY2KHB0TjBaDYR0oUoqjtqpM5dlJ59pJSeBYcWE6tSAsczah7Y-CjT3gqZRA8HB56Ew2xpkrSXTYNGM_A-S7C4jx88Eg_1APV83T42UQsAKEfHSsAGrbMIvq9yV6eeHVmBOZaePkHesQosNsIfQh851WKFzHbkdSe9Q7WDOkjQkAP63LjozDY_vALgkH-BZXZ6EQ38jNV5ADYdh3"/><div class="flex flex-col"><div class="flex items-center gap-space-sm"><span class="font-headline-sm text-headline-sm tracking-tight text-on-surface font-bold">VayuRisk AI</span><span class="px-space-xs py-space-2xs rounded bg-surface-container-high text-primary font-label-code text-label-code">Delhi NCR Model v4.2-Live</span></div><span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">Risk &amp; Policy Analytical Lab</span></div></div><div class="hidden xl:flex items-center gap-space-md px-space-md py-space-2xs bg-surface-container-low rounded"><div class="flex items-center gap-space-xs"><span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span><span class="font-label-code text-label-code text-on-surface">38 STATIONS ACTIVE</span></div><span class="text-outline-variant font-label-code text-label-code">|</span><span class="font-label-code text-label-code text-on-surface-variant">LATENCY: <span class="text-primary font-label-code text-label-code">2.4s</span></span><span class="text-outline-variant font-label-code text-label-code">|</span><span class="font-label-code text-label-code text-on-surface-variant">SYNC: <span class="text-on-surface font-label-code text-label-code">3m ago</span></span></div><div class="flex items-center gap-space-md"><div class="hidden lg:flex items-center bg-surface-container-high rounded p-space-2xs"><span class="px-space-sm py-space-2xs text-on-surface-variant font-label-code text-label-code uppercase">Region:</span><span class="px-space-sm py-space-2xs bg-surface-container-lowest text-primary rounded font-label-code text-label-code">Delhi NCT</span></div><div class="flex items-center bg-surface-container-high rounded p-space-2xs"><span class="px-space-sm py-space-2xs text-on-surface-variant font-label-code text-label-code uppercase hidden sm:inline">Horizon:</span><button class="px-space-sm py-space-2xs bg-surface-container-lowest text-primary rounded font-label-code text-label-code">1h</button><button class="px-space-sm py-space-2xs text-on-surface-variant hover:text-on-surface font-label-code text-label-code">6h</button><button class="px-space-sm py-space-2xs text-on-surface-variant hover:text-on-surface font-label-code text-label-code">24h</button></div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div><div class="w-full bg-error-container/30 px-margin-desktop py-space-2xs flex items-center justify-between"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-error text-[16px]">warning</span><span class="font-label-code text-label-code text-error tracking-wide uppercase font-semibold">GRAP Stage III Early Warning:</span><span class="font-label-code text-label-code text-on-surface">P(Severe &gt; 400 AQI in 24h) = <span class="text-error font-bold font-label-code text-label-code">78.4%</span></span></div><div class="hidden md:flex items-center gap-space-lg"><span class="font-label-code text-label-code text-tertiary">CRITICAL THRESHOLD IMMINENT</span><span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Protocol CAQM-382</span></div></div><div class="w-full bg-surface-container px-margin-desktop"><nav class="flex items-center gap-space-xs overflow-x-auto py-space-xs" data-active-classes="text-primary bg-surface-container-highest rounded"><a class="px-space-md py-space-xs font-label-caps text-label-caps uppercase text-on-surface-variant hover:text-on-surface whitespace-nowrap transition-colors" data-path="real-time-and-forecasts" href="#">Real-Time &amp; Forecasts</a><a class="px-space-md py-space-xs font-label-caps text-label-caps uppercase text-on-surface-variant hover:text-on-surface whitespace-nowrap transition-colors" data-path="model-performance-and-thresholds" href="#">Model Performance &amp; Thresholds</a><a class="px-space-md py-space-xs font-label-caps text-label-caps uppercase text-on-surface-variant hover:text-on-surface whitespace-nowrap transition-colors" data-path="causal-policy-and-diwali-impact" href="#">Causal Policy &amp; Diwali Impact</a><a class="px-space-md py-space-xs font-label-caps text-label-caps uppercase text-on-surface-variant hover:text-on-surface whitespace-nowrap transition-colors" data-path="station-explorer-and-sensor-diagnostics" href="#">Station Explorer &amp; Sensor Diagnostics</a></nav></div></header><aside class="fixed left-0 top-32 bottom-0 w-64 bg-surface-container-lowest z-40 flex flex-col justify-between py-space-md shadow-[1px_0_12px_rgba(0,0,0,0.5)]"><div class="flex flex-col gap-space-md px-space-md"><div class="px-space-sm pt-space-xs"><span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">Active Telemetry Hub</span></div><div class="flex flex-col gap-space-2xs"><div class="px-space-sm py-space-xs rounded bg-surface-container-low flex items-center justify-between"><span class="font-label-code text-label-code text-on-surface-variant">Anand Vihar</span><span class="font-label-code text-label-code text-error font-semibold">442 AQI</span></div><div class="px-space-sm py-space-xs rounded bg-surface-container-low flex items-center justify-between"><span class="font-label-code text-label-code text-on-surface-variant">ITO</span><span class="font-label-code text-label-code text-secondary font-semibold">384 AQI</span></div><div class="px-space-sm py-space-xs rounded bg-surface-container-low flex items-center justify-between"><span class="font-label-code text-label-code text-on-surface-variant">Punjabi Bagh</span><span class="font-label-code text-label-code text-error font-semibold">412 AQI</span></div><div class="px-space-sm py-space-xs rounded bg-surface-container-low flex items-center justify-between"><span class="font-label-code text-label-code text-on-surface-variant">RK Puram</span><span class="font-label-code text-label-code text-secondary font-semibold">368 AQI</span></div></div><div class="px-space-sm pt-space-sm"><span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">Mitigation Status</span></div><div class="p-space-sm rounded bg-surface-container flex flex-col gap-space-2xs"><div class="flex items-center justify-between"><span class="font-label-code text-label-code text-on-surface">GRAP II Active</span><span class="w-2 h-2 rounded-full bg-secondary"></span></div><div class="flex items-center justify-between"><span class="font-label-code text-label-code text-on-surface-variant">Escalation Alert</span><span class="font-label-code text-label-code text-error">STAGE III</span></div></div></div><div class="px-space-md flex flex-col gap-space-2xs"><div class="p-space-sm rounded bg-surface-container-high/50 flex flex-col gap-space-2xs"><span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Data Engine</span><div class="flex items-center justify-between"><span class="font-label-code text-label-code text-on-surface-variant">CPCB + IMD + MODIS</span><span class="font-label-code text-label-code text-primary">READY</span></div></div></div></aside><div class="pl-64"><main class="relative pt-32 w-full px-margin-desktop bg-surface min-h-screen"><div class="flex flex-col w-full">
+<div class="flex flex-col gap-space-lg pb-space-2xl"><!-- Top Header Bar -->
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-md border-b border-surface-container-highest pb-space-md">
+<div class="flex flex-col gap-space-2xs">
+<div class="flex items-center gap-space-sm flex-wrap">
+<span class="px-space-xs py-space-2xs rounded bg-surface-container-highest text-primary font-label-code text-label-code font-semibold">CAUSAL EVALUATION LAB</span>
+<span class="font-label-code text-label-code text-on-surface-variant">NODE: CAQM-DEL-SYNTH-84</span>
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+<span class="font-label-code text-label-code text-primary font-medium">IDENTIFIED: SCM + DML</span>
+</div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight font-bold">
+      Diwali Pyrotechnic Impact &amp; Policy Interventions
+    </h1>
+</div>
+<div class="flex items-center gap-space-xs shrink-0">
+<span class="px-space-sm py-space-xs rounded bg-surface-container text-on-surface font-label-code text-label-code">14 Donor Stations</span>
+<span class="px-space-sm py-space-xs rounded bg-primary-container text-on-primary font-label-code text-label-code font-semibold">RMSE: 11.2 AQI</span>
+</div>
+</div>
+<!-- 4 Clean Summary KPI Tiles -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-space-md">
+<!-- Tile 1: Net Spike -->
+<div class="bg-surface-container-low border border-surface-container-highest/60 p-space-md rounded-xl flex flex-col justify-between shadow-sm">
+<div class="flex items-center justify-between">
+<span class="font-label-caps text-label-caps uppercase text-on-surface-variant font-semibold tracking-wider">Net Pyrotechnic Spike</span>
+<span class="px-space-xs py-space-2xs rounded bg-error-container text-error font-label-code text-label-code font-bold">p &lt; 0.001</span>
+</div>
+<div class="my-space-xs flex items-baseline gap-space-xs">
+<span class="font-metric-display text-metric-display text-error font-bold">+142</span>
+<span class="font-label-code text-label-code text-on-surface-variant">AQI pts</span>
+</div>
+<div class="flex items-center justify-between text-on-surface-variant font-label-code text-label-code">
+<span>95% CI: [126, 158]</span>
+<span class="text-tertiary">SE: 8.16</span>
+</div>
+</div>
+<!-- Tile 2: Counterfactual vs Observed -->
+<div class="bg-surface-container-low border border-surface-container-highest/60 p-space-md rounded-xl flex flex-col justify-between shadow-sm">
+<div class="flex items-center justify-between">
+<span class="font-label-caps text-label-caps uppercase text-on-surface-variant font-semibold tracking-wider">Counterfactual vs Actual</span>
+<span class="px-space-xs py-space-2xs rounded bg-surface-container-highest text-secondary font-label-code text-label-code">Δ +142 pt gap</span>
+</div>
+<div class="my-space-xs flex items-baseline gap-space-sm">
+<span class="font-metric-display text-metric-display text-primary font-bold">218</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">vs</span>
+<span class="font-metric-display text-metric-display text-error font-bold">360</span>
+<span class="font-label-code text-label-code text-on-surface-variant">peak AQI</span>
+</div>
+<div class="flex items-center justify-between text-on-surface-variant font-label-code text-label-code">
+<span>Synthetic Baseline</span>
+<span class="text-primary font-semibold">R² = 0.941</span>
+</div>
+</div>
+<!-- Tile 3: Atmospheric Dissipation -->
+<div class="bg-surface-container-low border border-surface-container-highest/60 p-space-md rounded-xl flex flex-col justify-between shadow-sm">
+<div class="flex items-center justify-between">
+<span class="font-label-caps text-label-caps uppercase text-on-surface-variant font-semibold tracking-wider">Atmospheric Dissipation</span>
+<span class="px-space-xs py-space-2xs rounded bg-surface-container-highest text-primary font-label-code text-label-code">Half-Life</span>
+</div>
+<div class="my-space-xs flex items-baseline gap-space-xs">
+<span class="font-metric-display text-metric-display text-primary font-bold">38.0</span>
+<span class="font-label-code text-label-code text-on-surface-variant">hours</span>
+</div>
+<div class="flex items-center justify-between text-on-surface-variant font-label-code text-label-code">
+<span>Decay to Trend</span>
+<span class="text-primary">T+38h return</span>
+</div>
+</div>
+<!-- Tile 4: Ban Efficacy -->
+<div class="bg-surface-container-low border border-surface-container-highest/60 p-space-md rounded-xl flex flex-col justify-between shadow-sm">
+<div class="flex items-center justify-between">
+<span class="font-label-caps text-label-caps uppercase text-on-surface-variant font-semibold tracking-wider">Ban Attenuation Efficacy</span>
+<span class="px-space-xs py-space-2xs rounded bg-primary-container text-on-primary font-label-code text-label-code font-bold">Controlled</span>
+</div>
+<div class="my-space-xs flex items-baseline gap-space-xs">
+<span class="font-metric-display text-metric-display text-primary font-bold">32.4%</span>
+<span class="font-label-code text-label-code text-on-surface-variant">reduction</span>
+</div>
+<div class="flex items-center justify-between text-on-surface-variant font-label-code text-label-code">
+<span>vs Lax Counterfactual</span>
+<span class="text-secondary">-68 AQI averted</span>
+</div>
+</div>
+</div>
+<!-- Primary Visualization: Synthetic Control Trajectory -->
+<div class="bg-surface-container-low border border-surface-container-highest/60 rounded-xl p-space-lg shadow-md flex flex-col gap-space-md">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm">
+<div class="flex items-center gap-space-sm">
+<span class="font-headline-sm text-headline-sm text-on-surface font-semibold">Synthetic Control Trajectory (T-7d to T+7d)</span>
+<span class="px-space-xs py-space-2xs rounded bg-surface-container-highest text-on-surface-variant font-label-code text-label-code">1-hr Res</span>
+</div>
+<!-- Compact Legend -->
+<div class="flex items-center gap-space-md flex-wrap font-label-code text-label-code">
+<div class="flex items-center gap-space-xs">
+<span class="w-3 h-0.5 bg-error"></span>
+<span class="text-on-surface">Observed Delhi AQI</span>
+</div>
+<div class="flex items-center gap-space-xs">
+<span class="w-3 h-0.5 border-t-2 border-dashed border-primary"></span>
+<span class="text-on-surface">Synthetic Counterfactual</span>
+</div>
+<div class="flex items-center gap-space-xs">
+<span class="w-2.5 h-2.5 rounded-sm bg-error/30 border border-error/50"></span>
+<span class="text-tertiary">Attributable Spike (+142)</span>
+</div>
+</div>
+</div>
+<!-- SVG Canvas -->
+<div class="relative w-full h-[320px] bg-surface-container-lowest rounded-lg p-space-sm flex flex-col justify-between overflow-hidden border border-surface-container-highest/40">
+<svg class="w-full h-full" preserveaspectratio="none" viewbox="0 0 1000 260">
+<defs>
+<lineargradient id="causalSpikeGradient" x1="0%" x2="0%" y1="0%" y2="100%">
+<stop offset="0%" stop-color="#ff7886" stop-opacity="0.40"></stop>
+<stop offset="60%" stop-color="#ee9800" stop-opacity="0.15"></stop>
+<stop offset="100%" stop-color="#122131" stop-opacity="0.0"></stop>
+</lineargradient>
+<pattern height="52" id="matrixGrid" patternunits="userSpaceOnUse" width="71.4">
+<path d="M 71.4 0 L 0 0 0 52" fill="none" stroke="#273647" stroke-dasharray="2 2" stroke-width="0.5"></path>
+</pattern>
+</defs>
+<rect fill="url(#matrixGrid)" height="260" opacity="0.5" width="1000"></rect>
+<!-- Reference Line: GRAP III 400 -->
+<line stroke="#ffb95f" stroke-dasharray="4 4" stroke-width="1" x1="0" x2="1000" y1="80" y2="80"></line>
+<text fill="#ffb95f" font-family="JetBrains Mono" font-size="9.5" font-weight="600" x="16" y="74">GRAP STAGE III THRESHOLD (400 AQI)</text>
+<!-- Reference Line: Poor 200 -->
+<line stroke="#3c4a42" stroke-dasharray="4 4" stroke-width="1" x1="0" x2="1000" y1="160" y2="160"></line>
+<text fill="#86948a" font-family="JetBrains Mono" font-size="9" x="16" y="154">NAAQS POOR (200)</text>
+<!-- T-0 Event Vertical Marker -->
+<line stroke="#ffb2b7" stroke-dasharray="3 3" stroke-width="1.5" x1="500" x2="500" y1="10" y2="250"></line>
+<rect fill="#93000a" height="20" rx="3" width="110" x="445" y="8"></rect>
+<text fill="#ffdad6" font-family="JetBrains Mono" font-size="9" font-weight="600" text-anchor="middle" x="500" y="22">T-0: DIWALI NIGHT</text>
+<!-- Attributable Shock Shaded Area (T-0 to T+3d) -->
+<path d="M 500 135 C 520 75, 540 25, 560 20 C 580 16, 600 40, 620 90 C 645 125, 665 138, 680 144 L 680 144 C 660 142, 645 141, 620 138 C 600 136, 580 134, 560 132 C 540 131, 520 132, 500 135 Z" fill="url(#causalSpikeGradient)"></path>
+<!-- Curve 1: Synthetic Counterfactual (Teal dashed) -->
+<path d="M 0 155 C 60 150, 120 162, 180 152 C 240 140, 300 146, 360 142 C 420 137, 460 134, 500 135 C 540 131, 580 134, 620 138 C 680 144, 740 141, 800 145 C 860 150, 930 147, 1000 140" fill="none" stroke="#10b981" stroke-dasharray="5 3" stroke-width="2.5"></path>
+<!-- Curve 2: Observed Actual Delhi AQI (Solid Crimson) -->
+<path d="M 0 156 C 60 149, 120 164, 180 151 C 240 142, 300 145, 360 143 C 420 136, 460 132, 500 135 C 520 75, 540 25, 560 20 C 580 16, 600 40, 620 90 C 645 125, 665 138, 680 144 C 740 141, 800 145, 860 150 L 1000 140" fill="none" stroke="#ff7886" stroke-width="2.5"></path>
+<!-- Peak Point Marker -->
+<circle cx="560" cy="20" fill="#ff7886" r="4.5" stroke="#690005" stroke-width="2"></circle>
+<rect fill="#010f1f" height="28" rx="3" stroke="#ff7886" stroke-width="0.75" width="135" x="575" y="12"></rect>
+<text fill="#ffb4ab" font-family="JetBrains Mono" font-size="8.5" font-weight="700" x="582" y="24">PEAK: 360 AQI (T+12h)</text>
+<text fill="#4edea3" font-family="JetBrains Mono" font-size="7.5" x="582" y="35">Counterfactual: 218 AQI</text>
+<!-- Attributable Badge -->
+<rect fill="#1c2b3c" height="20" rx="3" stroke="#ee9800" stroke-width="0.75" width="155" x="525" y="62"></rect>
+<text fill="#ffddb8" font-family="JetBrains Mono" font-size="9" font-weight="600" text-anchor="middle" x="602" y="76">Net Spike: +142 AQI</text>
+</svg>
+<!-- Timeline Axis -->
+<div class="flex items-center justify-between pt-space-xs text-on-surface-variant font-label-code text-label-code border-t border-surface-container-highest/30">
+<span>T-7d</span>
+<span>T-5d</span>
+<span>T-3d</span>
+<span>T-1d</span>
+<span class="text-primary font-bold">T-0 (Diwali)</span>
+<span>T+1d</span>
+<span>T+3d</span>
+<span>T+5d</span>
+<span>T+7d</span>
+</div>
+</div>
+</div>
+<!-- Bottom 2-Column Balanced Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-space-md">
+<!-- Column 1: Event Study & Chemical Speciation Attribution -->
+<div class="bg-surface-container-low border border-surface-container-highest/60 rounded-xl p-space-lg shadow-md flex flex-col justify-between gap-space-md">
+<div class="flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<span class="font-headline-sm text-headline-sm text-on-surface font-semibold">Event Study &amp; Structural Break</span>
+<span class="px-space-xs py-space-2xs rounded bg-primary-container text-on-primary font-label-code text-label-code font-semibold">Parallel Trends: Valid (p = 0.42)</span>
+</div>
+<span class="font-label-code text-label-code text-on-surface-variant">Pre/post treatment coefficient estimates (τ = -3 to +3)</span>
+</div>
+<!-- Point-estimate Plot with Error Bars -->
+<div class="bg-surface-container-lowest rounded-lg p-space-sm h-40 flex items-center justify-center border border-surface-container-highest/40">
+<svg class="w-full h-full" viewbox="0 0 460 140">
+<!-- Zero Reference Line -->
+<line stroke="#3c4a42" stroke-width="1" x1="20" x2="440" y1="90" y2="90"></line>
+<text fill="#86948a" font-family="JetBrains Mono" font-size="8" x="24" y="86">β = 0</text>
+<!-- Event Vertical T-0 -->
+<line stroke="#ffb2b7" stroke-dasharray="2 2" stroke-width="1" x1="230" x2="230" y1="10" y2="130"></line>
+<text fill="#ffb2b7" font-family="JetBrains Mono" font-size="8" x="234" y="20">Diwali Break</text>
+<!-- tau = -3 -->
+<line stroke="#4edea3" stroke-width="1.5" x1="70" x2="70" y1="78" y2="102"></line>
+<circle cx="70" cy="90" fill="#4edea3" r="3"></circle>
+<text fill="#86948a" font-family="JetBrains Mono" font-size="8" text-anchor="middle" x="70" y="116">τ-3</text>
+<!-- tau = -2 -->
+<line stroke="#4edea3" stroke-width="1.5" x1="120" x2="120" y1="80" y2="100"></line>
+<circle cx="120" cy="91" fill="#4edea3" r="3"></circle>
+<text fill="#86948a" font-family="JetBrains Mono" font-size="8" text-anchor="middle" x="120" y="116">τ-2</text>
+<!-- tau = -1 (Reference baseline) -->
+<circle cx="170" cy="90" fill="#ffffff" r="3.5"></circle>
+<text fill="#86948a" font-family="JetBrains Mono" font-size="8" text-anchor="middle" x="170" y="116">τ-1 (Ref)</text>
+<!-- tau = +1 -->
+<line stroke="#ff7886" stroke-width="1.5" x1="280" x2="280" y1="35" y2="55"></line>
+<circle cx="280" cy="45" fill="#ff7886" r="3.5"></circle>
+<text fill="#ff7886" font-family="JetBrains Mono" font-size="8" text-anchor="middle" x="280" y="116">τ+1</text>
+<!-- tau = +2 (Peak) -->
+<line stroke="#ff7886" stroke-width="1.5" x1="340" x2="340" y1="15" y2="35"></line>
+<circle cx="340" cy="25" fill="#ffb4ab" r="4"></circle>
+<text fill="#ff7886" font-family="JetBrains Mono" font-size="8" text-anchor="middle" x="340" y="116">τ+2 (Peak)</text>
+<!-- tau = +3 -->
+<line stroke="#ff7886" stroke-width="1.5" x1="400" x2="400" y1="45" y2="65"></line>
+<circle cx="400" cy="55" fill="#ff7886" r="3.5"></circle>
+<text fill="#ff7886" font-family="JetBrains Mono" font-size="8" text-anchor="middle" x="400" y="116">τ+3</text>
+</svg>
+</div>
+<!-- Chemical Speciation Mini-Bars -->
+<div class="flex flex-col gap-space-xs pt-space-2xs border-t border-surface-container-highest/40">
+<div class="flex items-center justify-between mb-space-2xs">
+<span class="font-label-caps text-label-caps uppercase text-on-surface-variant font-semibold">Pyrotechnic Tracer Fingerprint (ICP-MS)</span>
+<span class="font-label-code text-label-code text-primary">Verified (p &lt; 0.0001)</span>
+</div>
+<!-- Barium -->
+<div class="flex flex-col gap-space-2xs">
+<div class="flex items-center justify-between font-label-code text-label-code">
+<span class="text-on-surface">Barium (Ba) — Green Flare</span>
+<span class="text-error font-bold">+1,480%</span>
+</div>
+<div class="w-full bg-surface-container-highest rounded-full h-1.5 overflow-hidden">
+<div class="bg-error h-full rounded-full" style="width: 94%"></div>
+</div>
+</div>
+<!-- Strontium -->
+<div class="flex flex-col gap-space-2xs">
+<div class="flex items-center justify-between font-label-code text-label-code">
+<span class="text-on-surface">Strontium (Sr) — Red Flare</span>
+<span class="text-tertiary font-bold">+840%</span>
+</div>
+<div class="w-full bg-surface-container-highest rounded-full h-1.5 overflow-hidden">
+<div class="bg-tertiary h-full rounded-full" style="width: 78%"></div>
+</div>
+</div>
+<!-- Potassium -->
+<div class="flex flex-col gap-space-2xs">
+<div class="flex items-center justify-between font-label-code text-label-code">
+<span class="text-on-surface">Potassium (K⁺) — Oxidizer</span>
+<span class="text-secondary font-bold">+620%</span>
+</div>
+<div class="w-full bg-surface-container-highest rounded-full h-1.5 overflow-hidden">
+<div class="bg-secondary h-full rounded-full" style="width: 64%"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Column 2: Counterfactual Policy Sandbox (Interactive) -->
+<div class="bg-surface-container-low border border-surface-container-highest/60 rounded-xl p-space-lg shadow-md flex flex-col justify-between gap-space-md">
+<div class="flex items-center justify-between">
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-semibold">Counterfactual Policy Sandbox</h2>
+<span class="px-space-xs py-space-2xs rounded bg-surface-container-highest text-secondary font-label-code text-label-code font-medium">DML Simulation</span>
+</div>
+<!-- Interactive Levers -->
+<div class="flex flex-col gap-space-sm">
+<!-- Lever 1: Firecracker Ban -->
+<div class="flex flex-col gap-space-xs bg-surface-container p-space-sm rounded-lg">
+<div class="flex items-center justify-between font-label-code text-label-code">
+<span class="text-on-surface font-medium">Firecracker Ban Enforcement</span>
+<span class="text-primary font-bold" id="ban-label">Strict (-64 AQI)</span>
+</div>
+<div class="grid grid-cols-3 gap-space-xs bg-surface-container-low p-space-2xs rounded">
+<button class="py-space-2xs rounded bg-primary text-on-primary font-label-code text-label-code font-semibold transition-all" id="btn-strict" onclick="setBan('strict')">Strict (-64)</button>
+<button class="py-space-2xs rounded bg-surface-container text-on-surface-variant hover:text-on-surface font-label-code text-label-code transition-all" id="btn-mod" onclick="setBan('moderate')">Moderate (-28)</button>
+<button class="py-space-2xs rounded bg-surface-container text-on-surface-variant hover:text-on-surface font-label-code text-label-code transition-all" id="btn-lax" onclick="setBan('lax')">Unenforced (0)</button>
+</div>
+</div>
+<!-- Lever 2: Odd-Even Traffic -->
+<div class="flex items-center justify-between bg-surface-container p-space-sm rounded-lg">
+<div class="flex flex-col">
+<span class="font-body-md text-body-md text-on-surface font-medium">Odd-Even Traffic Scheme</span>
+<span class="font-label-code text-label-code text-on-surface-variant">Tailpipe VOC &amp; NO₂ curtailment</span>
+</div>
+<button class="px-space-md py-space-xs rounded bg-primary text-on-primary font-label-code text-label-code font-semibold transition-all" id="btn-oddeven" onclick="toggleOddEven()">
+          ACTIVE (-18 AQI)
+        </button>
+</div>
+<!-- Lever 3: Mechanical Road Sweeping -->
+<div class="flex items-center justify-between bg-surface-container p-space-sm rounded-lg">
+<div class="flex flex-col">
+<span class="font-body-md text-body-md text-on-surface font-medium">Mechanical Road Sweeping</span>
+<span class="font-label-code text-label-code text-on-surface-variant">Re-entrained road dust buffer</span>
+</div>
+<button class="px-space-md py-space-xs rounded bg-primary text-on-primary font-label-code text-label-code font-semibold transition-all" id="btn-sweeper" onclick="toggleSweeper()">
+          ACTIVE (-8 AQI)
+        </button>
+</div>
+</div>
+<!-- Dynamic Impact Card -->
+<div class="p-space-md rounded-lg bg-surface-container-high/70 border border-primary/20 flex items-center justify-between">
+<div class="flex flex-col">
+<span class="font-label-caps text-label-caps uppercase text-on-surface-variant font-semibold">Net AQI Reduction</span>
+<div class="flex items-baseline gap-space-2xs my-space-2xs">
+<span class="font-metric-display text-metric-display text-primary font-bold" id="delta-aqi">-90</span>
+<span class="font-label-code text-label-code text-on-surface-variant">AQI Points</span>
+</div>
+</div>
+<div class="flex flex-col items-end">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase font-semibold">Health Benefit</span>
+<span class="font-headline-sm text-headline-sm text-secondary font-bold my-space-2xs" id="hospital-cases">Est. ~1,420 Cases</span>
+<span class="font-label-code text-label-code text-on-surface-variant">ER Admissions Avoided</span>
+</div>
+</div>
+</div>
+</div></div>
+</div>
+<script>
+  let banVal = 64;
+  let oddEvenVal = 18;
+  let sweeperVal = 8;
+
+  function updateSimulatorOutput() {
+    const totalReduction = banVal + oddEvenVal + sweeperVal;
+    const avertedCases = Math.round(totalReduction * 15.8);
+    
+    const deltaEl = document.getElementById('delta-aqi');
+    const casesEl = document.getElementById('hospital-cases');
+    
+    if (deltaEl) deltaEl.innerText = totalReduction === 0 ? '0' : '-' + totalReduction;
+    if (casesEl) casesEl.innerText = '~' + avertedCases.toLocaleString() + ' Cases';
+  }
+
+  function setBan(level) {
+    const btnStrict = document.getElementById('btn-strict');
+    const btnMod = document.getElementById('btn-mod');
+    const btnLax = document.getElementById('btn-lax');
+    const banLabel = document.getElementById('ban-label');
+
+    btnStrict.className = "py-space-2xs rounded bg-surface-container-high text-on-surface-variant hover:text-on-surface font-label-code text-label-code transition-all";
+    btnMod.className = "py-space-2xs rounded bg-surface-container-high text-on-surface-variant hover:text-on-surface font-label-code text-label-code transition-all";
+    btnLax.className = "py-space-2xs rounded bg-surface-container-high text-on-surface-variant hover:text-on-surface font-label-code text-label-code transition-all";
+
+    if (level === 'strict') {
+      banVal = 64;
+      btnStrict.className = "py-space-2xs rounded bg-primary text-on-primary font-label-code text-label-code font-semibold transition-all";
+      banLabel.innerText = "Strict (-64 AQI)";
+      banLabel.className = "text-primary font-bold";
+    } else if (level === 'moderate') {
+      banVal = 32;
+      btnMod.className = "py-space-2xs rounded bg-secondary text-on-secondary font-label-code text-label-code font-semibold transition-all";
+      banLabel.innerText = "Moderate (-32 AQI)";
+      banLabel.className = "text-secondary font-bold";
+    } else {
+      banVal = 0;
+      btnLax.className = "py-space-2xs rounded bg-error text-on-error font-label-code text-label-code font-semibold transition-all";
+      banLabel.innerText = "Lax (+0 AQI)";
+      banLabel.className = "text-error font-bold";
+    }
+    updateSimulatorOutput();
+  }
+
+  function toggleOddEven() {
+    const btn = document.getElementById('btn-oddeven');
+    if (oddEvenVal > 0) {
+      oddEvenVal = 0;
+      btn.innerText = "INACTIVE";
+      btn.className = "px-space-md py-space-xs rounded bg-surface-container-high text-on-surface-variant font-label-code text-label-code transition-all";
+    } else {
+      oddEvenVal = 18;
+      btn.innerText = "ACTIVE (-18)";
+      btn.className = "px-space-md py-space-xs rounded bg-primary text-on-primary font-label-code text-label-code font-semibold transition-all";
+    }
+    updateSimulatorOutput();
+  }
+
+  function toggleSweeper() {
+    const btn = document.getElementById('btn-sweeper');
+    if (sweeperVal > 0) {
+      sweeperVal = 0;
+      btn.innerText = "INACTIVE";
+      btn.className = "px-space-md py-space-xs rounded bg-surface-container-high text-on-surface-variant font-label-code text-label-code transition-all";
+    } else {
+      sweeperVal = 8;
+      btn.innerText = "ACTIVE (-8)";
+      btn.className = "px-space-md py-space-xs rounded bg-primary text-on-primary font-label-code text-label-code font-semibold transition-all";
+    }
+    updateSimulatorOutput();
+  }
+</script></main></div></body></html>
