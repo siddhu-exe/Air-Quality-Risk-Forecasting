@@ -1,8 +1,10 @@
 import React from 'react';
-import { mockStations } from '../../data/mock/stations';
+import { useStations } from '../../data/api';
 import { getAQIColorClass, getAQICategory } from '../../lib/aqi';
 
 export function Sidebar() {
+  const { data: stations = [], isLoading, isError } = useStations();
+
   return (
     <aside className="fixed left-0 top-32 bottom-0 w-64 bg-surface-container-lowest z-40 flex flex-col justify-between py-space-md shadow-[1px_0_12px_rgba(0,0,0,0.5)] border-r border-surface-container-high/50">
       <div className="flex flex-col gap-space-md px-space-md overflow-y-auto">
@@ -10,15 +12,19 @@ export function Sidebar() {
           <span className="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">Active Telemetry Hub</span>
         </div>
         <div className="flex flex-col gap-space-2xs">
-          {mockStations.map((station) => (
+          {isLoading ? (
+            <div className="text-on-surface-variant font-label-code text-label-code px-space-sm animate-pulse">Loading stations...</div>
+          ) : isError ? (
+            <div className="text-error font-label-code text-label-code px-space-sm">Data Engine Offline</div>
+          ) : stations.map((station) => (
             <div key={station.id} className="px-space-sm py-space-xs rounded bg-surface-container-low flex items-center justify-between border border-surface-container-high/30">
               <span className="font-label-code text-label-code text-on-surface-variant">{station.name}</span>
               {station.status === 'LIVE' ? (
-                <span className={`font-label-code text-label-code font-semibold ${getAQIColorClass(getAQICategory(station.aqi), 'text')}`}>
-                  {station.aqi} AQI
+                <span className={`font-label-code text-label-code font-semibold ${getAQIColorClass(getAQICategory(station.aqi || 0), 'text')}`}>
+                  {station.aqi || '--'} AQI
                 </span>
               ) : (
-                <span className="font-label-code text-label-code text-primary/70 font-semibold text-[10px] tracking-wider">CALIBRATING</span>
+                <span className="font-label-code text-label-code text-primary/70 font-semibold text-[10px] tracking-wider">{station.status}</span>
               )}
             </div>
           ))}
