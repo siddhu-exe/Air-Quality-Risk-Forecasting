@@ -1,8 +1,12 @@
 import React from 'react';
 import { SectionHeader } from '../components/shared/Headers';
 import { KPICard } from '../components/shared/KPICard';
+import { DiwaliCausalChart } from '../components/charts/DiwaliCausalChart';
+import { useDiwaliCausal } from '../data/api';
 
 export function CausalImpactView() {
+  const { data: diwaliData = [], isLoading } = useDiwaliCausal();
+
   return (
     <>
       <SectionHeader title="NODE: CAQM-DEL-SYNTH-84" subtitle="| ECONOMETRIC POLICY EVALUATION (DIWALI 2025)" />
@@ -39,8 +43,8 @@ export function CausalImpactView() {
 
       <div className="mt-space-md rounded bg-surface-container p-space-md lg:p-space-lg shadow-sm border border-surface-container-high/60">
         <h2 className="font-headline-sm text-on-surface font-bold mb-4">Interrupted Time Series & Synthetic Control Analysis</h2>
-        <div className="h-[400px] w-full border border-surface-container-high/40 rounded bg-surface-container-lowest flex items-center justify-center text-on-surface-variant font-label-code">
-          Causal Chart Placeholder
+        <div className="h-[400px] w-full border border-surface-container-high/40 rounded bg-surface-container-lowest text-on-surface-variant font-label-code">
+          <DiwaliCausalChart data={diwaliData} isLoading={isLoading} />
         </div>
       </div>
     </>
