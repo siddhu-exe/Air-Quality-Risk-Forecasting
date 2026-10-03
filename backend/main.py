@@ -55,15 +55,20 @@ async def get_stations():
     if '1h' not in data_cache:
         raise HTTPException(status_code=503, detail="Data not available")
 
-    # Get unique stations from 1h data
+    # Get latest AQI per station from 1h data
     df = data_cache['1h']
-    stations = df['station_name'].unique().tolist()
+    last_rows = df.sort_values(by='timestamp').groupby('station_name').last().reset_index()
 
     # Format to match frontend mock shape
-    return [
-        {"id": stat, "name": stat, "status": "LIVE"}
-        for stat in sorted(stations)
-    ]
+    stations = []
+    for _, row in last_rows.iterrows():
+        stations.append({
+            "id": row['station_name'],
+            "name": row['station_name'],
+            "status": "LIVE",
+            "aqi": int(row['y_true']) if pd.notnull(row['y_true']) else 0
+        })
+    return stations
 
 @app.get("/api/forecasts")
 async def get_forecasts(horizon: str = Query("1h", regex="^(1h|6h|24h)$"), station: Optional[str] = "ALL"):
