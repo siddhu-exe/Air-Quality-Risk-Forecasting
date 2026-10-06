@@ -13,7 +13,7 @@ from pathlib import Path
 import pandas as pd
 import numpy as np
 
-PROJECT_DIR = Path(__file__).resolve().parent.parent
+PROJECT_DIR = Path(__file__).resolve().parents[2]
 KAGGLE_DIR = PROJECT_DIR / "kaggle"
 
 EXPECTED_COUNTS = {
