@@ -147,147 +147,102 @@ def extract_data():
     return df_2025_daily, df_2025_hourly, df_2024_daily, df_2024_hourly, df_2025_placebo
 
 
+def _fit_clustered(formula, data, cluster_col='date'):
+    """OLS with standard errors clustered by calendar date.
+
+    Diwali windows are panel data (station x day). Clustering by date absorbs the
+    cross-sectional dependence from common daily shocks (weather, regional transport),
+    which station-clustered errors miss.
+    """
+    res = smf.ols(formula, data=data).fit(
+        cov_type='cluster', cov_kwds={'groups': data[cluster_col]}
+    )
+    res._cluster_col = cluster_col
+    res._n_clusters = int(data[cluster_col].nunique())
+    return res
+
+
+def _tidy_row(res, model_id, outcome, specification, coef_name, interpretation):
+    ci = res.conf_int().loc[coef_name]
+    return {
+        'model_id': model_id,
+        'outcome': outcome,
+        'specification': specification,
+        'se_type': f'cluster_by_{getattr(res, "_cluster_col", "date")}',
+        'coef_name': coef_name,
+        'coef': float(res.params[coef_name]),
+        'std_err': float(res.bse[coef_name]),
+        't_stat': float(res.tvalues[coef_name]),
+        'p_value': float(res.pvalues[coef_name]),
+        'ci_lower': float(ci[0]),
+        'ci_upper': float(ci[1]),
+        'r_squared': float(res.rsquared),
+        'n_obs': int(res.nobs),
+        'n_clusters': int(getattr(res, '_n_clusters', 0)),
+        'interpretation': interpretation,
+    }
+
+
 def run_statistical_models(df_2025_daily, df_2025_placebo):
-    # Prepare 2025 dataset
+    """Fit pre-trend, naive before/after, station FE, meteo, ITS and placebo specs.
+
+    Primary outcome is raw daily-mean PM2.5 (AQI is a pre-smoothed 24h rolling average,
+    so it hides the hourly dynamics). AQI is retained as a secondary outcome. Every
+    model uses standard errors clustered by date; station fixed effects are kept.
+    """
     diwali_date = pd.to_datetime('2025-10-20').date()
     df_2025 = df_2025_daily.copy()
     df_2025['date_dt'] = pd.to_datetime(df_2025['date'])
     df_2025['rel_day'] = (df_2025['date_dt'] - pd.to_datetime(diwali_date)).dt.days
     df_2025['post'] = (df_2025['rel_day'] > 0).astype(int)
+    df_2025['date'] = df_2025['date_dt'].dt.date
 
-    # Exclude day 0 for sharp pre/post comparisons
-    df_pre_post = df_2025[df_2025['rel_day'] != 0].copy()
     df_pre = df_2025[df_2025['rel_day'] < 0].copy()
-
-    # Pre-trend regression
-    pre_trend_fit = smf.ols('aqi ~ rel_day', data=df_pre).fit(
-        cov_type='cluster', cov_kwds={'groups': df_pre['station_name']}
-    )
-
-    # Model 1: Bivariate OLS
-    m1 = smf.ols('aqi ~ post', data=df_pre_post).fit(
-        cov_type='cluster', cov_kwds={'groups': df_pre_post['station_name']}
-    )
-
-    # Model 2: Station Fixed Effects
-    m2 = smf.ols('aqi ~ post + C(station_name)', data=df_pre_post).fit(
-        cov_type='cluster', cov_kwds={'groups': df_pre_post['station_name']}
-    )
-
-    # Model 3: Meteo Controls
+    df_pre_post = df_2025[df_2025['rel_day'] != 0].copy()
     df_meteo = df_pre_post.dropna(subset=['temp', 'wind_speed', 'humidity']).copy()
-    m3 = smf.ols('aqi ~ post + temp + wind_speed + humidity + C(station_name)', data=df_meteo).fit(
-        cov_type='cluster', cov_kwds={'groups': df_meteo['station_name']}
-    )
-
-    # Model 4: Interrupted Time Series (Pre-trend + Level Jump + Trend Change + Meteo Controls)
     df_meteo['post_rel_day'] = df_meteo['post'] * df_meteo['rel_day']
-    m4 = smf.ols(
-        'aqi ~ rel_day + post + post_rel_day + temp + wind_speed + humidity + C(station_name)',
-        data=df_meteo
-    ).fit(cov_type='cluster', cov_kwds={'groups': df_meteo['station_name']})
 
-    # Model 5: Placebo Test on Non-Event (2025-09-20)
     placebo_date = pd.to_datetime('2025-09-20').date()
     df_p = df_2025_placebo.copy()
     df_p['date_dt'] = pd.to_datetime(df_p['date'])
     df_p['rel_day'] = (df_p['date_dt'] - pd.to_datetime(placebo_date)).dt.days
     df_p['post'] = (df_p['rel_day'] > 0).astype(int)
+    df_p['date'] = df_p['date_dt'].dt.date
     df_p_pre_post = df_p[df_p['rel_day'] != 0].copy()
 
-    m_placebo = smf.ols('aqi ~ post + C(station_name)', data=df_p_pre_post).fit(
-        cov_type='cluster', cov_kwds={'groups': df_p_pre_post['station_name']}
-    )
+    rows, fits = [], {}
+    for y in ('pm25', 'aqi'):
+        if y not in df_2025.columns:
+            continue
+        pre = _fit_clustered(f'{y} ~ rel_day', df_pre.dropna(subset=[y]))
+        m1 = _fit_clustered(f'{y} ~ post', df_pre_post.dropna(subset=[y]))
+        m2 = _fit_clustered(f'{y} ~ post + C(station_name)', df_pre_post.dropna(subset=[y]))
+        m3 = _fit_clustered(
+            f'{y} ~ post + temp + wind_speed + humidity + C(station_name)', df_meteo.dropna(subset=[y]))
+        m4 = _fit_clustered(
+            f'{y} ~ rel_day + post + post_rel_day + temp + wind_speed + humidity + C(station_name)',
+            df_meteo.dropna(subset=[y]))
+        mp = _fit_clustered(f'{y} ~ post + C(station_name)', df_p_pre_post.dropna(subset=[y]))
 
-    models_summary = [
-        {
-            'model_id': 'Pre-Trend Slope',
-            'specification': 'AQI ~ rel_day (Pre-Diwali [-14, -1])',
-            'coef_name': 'rel_day',
-            'coef': pre_trend_fit.params['rel_day'],
-            'std_err': pre_trend_fit.bse['rel_day'],
-            't_stat': pre_trend_fit.tvalues['rel_day'],
-            'p_value': pre_trend_fit.pvalues['rel_day'],
-            'ci_lower': pre_trend_fit.conf_int().loc['rel_day'][0],
-            'ci_upper': pre_trend_fit.conf_int().loc['rel_day'][1],
-            'r_squared': pre_trend_fit.rsquared,
-            'n_obs': int(pre_trend_fit.nobs),
-            'interpretation': 'Pre-Diwali trend violates parallel pre-trends (+20.38 pts/day)'
-        },
-        {
-            'model_id': 'Model 1 (Naive OLS)',
-            'specification': 'AQI ~ Post',
-            'coef_name': 'post',
-            'coef': m1.params['post'],
-            'std_err': m1.bse['post'],
-            't_stat': m1.tvalues['post'],
-            'p_value': m1.pvalues['post'],
-            'ci_lower': m1.conf_int().loc['post'][0],
-            'ci_upper': m1.conf_int().loc['post'][1],
-            'r_squared': m1.rsquared,
-            'n_obs': int(m1.nobs),
-            'interpretation': 'Naive shift (+135.57 pts) confounded by pre-existing seasonal trajectory'
-        },
-        {
-            'model_id': 'Model 2 (Station Fixed Effects)',
-            'specification': 'AQI ~ Post + Station FE',
-            'coef_name': 'post',
-            'coef': m2.params['post'],
-            'std_err': m2.bse['post'],
-            't_stat': m2.tvalues['post'],
-            'p_value': m2.pvalues['post'],
-            'ci_lower': m2.conf_int().loc['post'][0],
-            'ci_upper': m2.conf_int().loc['post'][1],
-            'r_squared': m2.rsquared,
-            'n_obs': int(m2.nobs),
-            'interpretation': 'Within-station shift (+136.35 pts) absorbs station baseline heterogeneity'
-        },
-        {
-            'model_id': 'Model 3 (Meteo Controls)',
-            'specification': 'AQI ~ Post + Temp + WS + RH + Station FE',
-            'coef_name': 'post',
-            'coef': m3.params['post'],
-            'std_err': m3.bse['post'],
-            't_stat': m3.tvalues['post'],
-            'p_value': m3.pvalues['post'],
-            'ci_lower': m3.conf_int().loc['post'][0],
-            'ci_upper': m3.conf_int().loc['post'][1],
-            'r_squared': m3.rsquared,
-            'n_obs': int(m3.nobs),
-            'interpretation': 'Controls for surface weather (+114.53 pts) but omits trend dynamics'
-        },
-        {
-            'model_id': 'Model 4 (Interrupted Time Series)',
-            'specification': 'AQI ~ rel_day + Post + (Post x rel_day) + Meteo + FE',
-            'coef_name': 'post (Level Jump)',
-            'coef': m4.params['post'],
-            'std_err': m4.bse['post'],
-            't_stat': m4.tvalues['post'],
-            'p_value': m4.pvalues['post'],
-            'ci_lower': m4.conf_int().loc['post'][0],
-            'ci_upper': m4.conf_int().loc['post'][1],
-            'r_squared': m4.rsquared,
-            'n_obs': int(m4.nobs),
-            'interpretation': 'Accounting for pre-trend: Post jump is statistically zero (p=0.425)'
-        },
-        {
-            'model_id': 'Model 5 (Placebo Non-Event)',
-            'specification': 'AQI ~ Post_Placebo + Station FE (Sep 20, 2025)',
-            'coef_name': 'post_placebo',
-            'coef': m_placebo.params['post'],
-            'std_err': m_placebo.bse['post'],
-            't_stat': m_placebo.tvalues['post'],
-            'p_value': m_placebo.pvalues['post'],
-            'ci_lower': m_placebo.conf_int().loc['post'][0],
-            'ci_upper': m_placebo.conf_int().loc['post'][1],
-            'r_squared': m_placebo.rsquared,
-            'n_obs': int(m_placebo.nobs),
-            'interpretation': 'Statistically significant pseudo-effect (+23.95 pts, p<0.001) on non-event'
-        }
-    ]
+        rows += [
+            _tidy_row(pre, 'Pre-Trend Slope', y, f'{y} ~ rel_day (pre-Diwali [-14,-1])', 'rel_day',
+                      'Pre-Diwali slope; non-zero means the parallel-trends assumption is violated'),
+            _tidy_row(m1, 'Model 1 (Naive Before/After)', y, f'{y} ~ post', 'post',
+                      'Naive before/after shift; confounded by the seasonal trajectory'),
+            _tidy_row(m2, 'Model 2 (Station FE)', y, f'{y} ~ post + station FE', 'post',
+                      'Within-station shift after absorbing station baselines'),
+            _tidy_row(m3, 'Model 3 (Meteo Controls)', y, f'{y} ~ post + meteo + station FE', 'post',
+                      'Shift controlling for surface weather only'),
+            _tidy_row(m4, 'Model 4 (Interrupted Time Series)', y,
+                      f'{y} ~ rel_day + post + post:rel_day + meteo + station FE', 'post',
+                      'Level jump after accounting for the pre-existing trend'),
+            _tidy_row(mp, 'Model 5 (Placebo Non-Event)', y,
+                      f'{y} ~ post_placebo + station FE (2025-09-20)', 'post',
+                      'Placebo pseudo-effect on a non-event date; should be ~0 if the design is valid'),
+        ]
+        fits[y] = {'pre': pre, 'm1': m1, 'm2': m2, 'm3': m3, 'm4': m4, 'placebo': mp}
 
-    df_models_summary = pd.DataFrame(models_summary)
-    return df_models_summary, pre_trend_fit, m1, m2, m3, m4, m_placebo
+    return pd.DataFrame(rows), fits
 
 
 def generate_plots(df_2025_daily, df_2025_hourly, df_2024_hourly, df_2025_placebo, df_models_summary):
@@ -551,15 +506,33 @@ def export_csv_tables(df_2025_daily, df_2024_daily, df_2025_placebo, df_models_s
 
 def main():
     print("Extracting CAAQMS and AQI data from PostgreSQL...")
-    df_2025_daily, df_2025_hourly, df_2024_daily, df_2024_hourly, df_2025_placebo = extract_data()
-    print("Fitting econometric models and hypothesis tests...")
-    df_models_summary, pre_trend_fit, m1, m2, m3, m4, m_placebo = run_statistical_models(df_2025_daily, df_2025_placebo)
-    print("Generating figures...")
-    generate_plots(df_2025_daily, df_2025_hourly, df_2024_hourly, df_2025_placebo, df_models_summary)
-    print("Exporting CSV tables...")
-    export_csv_tables(df_2025_daily, df_2024_daily, df_2025_placebo, df_models_summary, df_2025_hourly, df_2024_hourly)
-    print("\n--- MASTER REGRESSION SUMMARY ---")
-    print(df_models_summary[['model_id', 'coef_name', 'coef', 'std_err', 'p_value', 'ci_lower', 'ci_upper', 'interpretation']].to_string())
+    connected = True
+    try:
+        df_2025_daily, df_2025_hourly, df_2024_daily, df_2024_hourly, df_2025_placebo = extract_data()
+    except Exception as exc:
+        connected = False
+        print(f"[warn] PostgreSQL unavailable ({type(exc).__name__}); using cached daily CSVs.")
+        df_2025_daily = pd.read_csv(os.path.join(OUTPUT_DIR, 'diwali_2025_daily_window.csv'))
+        df_2025_placebo = pd.read_csv(os.path.join(OUTPUT_DIR, 'placebo_2025_daily_window.csv'))
+        df_2024_daily = pd.read_csv(os.path.join(OUTPUT_DIR, 'diwali_2024_daily_window.csv'))
+        df_2025_hourly, df_2024_hourly = None, None
+
+    print("Fitting econometric models and hypothesis tests (PM2.5 primary, SEs clustered by date)...")
+    df_models_summary, fits = run_statistical_models(df_2025_daily, df_2025_placebo)
+    df_models_summary.to_csv(os.path.join(OUTPUT_DIR, 'regression_models_summary.csv'), index=False)
+    print(f"Saved regression_models_summary.csv ({len(df_models_summary)} rows)")
+
+    if connected:
+        print("Generating figures...")
+        generate_plots(df_2025_daily, df_2025_hourly, df_2024_hourly, df_2025_placebo, df_models_summary)
+        print("Exporting CSV tables...")
+        export_csv_tables(df_2025_daily, df_2024_daily, df_2025_placebo, df_models_summary, df_2025_hourly, df_2024_hourly)
+    else:
+        print("[warn] Skipping figures and hourly spike tables (hourly data is not cached in the required shape).")
+
+    print("\n--- MASTER REGRESSION SUMMARY (PM2.5 primary, SEs clustered by date) ---")
+    cols = ['model_id', 'outcome', 'coef_name', 'coef', 'std_err', 'p_value', 'ci_lower', 'ci_upper', 'se_type', 'n_clusters']
+    print(df_models_summary[df_models_summary['outcome'] == 'pm25'][cols].to_string(index=False))
     print("\nCausal analysis pipeline completed successfully.")
 
 
