@@ -10,6 +10,7 @@ from sklearn.metrics import confusion_matrix, f1_score, precision_score, recall_
 
 CPCB_BOUNDARIES = np.array([0, 51, 101, 201, 301, 401, 501])
 CPCB_LABELS = ['Good', 'Satisfactory', 'Moderate', 'Poor', 'Very Poor', 'Severe']
+HORIZON_HOURS = {'1h': 1, '6h': 6, '24h': 24}
 
 def cpcb_classify(aqi_values: np.ndarray) -> np.ndarray:
     """Map continuous AQI to 0-5 CPCB ordinal classes."""
@@ -145,6 +146,76 @@ def detect_episodes(df: pd.DataFrame, threshold: float, col_name: str, max_gap: 
 
     return pd.DataFrame(episodes)
 
+
+def episode_detection_report(df: pd.DataFrame, horizon: str, actual_col: str,
+                             model_pred_col: str, persist_pred_col: str,
+                             threshold: float = 401.0, max_gap: int = 3):
+    """Baseline-aware episode hit-rate and lead-time metric with explicit time alignment.
+
+    Alignment (verified against ``build_features.py``):
+      * row ``timestamp`` is the forecast ISSUANCE time ``t``;
+      * the target time is ``t + horizon`` and ``actual_col[t]`` is the AQI observed
+        at that target time (``target_aqi_{h}h = aqi.shift(-h)``).
+
+    An alert counts as a hit for an episode iff it is issued at or before the
+    episode's first threshold crossing and its target time falls inside
+    ``[episode_start, episode_end]``. There is no 12h pre-episode tolerance by
+    default; the legacy tolerance is also reported for comparison.
+
+    Returns one row per (episode, model), with ``model`` ∈ {``final``, ``persistence``}.
+    """
+    h_td = pd.Timedelta(hours=HORIZON_HOURS[horizon])
+    frame = df.copy()
+    frame['issue_time'] = pd.to_datetime(frame['timestamp'])
+    frame['target_time'] = frame['issue_time'] + h_td
+
+    # Detect episodes on ACTUAL AQI keyed by target time.
+    actual = (frame[['station_id', 'station_name', 'target_time', actual_col]]
+              .dropna(subset=[actual_col])
+              .rename(columns={'target_time': 'timestamp', actual_col: 'actual_aqi'})
+              .drop_duplicates(subset=['station_id', 'timestamp'])
+              .sort_values(['station_id', 'timestamp']))
+    episodes = detect_episodes(actual, threshold, 'actual_aqi', max_gap=max_gap)
+    if len(episodes) == 0:
+        return pd.DataFrame()
+
+    rows = []
+    for _, ep in episodes.iterrows():
+        for model_name, pred_col in (('final', model_pred_col), ('persistence', persist_pred_col)):
+            station_preds = frame[(frame['station_id'] == ep['station_id']) & (frame[pred_col] >= threshold)]
+
+            def first_alert(tolerance_hours):
+                valid = station_preds[
+                    (station_preds['issue_time'] <= ep['first_actual_crossing'])
+                    & (station_preds['target_time'] >= ep['first_actual_crossing'] - pd.Timedelta(hours=tolerance_hours))
+                    & (station_preds['target_time'] <= ep['end_time'])
+                ]
+                if len(valid) == 0:
+                    return 'miss', 0.0, 0
+                lead = (ep['first_actual_crossing'] - valid['issue_time'].min()).total_seconds() / 3600.0
+                return 'hit', lead, int(len(valid))
+
+            detection, lead, n_alerts = first_alert(0)
+            detection_tol12, lead_tol12, n_alerts_tol12 = first_alert(12)
+            rows.append({
+                'station_id': ep['station_id'],
+                'station_name': ep['station_name'],
+                'start_time': ep['start_time'],
+                'end_time': ep['end_time'],
+                'peak_aqi': ep['peak_aqi'],
+                'duration_hours': ep['duration_hours'],
+                'first_actual_crossing': ep['first_actual_crossing'],
+                'horizon': horizon,
+                'model': model_name,
+                'detection': detection,
+                'lead_time_hours': lead,
+                'n_alerts': n_alerts,
+                'detection_tol12': detection_tol12,
+                'lead_time_hours_tol12': lead_tol12,
+                'n_alerts_tol12': n_alerts_tol12,
+            })
+    return pd.DataFrame(rows)
+
 def analyze_horizon(df: pd.DataFrame, horizon: str, actual_col: str, pred_col: str):
     """Run all classification & evaluation logic for a single horizon."""
     print(f"=== Analyzing {horizon} Horizon ===")
@@ -204,7 +275,17 @@ def analyze_horizon(df: pd.DataFrame, horizon: str, actual_col: str, pred_col: s
     else:
         severe_f1, severe_rec, severe_prec = np.nan, np.nan, np.nan
         
-    vpoor_plus_rec = recall_score(y_true_cpcb >= 4, y_pred_cpcb >= 4)
+    vpoor_plus_rec = recall_score(y_true_cpcb >= 4, y_pred_cpcb >= 4, zero_division=0)
+    vpoor_plus_prec = precision_score(y_true_cpcb >= 4, y_pred_cpcb >= 4, zero_division=0)
+    vpoor_plus_f1 = f1_score(y_true_cpcb >= 4, y_pred_cpcb >= 4, zero_division=0)
+
+    # Binary confusion counts so recall is never reported without its cost.
+    severe_tp = int(np.sum((y_true_cpcb == 5) & (y_pred_cpcb == 5)))
+    severe_fp = int(np.sum((y_true_cpcb != 5) & (y_pred_cpcb == 5)))
+    severe_fn = int(np.sum((y_true_cpcb == 5) & (y_pred_cpcb != 5)))
+    vp_tp = int(np.sum((y_true_cpcb >= 4) & (y_pred_cpcb >= 4)))
+    vp_fp = int(np.sum((y_true_cpcb < 4) & (y_pred_cpcb >= 4)))
+    vp_fn = int(np.sum((y_true_cpcb >= 4) & (y_pred_cpcb < 4)))
     
     # Critical Miss Rate (Actual Severe predicted as <= Moderate (<=2))
     total_actual_severe = np.sum(severe_mask)
@@ -225,7 +306,15 @@ def analyze_horizon(df: pd.DataFrame, horizon: str, actual_col: str, pred_col: s
         'severe_f1': severe_f1,
         'severe_recall': severe_rec,
         'severe_precision': severe_prec,
+        'severe_tp': severe_tp,
+        'severe_fp': severe_fp,
+        'severe_fn': severe_fn,
         'vpoor_plus_recall': vpoor_plus_rec,
+        'vpoor_plus_precision': vpoor_plus_prec,
+        'vpoor_plus_f1': vpoor_plus_f1,
+        'vpoor_plus_tp': vp_tp,
+        'vpoor_plus_fp': vp_fp,
+        'vpoor_plus_fn': vp_fn,
         'critical_miss_rate': critical_miss_rate
     }
     
@@ -263,119 +352,55 @@ def process_all():
     print(metrics_df[['horizon', 'macro_f1', 'severe_recall', 'ordinal_mae']])
     
     # ----------------------------------------------------
-    # binary severe detection & Episode Lead Time Logic
+    # Episode hit-rate & lead-time (explicit time alignment)
     # ----------------------------------------------------
-    # For episode detection, we will look at Severe episodes (AQI >= 401)
-    # in the 24h actuals as a base source of truth since all horizons share the same period natively.
-    # Actually, we should evaluate lead time per horizon.
-    
+    # Row `timestamp` is the forecast ISSUANCE time t; the target time is t + horizon
+    # (target_aqi_{h}h = aqi.shift(-h), see src/features/build_features.py). Episodes are
+    # detected on actual AQI keyed by target time, and an alert must be issued at or before
+    # the episode start with a target time inside the episode. There is no 12h pre-episode
+    # tolerance by default; the legacy tolerance is reported alongside for comparison.
+    horizon_specs = [
+        ('1h', df1, 'y_true', 'y_pred', 'naive_pred'),
+        ('6h', df6, 'y_true', 'y_pred', 'naive_pred'),
+        ('24h', df24, 'target_aqi_24h', 'prediction_hybrid_6c_winning', 'prediction_naive_persistence'),
+    ]
+
     episodes_all = []
-    
-    for h, df, actual_col, pred_col in [('1h', df1, 'y_true', 'y_pred'),
-                                        ('6h', df6, 'y_true', 'y_pred'),
-                                        ('24h', df24, 'target_aqi_24h', 'prediction_hybrid_6c_winning')]:
-        
-        # Binary severe thresholds for AUPRC/AUROC estimation
+    for h, df, actual_col, pred_col, persist_col in horizon_specs:
+        # Binary ranking metrics
         try:
-            auroc_300 = roc_auc_score(df[actual_col] >= 300, df[pred_col])
             auroc_400 = roc_auc_score(df[actual_col] >= 401, df[pred_col])
             auprc_400 = average_precision_score(df[actual_col] >= 401, df[pred_col])
-        except Exception as e:
-            auroc_300 = np.nan
+        except Exception:
             auroc_400 = np.nan
             auprc_400 = np.nan
-            
         print(f"[{h}] AUROC >= 401: {auroc_400:.4f}, AUPRC >= 401: {auprc_400:.4f}")
-        
-        # Episode detection for Stage III (>=401)
-        eps = detect_episodes(df, 401.0, actual_col, max_gap=3)
+
+        eps = episode_detection_report(df, h, actual_col, pred_col, persist_col)
         if len(eps) > 0:
-            eps['horizon'] = h
-            
-            # For each episode, determine Lead Time
-            lead_times = []
-            hit_miss = []
-            for _, ep in eps.iterrows():
-                # We filter predictions made AT OR BEFORE the first actual occurrence.
-                # Actually, the 'timestamp' in these dfs is the issuance time of the forecast.
-                # For 24h, a forecast issued at T predicts T+24.
-                # If ep['first_actual_crossing'] is T_actual, any forecast issued at T <= T_actual
-                # that predicts >=401 is an early warning. 
-                # Let's align on the time spaces.
-                # In these files, `timestamp` might be issuance time or target time depending on how it was saved.
-                # Let's assume `timestamp` = target time for comparability, because phase_5 logic: 
-                # 'target_aqi_24h' is literally AQI at target time. 
-                # So the forecast was issued at `timestamp - horizon`.
-                
-                if h == '1h': h_td = pd.Timedelta(hours=1)
-                elif h == '6h': h_td = pd.Timedelta(hours=6)
-                else: h_td = pd.Timedelta(hours=24)
-                
-                # issuance_time = df['timestamp'] - h_td
-                
-                # To find lead time: 
-                # Did we predict the crossover beforehand?
-                # The prediction for T_cross is made at T_cross - h_td
-                # So if at T_cross - h_td we predicted that T_cross will be >= 401, we have h_td lead time!
-                # If we predicted it even earlier (for an earlier point in the episode), we have more lead time relative to episode start.
-                
-                # Let's find all predictions made BEFORE T_actual that predicted >=401 for ANY time within the episode.
-                episode_actual_start = ep['first_actual_crossing']
-                episode_actual_end = ep['end_time']
-
-                station_df = df[df['station_id'] == ep['station_id']]
-
-                # We need forecasts that PREDICT >=401 that FALL within the episode time window or slightly before.
-                # Actually, an alert is valid for an episode if the predicted target time falls within the episode [+ a small operational window, say 24h before]
-                # GRAP alerting: "If ANY forecast in the next 72h indicates Severe".
-                # For our simplified evaluation: Did a forecast issued BEFORE episode_actual_start predict >=401 for a target time between [episode_actual_start, episode_actual_end]?
-
-                severe_preds = station_df[(station_df[pred_col] >= 401)]
-                severe_preds = severe_preds.copy()
-                severe_preds['issuance_time'] = severe_preds['timestamp'] - h_td
-
-                # Condition 1: Target time is within the actual episode (meaning it accurately predicted this specific event)
-                # Or at least within 12 hours of the start
-                valid_alerts = severe_preds[
-                    (severe_preds['timestamp'] >= episode_actual_start - pd.Timedelta(hours=12)) &
-                    (severe_preds['timestamp'] <= episode_actual_end)
-                ]
-
-                # Condition 2: Issued BEFORE or AT the actual crossing
-                valid_alerts = valid_alerts[valid_alerts['issuance_time'] <= episode_actual_start]
-
-                if len(valid_alerts) > 0:
-                    first_alert_time = valid_alerts['issuance_time'].min()
-
-                    lt = (episode_actual_start - first_alert_time).total_seconds() / 3600
-                    # cap lead time realistically; a forecast 24h ahead cannot give 30h lead time. Max lead time should be bounded by horizon.
-                    # Since we only look at horizon H, the maximum possible lead time for a perfect forecast exactly H hours ahead of start is H.
-                    # If it predicted an exceedance at target time T_target (which is after T_start), and was issued at T_target - H <= T_start,
-                    # the lead time is T_start - (T_target - H) = H - (T_target - T_start).
-                    # Max lead time is H.
-                    status = 'hit'
-                else:
-                    lt = 0
-                    status = 'miss'
-                    
-                lead_times.append(lt)
-                hit_miss.append(status)
-                
-            eps['lead_time_hours'] = lead_times
-            eps['detection'] = hit_miss
             episodes_all.append(eps)
-            
+
     if len(episodes_all) > 0:
         all_eps_df = pd.concat(episodes_all, ignore_index=True)
         all_eps_df.to_csv('reports/classification/episodes/grap_episode_lead_times.csv', index=False)
-        
-        print("\nEpisode Detection Summary (>=401):")
-        sum_df = all_eps_df.groupby(['horizon', 'detection']).size().unstack(fill_value=0)
-        print(sum_df)
-        print("\nMean Lead Time (Hits only):")
-        hits = all_eps_df[all_eps_df['detection'] == 'hit']
-        if len(hits) > 0:
-            print(hits.groupby('horizon')['lead_time_hours'].mean())
+
+        print("\nEpisode detection (>=401), model vs persistence, no pre-episode tolerance:")
+        summary = (all_eps_df.groupby(['horizon', 'model'])
+                   .agg(episodes=('detection', 'size'),
+                        hits=('detection', lambda s: int((s == 'hit').sum())),
+                        mean_lead_hours=('lead_time_hours', 'mean'))
+                   .reset_index())
+        summary['hit_rate'] = summary['hits'] / summary['episodes']
+        print(summary.to_string(index=False))
+
+        print("\nSame metric with the legacy 12h pre-episode tolerance (for comparison):")
+        tol = (all_eps_df.groupby(['horizon', 'model'])
+               .agg(episodes=('detection', 'size'),
+                    hits=('detection_tol12', lambda s: int((s == 'hit').sum())),
+                    mean_lead_hours=('lead_time_hours_tol12', 'mean'))
+               .reset_index())
+        tol['hit_rate'] = tol['hits'] / tol['episodes']
+        print(tol.to_string(index=False))
 
 if __name__ == '__main__':
     process_all()
