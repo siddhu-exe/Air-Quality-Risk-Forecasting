@@ -12,7 +12,7 @@
 
 This formal audit report provides a rigorous, exhaustive, and mathematical verification across all components of **Phase 6: Multi-Horizon Forecasting & 24-Hour Forecast Refinement Suite** prior to transitioning to **Phase 7: CPCB Risk Classification & GRAP Policy Alerting**.
 
-### Master Audit Verdict: **PASSED (100% COMPLIANCE)**
+### Master Audit Verdict: **PASSED**
 
 All three forecasting horizons ($h \in \{1\text{h}, 6\text{h}, 24\text{h}\}$) have been audited against baseline persistence heuristics on the held-out out-of-sample peak winter crisis test set (November–December 2025). The results are formally frozen:
 
@@ -58,9 +58,9 @@ All three forecasting horizons ($h \in \{1\text{h}, 6\text{h}, 24\text{h}\}$) ha
 
 ---
 
-## 3. Dataset Integrity & Cryptographic Manifest Verification
+## 3. Dataset Integrity & SHA-256 Manifest Verification
 
-The versioned datasets in `data/processed/ml/` were audited for row counts, feature dimensions, missingness, and cryptographic SHA-256 integrity:
+The versioned datasets in `data/processed/ml/` were audited for row counts, feature dimensions, missingness, and SHA-256 checksums:
 
 ```text
 ┌────────────────────────────────────────────────────────────────────────────────────────────────────────┐
@@ -203,7 +203,7 @@ models/
 | **All 3 Horizons Beat Persistence** | **YES** | 1h (+0.11 pts), 6h (+2.89 pts), 24h (+4.23 pts). |
 | **Multi-Station Generalization** | **YES** | 100% of Delhi monitoring stations beat persistence. |
 | **Zero Temporal Leakage** | **YES** | Verified mathematically across all feature pipelines. |
-| **Cryptographic Dataset Integrity** | **YES** | 100% SHA-256 match in versioned ML Parquet files. |
+| **Dataset Integrity (SHA-256)** | **YES** | All versioned ML Parquet files match their recorded SHA-256 checksums. |
 | **Artifacts Serialized & Loadable** | **YES** | All `.joblib` models, scalers, imputers tested. |
 | **Documentation Synchronized** | **YES** | `README.md`, `CLAUDE.md`, `docs/`, `memory/` updated. |
 | **Git Working Tree Clean** | **YES** | Clean working directory; no unsaved files. |

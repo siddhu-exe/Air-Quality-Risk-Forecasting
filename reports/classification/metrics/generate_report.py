@@ -113,7 +113,7 @@ It natively provides 17+ hours of reliable notice (hit rate **74.4%**), satisfyi
 
 ## 5. Phase 7 Verdict
 
-The categorization engine successfully parses the multi-horizon numerical continuous array out into actionable, compliant alerting layers. The operational trade-off is clearly validated computationally: the 24h model buys vital mobilization time at the cost of slight border precision, while the 1h model guarantees execution reality.
+The categorization engine successfully parses the multi-horizon numerical continuous array out into actionable, compliant alerting layers. The operational trade-off is clearly validated computationally: the 24h model buys vital mobilization time at the cost of slight border precision, while the 1h model stays close to persistence.
 
 **VERDICT: PHASE 7 CLASSIFICATION PASSED.** Data and model insights are ready for user consumption.
 """

@@ -150,7 +150,7 @@ $$\Delta_{24\text{h}} = \text{AQI}(t+24\text{h}) - \text{AQI}(t)$$
 $$\widehat{\text{AQI}}(t+24\text{h}) = \text{AQI}(t) + \widehat{\Delta}_{24\text{h}}$$
 
 ### Theoretical Advantages
-1. **Zero-Order Consistency:** When the model predicts no change ($\widehat{\Delta}_{24\text{h}} = 0$), the forecast naturally defaults to **Naive Persistence**, guaranteeing that the model cannot drift into arbitrary underprediction.
+1. **Zero-Order Consistency:** When the model predicts no change ($\widehat{\Delta}_{24\text{h}} = 0$), the forecast naturally defaults to **Naive Persistence**, so the model does not drift into arbitrary underprediction.
 2. **Stationary Target Space:** While raw AQI shifted from a mean of 177.96 to 379.22 ($\Delta\mu = +201.26$), the target delta $\Delta_{24\text{h}}$ is centered near zero in all splits (Train Mean: $-0.03$, Test Mean: $+1.92$).
 
 ---

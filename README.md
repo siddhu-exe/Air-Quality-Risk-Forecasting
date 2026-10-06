@@ -1,6 +1,6 @@
 # Delhi Air Quality Risk Forecasting
 
-This project forecasts air quality across Delhi 1 to 24 hours in advance and evaluates the impact of citywide pollution control policies. Instead of treating air quality as a generic regression problem, it investigates why standard machine learning breaks down during severe winter smog episodes and how to build models that actually hold up. It also includes an econometric policy evaluation of Delhi's Diwali firecracker ban and an interactive evaluation dashboard.
+This project forecasts air quality across Delhi 1 to 24 hours in advance and evaluates the impact of citywide pollution control policies. Instead of treating air quality as a generic regression problem, it investigates why standard machine learning breaks down during severe winter smog episodes and how to build models that actually hold up. It also includes a methodological study of why naive before/after evaluations of Delhi's Diwali firecracker ban are unreliable, and an interactive evaluation dashboard.
 
 ## Project Links
 
@@ -17,6 +17,18 @@ Delhi experiences some of the most hazardous urban air pollution events in the w
 However, off-the-shelf machine learning pipelines frequently fail in this setting. Tree-based models hit mathematical ceilings during extreme spikes, standard evaluation protocols suffer from temporal leakage, and naive before-and-after policy evaluations confuse seasonal winter meteorology with policy failure.
 
 This repository implements a full data and modeling pipeline across 7 continuous monitoring stations in Delhi. It covers raw telemetry ingestion into PostgreSQL 16, causal feature engineering, multi-horizon forecasting (1h, 6h, 24h), CPCB regulatory classification, cost-sensitive alert optimization, and econometric causal policy evaluation.
+
+---
+
+## Limitations (Read First)
+
+- **The target is smoothed.** Official AQI is a 24-hour rolling average, so consecutive hours are nearly identical (lag-1 autocorrelation ≈ 0.998). "Copy the last value" is therefore a very strong baseline, and model skill must be judged against persistence, not R² alone.
+- **Persistence is hard to beat.** At 1h the tuned model loses to persistence on RMSE and R²; at 24h the hybrid beats it on both (MAE skill +0.11, RMSE skill +0.12).
+- **Training lacks prior winters.** The model trains on 2025-01..08, which contains no winter peak, so tree models cannot extrapolate beyond ~347 AQI. Recomputing AQI for 2023–2024 is a Tier 2 fix.
+- **A single test window.** Evaluation is one Nov–Dec 2025 backtest; there is no rolling-origin or multi-winter evaluation yet.
+- **No forecast meteorology.** Models use ground telemetry and observed weather only, not forecast wind or boundary-layer data.
+- **Backtest only.** Everything is evaluated on historical data; there is no live ingestion, deployed forecast, or comparison against operational government forecasts (IITM AQEWS/SAFAR).
+- **Geographic scope.** 7 urban monitoring stations within the National Capital Territory of Delhi.
 
 ---
 
@@ -46,7 +58,7 @@ Econometric Causal Analysis       Causal Feature Engineering               Multi
                                                                  │
                                                                  ▼
                                                     Cost-Aware Threshold Optimization
-                                                    (Asymmetric 5:1 Loss, 95.7% Severe Recall)
+                                                    (Validation-Selected Thresholds)
                                                                  │
                                                                  ▼
                                                     Interactive Streamlit Dashboard
@@ -56,18 +68,28 @@ Econometric Causal Analysis       Causal Feature Engineering               Multi
 
 ## Key Results
 
-Models were evaluated out-of-sample on the held-out peak winter crisis test set (November 1 – December 31, 2025; N = 9,800 hourly observations across all 7 Delhi continuous monitoring stations).
+Models were evaluated out-of-sample on the held-out peak winter crisis test set (November 1 – December 31, 2025, across all 7 Delhi continuous monitoring stations). Because the AQI target is already a 24-hour rolling average, the naive-persistence reference (predict the current AQI) is reported for every horizon, and skill scores are measured against it: `skill = 1 - metric_model / metric_persistence`, so a positive value means the model beats persistence. CIs are 95% day-block bootstrap intervals.
 
-| Horizon | Final Model Architecture | Test MAE | Test RMSE | Test R² | Test MAPE | vs Naive Baseline |
-| :--- | :--- | :---: | :---: | :---: | :---: | :---: |
-| **1-Hour** | Tuned LightGBM (All Causal Features) | **2.29** | 3.65 | 0.9958 | 0.86% | +0.11 pts MAE |
-| **6-Hour** | Tuned LightGBM (All Causal Features) | **11.84** | 16.71 | 0.9126 | 3.68% | +2.89 pts MAE |
-| **24-Hour** | 50/50 Hybrid (Naive Persistence + Ridge alpha=1000) | **34.11** | 44.80 | 0.3647 | 9.72% | +4.23 pts MAE |
+| Horizon | Model | N | MAE | MAE 95% CI | RMSE | RMSE 95% CI | R² | Bias | MAE (AQI≥300) | MAE skill | RMSE skill |
+| :--- | :--- | ---: | ---: | :---: | ---: | :---: | ---: | ---: | ---: | ---: | ---: |
+| 1h | Tuned LightGBM | 10057 | 2.29 | [1.66, 3.16] | 5.08 | [2.88, 7.17] | 0.992 | -0.83 | 2.3 | 0.047 | -0.332 |
+| 1h | Naive persistence | 10057 | 2.40 | [2.11, 2.69] | 3.82 | [3.23, 4.42] | 0.995 | -0.14 | 2.3 | 0.000 | 0.000 |
+| 6h | Tuned LightGBM | 9998 | 11.84 | [10.33, 13.63] | 15.97 | [13.42, 18.83] | 0.919 | -6.85 | 11.8 | 0.069 | 0.091 |
+| 6h | Naive persistence | 9998 | 12.72 | [11.12, 14.41] | 17.58 | [15.08, 19.90] | 0.902 | -0.77 | 11.9 | 0.000 | 0.000 |
+| 24h | 50/50 Hybrid (Persistence + Ridge) | 9800 | 34.11 | [29.57, 39.15] | 44.80 | [38.65, 50.84] | 0.365 | -5.12 | 31.9 | 0.110 | 0.117 |
+| 24h | Naive persistence | 9800 | 38.34 | [33.09, 44.01] | 50.75 | [43.63, 57.66] | 0.185 | -1.92 | 35.3 | 0.000 | 0.000 |
+
+Source of truth: `reports/metrics/headline_metrics.csv`, regenerated by `./venv/bin/python src/evaluation/build_metrics_table.py`.
 
 ### Key Classification & Alerting Metrics
-- **0.000% Critical Miss Rate:** Across all horizons, no Severe pollution event was ever misclassified as Moderate or Good.
-- **93.22% Very Poor or Worse Recall:** Reliable 24-hour advance detection of high-risk pollution episodes.
-- **17.36 Hours Lead Time:** Average advance warning time before the onset of 64 distinct winter crisis episodes.
+
+Severe (AQI ≥ 401) detection is reported at the alert threshold selected on the **validation** split (the 5:1 cost ratio gives τ = 274.5 AQI), then evaluated **once** on the winter test set. Recall is always shown with precision and the false-alarm count:
+
+- **Model:** recall 99.8%, precision 42.9%, FPR 92.7% (5,347 false-alarm hours on test).
+- **Naive persistence** at the same threshold: recall 99.6%, precision 43.0%, FPR 92.1% (5,314 false-alarm hours) — the alert rule adds little over copying the last value.
+- The validation window (Sep–Oct, 2.4% Severe hours) is far cleaner than the winter test window (41.1% Severe hours). That prevalence shift is why the validation-selected threshold is aggressive and false alarms are high on test.
+
+Source: `reports/classification/metrics/cost_optimal_thresholds_summary.csv` (`selected_on = val`). An earlier version selected the threshold on the test set itself; that leakage has been removed. The episode lead-time metric is being reworked separately.
 
 ---
 
@@ -85,9 +107,11 @@ I resolved this by removing raw calendar indicators and building a 50/50 hybrid 
 
 ## Causal Analysis
 
-**The naive before/after comparison showed a +135.6 AQI jump after the Diwali firecracker ban, but controlling for winter meteorological inversion revealed the policy shift was statistically indistinguishable from zero.**
+**The Diwali firecracker ban cannot be evaluated with this data: the ban was in force in every year studied, so there is no untreated Delhi period to compare against.**
 
-A simple before-and-after comparison suggested that pollution increased by 135.57 AQI points after Diwali 2025, which would make the firecracker ban look like an outright failure. However, checking pre-trends showed that air quality was already deteriorating by 20.38 AQI points per day prior to Diwali as winter temperature inversions and calm wind speeds set in. Using an Interrupted Time Series (ITS) model with station fixed effects, temperature, and wind controls, the estimated policy shift dropped to -10.59 AQI points (p = 0.425), which is not statistically significant. A 30-day in-time placebo test generated a false 24.26 point shift, confirming that raw comparisons pick up seasonal weather rather than policy failure.
+A naive before/after comparison suggests pollution jumped after Diwali 2025 (+135.6 AQI points; +97.3 µg/m³ PM2.5), which would make the ban look like a failure. But the design fails its own checks: pre-trends are violated (AQI already rising +20.4 points/day and PM2.5 +11.2 µg/m³/day in the 14 days before Diwali), and an in-time placebo on a non-event date returns a "significant" +24.3 AQI shift. With date-clustered standard errors and trend + weather controls (interrupted time series), the estimated level jump is statistically indistinguishable from zero (−10.6 AQI, p = 0.51; +17.0 µg/m³ PM2.5, p = 0.59). The honest conclusion is that the ban's effect is **not identifiable** here; claims that boundary-layer compression or stubble burning "caused" the post-Diwali crisis remain untested hypotheses, not findings.
+
+*Full breakdown:* [`reports/causal/diwali_ban_causal_analysis.md`](reports/causal/diwali_ban_causal_analysis.md)
 
 Hourly chemical tracer telemetry showed that firecrackers caused an acute burst on festival night—with PM2.5 surging 8.0x to 960.7 µg/m³ and SO₂ jumping 5.3x to 73.5 µg/m³—but this smoke cloud dispersed within 18 to 24 hours. The multi-week crisis that followed was driven by seasonal meteorology trapping background emissions, not lingering festival smoke.
 
@@ -97,15 +121,17 @@ Hourly chemical tracer telemetry showed that firecrackers caused an acute burst 
 
 ## Risk Classification & Alerting
 
-**Lowering the 24-hour Severe alert cutoff from 401.0 to 341.5 AQI catches 95.7% of hazardous pollution crises under an asymmetric public health loss ratio.**
+**Alert thresholds are selected on the validation split and evaluated once on the test set, and recall is always reported with precision and the false-alarm count.**
 
-Continuous AQI forecasts are mapped to the 6 statutory CPCB categories (Good, Satisfactory, Moderate, Poor, Very Poor, Severe) and CAQM Graded Response Action Plan (GRAP) Stages I through IV. At a 24-hour horizon, the statutory CPCB cutoff of 401.0 AQI misses 38.92% of Severe hours because regularized models naturally pull extreme predictions toward the historical mean. Applying an asymmetric 5:1 loss ratio—penalizing a missed severe crisis five times more than a false alarm—lowers the optimal decision threshold to 341.5 AQI. This raises Severe recall to 95.71%, reducing missed hazardous hours from 1,568 hours down to 173 hours (an 89% reduction). Importantly, 93.6% of the resulting false alarms occur when the air is already in the "Very Poor" tier (301 to 400 AQI), and exactly 0% occur in clean or moderate air.
+Continuous AQI forecasts are mapped to the 6 statutory CPCB categories (Good, Satisfactory, Moderate, Poor, Very Poor, Severe) and CAQM Graded Response Action Plan (GRAP) Stages I through IV. The Severe decision cutoff is chosen by minimizing expected asymmetric cost on validation (Sep–Oct 2025); only then is it applied to the winter test set. A prevalence shift makes this hard: validation has 2.4% Severe hours, the test window 41.1%.
 
-| Operating Policy | Decision Cutoff (AQI) | Severe Recall | Severe Precision | Missed Severe Hours | False Alarm Hours |
-| :--- | :---: | :---: | :---: | :---: | :---: |
-| **Statutory Fixed CPCB** | 401.0 | 61.08% | 73.86% | 1,568 h | 871 h |
-| **Cost-Optimal (5:1 Loss Ratio)** | **341.5** | **95.71%** | 54.33% | **173 h** | 3,242 h |
-| **Pragmatic Compromise** | 380.0 | 78.90% | 64.40% | 850 h | 1,757 h |
+| Operating Policy | Decision Cutoff (AQI) | Val Severe Recall | Val Severe Precision | Test Severe Recall | Test Severe Precision | Test Missed Severe Hours | Test False Alarm Hours |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Statutory Fixed CPCB** | 401.0 | 20.8% | 32.2% | 61.08% | 73.86% | 1,568 h | 871 h |
+| **Validation-optimal (5:1 Loss Ratio)** | **274.5** | **100.0%** | 9.81% | **99.83%** | 42.93% | **7 h** | 5,347 h |
+| **Pragmatic Compromise** | 380.0 | 49.1% | 33.3% | 78.90% | 64.40% | 850 h | 1,757 h |
+
+The aggressive validation-optimal cutoff buys high recall at the cost of precision. At the same 274.5 cutoff, naive persistence scores recall 99.63%, precision 43.03% and 5,314 false-alarm hours on test — essentially the same as the model — so this alert rule should not be read as evidence of predictive skill beyond persistence.
 
 *Full optimization curve, loss matrices, and sensitivity sweeps:* [`reports/classification/cost_aware_threshold_analysis.md`](reports/classification/cost_aware_threshold_analysis.md)
 
@@ -212,14 +238,6 @@ A clean public version of this dataset is hosted on Kaggle:
 - **Web Application & Visualization:** Streamlit, Plotly, Matplotlib, Seaborn
 
 ---
-
-## Limitations
-
-1. **24-Hour Forecasting Uncertainty:** An R² of 0.36 reflects fundamental physical limits of predicting atmospheric stagnation 24 hours ahead using only ground telemetry without numerical weather prediction (NWP) models.
-2. **Historical Backtest Scope:** The pipeline is currently evaluated on held-out historical data (November–December 2025) rather than a live streaming data feed.
-3. **Observational Causal Identification:** The Diwali analysis uses within-city Interrupted Time Series with meteorological controls because continuous upwind background stations outside Delhi were unavailable in source data.
-4. **Geographic Scope:** Telemetry is bounded to 7 urban monitoring stations within the National Capital Territory of Delhi.
-5. **Sensor Sparsity:** Xylene was unpopulated across all stations in raw telemetry, and rainfall sensors were unavailable at several monitoring sites.
 
 ---
 

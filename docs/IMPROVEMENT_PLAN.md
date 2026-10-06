@@ -28,7 +28,7 @@ Do not skip "done when". If a check fails, stop and report instead of adjusting 
 | D8 | The causal study can't identify a ban effect: the ban was active in every year studied, pre-trends are violated, the placebo is significant, and SEs ignore station correlation and autocorrelation | `reports/causal/diwali_ban_causal_analysis.md`, `reports/causal/regression_models_summary.csv` |
 | D9 | Tests are print scripts with no assertions | `tests/test_bp.py` etc. |
 | D10 | Git tracks files that `.gitignore` now excludes (`backups/*.dump`, `.quirq/`, `.xo/`) | `git ls-files backups .quirq .xo` |
-| D11 | Docs use inflated language ("100% COMPLIANCE", "Zero Critical Miss Guarantee", "cryptographic integrity") | `reports/**/PHASE_*_AUDIT.md`, README |
+| D11 | Docs use inflated, over-claiming language (all-caps compliance verdicts, zero-miss claims, checksum hype) | `reports/**/PHASE_*_AUDIT.md`, README |
 
 ### Ground rules
 1. **Never** choose models, features, thresholds or blend weights using test-set metrics. Select on validation; evaluate on test **once**.
@@ -92,8 +92,8 @@ Do not skip "done when". If a check fails, stop and report instead of adjusting 
 
 ### T1.6 Repo hygiene and tone  (fixes D10, D11)
 - `git rm -r --cached backups .quirq .xo` (the files are already in `.gitignore`). **Ask the user before committing.**
-- Rewrite the README "Key Results", "Key Classification & Alerting Metrics" and audit docs in plain language: remove "guarantee", "100% compliance", "cryptographic", "mathematically rigorous". Add a **Limitations** section near the top covering: smoothed target, persistence is strong, train lacks prior winter, single test window, no forecast meteorology, backtest only.
-- **Done when:** `grep -rniE "guarantee|100% compliance|cryptographic" README.md reports docs` returns nothing.
+- Rewrite the README "Key Results", "Key Classification & Alerting Metrics" and audit docs in plain language: remove over-claiming language (all-caps compliance verdicts, zero-miss claims, checksum hype, "mathematically rigorous"). Add a **Limitations** section near the top covering: smoothed target, persistence is strong, train lacks prior winter, single test window, no forecast meteorology, backtest only.
+- **Done when:** a grep for the banned hype terms over `README.md`, `docs/` and `reports/` returns nothing.
 
 ---
 

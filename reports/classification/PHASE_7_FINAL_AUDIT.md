@@ -10,9 +10,9 @@
 
 ## 1. Executive Summary & Audit Verdict
 
-This formal audit report provides an exhaustive, mathematically rigorous, and empirical verification of **Phase 7: CPCB Risk Classification & GRAP Policy Alerting** prior to freezing all classification artifacts and transitioning to **Phase 8: Production Deployment, Real-Time Inference & Dashboard Integration**.
+This audit report provides a detailed empirical verification of **Phase 7: CPCB Risk Classification & GRAP Policy Alerting** prior to freezing all classification artifacts and transitioning to **Phase 8: Production Deployment, Real-Time Inference & Dashboard Integration**.
 
-### Master Audit Verdict: **PASSED (100% COMPLIANCE)**
+### Master Audit Verdict: **PASSED**
 
 All continuous regression outputs from the frozen Phase 6 production models ($h \in \{1\text{h}, 6\text{h}, 24\text{h}\}$) have been deterministically mapped to the official 6-tier Central Pollution Control Board (CPCB) National Air Quality Index (NAQI) categories and the 4-tier Commission for Air Quality Management (CAQM) Graded Response Action Plan (GRAP 2024 Revision) emergency stages. The evaluation was performed strictly out-of-sample on the held-out peak winter test set (November 1 – December 31, 2025; $N=9,800$ to $10,057$ hourly observations across 7 DPCC/CPCB monitoring stations in Delhi) with zero threshold tuning, zero model retraining, and zero data leakage.
 
@@ -29,11 +29,11 @@ All continuous regression outputs from the frozen Phase 6 production models ($h 
 ```
 
 **Key Findings & Verified System Capabilities:**
-1. **Zero Critical Miss Guarantee:** Across all 3 horizons and all 7 monitoring stations ($N=29,855$ total evaluation predictions), the Critical Miss Rate is strictly **0.000%** (0 actual Severe cases were ever misclassified as Moderate, Satisfactory, or Good).
-2. **High-Risk Operational Safety Buffer ($>93\%$ Very Poor+ Recall):** At the 24-hour horizon, while strict Severe ($401–500$) recall is $61.08\%$ due to sharp boundary transitions, the combined Very Poor + Severe ($\text{AQI} \ge 301$) recall reaches **93.22%** citywide (and up to $95.49\%$ at Jahangirpuri), guaranteeing that severe air stagnation events are reliably captured.
+1. **No Severe-to-Moderate Misses (descriptive):** Across all 3 horizons and all 7 monitoring stations ($N=29,855$ predictions), the Critical Miss Rate is **0.000%**. This is a descriptive result on a smoothed 24h-average target and is not by itself evidence of predictive skill.
+2. **High-Risk Recall ($>93\%$ Very Poor+):** At 24h, strict Severe ($401–500$) recall is $61.08\%$; combined Very Poor + Severe ($\text{AQI} \ge 301$) recall is **93.22%** citywide. Precision is reported separately in the cost-aware threshold analysis and is much lower, so this recall figure should not be read alone.
 3. **17.4-Hour Actionable Early Warning:** The 24-hour forecasting pipeline successfully detected **74.4%** of contiguous Severe pollution episodes ($AQI \ge 401$) with an average advance lead time of **17.36 hours**, providing actionable regulatory warning ($\ge 6\text{ hours}$) for **55.8%** of winter crisis events.
 4. **Adjacency Concentration:** At the 24h horizon, **99.06%** of all predictions fall within $\pm 1$ adjacent CPCB class of the ground truth ($100.00\%$ within $\pm 1$ class for 1h and 6h).
-5. **Strict Frozen Non-Interference:** Phase 6 continuous models, parameters, scalers, imputers, and dataset splits were audited and preserved with 100% cryptographic integrity.
+5. **Strict Frozen Non-Interference:** Phase 6 continuous models, parameters, scalers, imputers, and dataset splits were audited and preserved unchanged (byte-identical, verified with SHA-256 checksums).
 
 ---
 
@@ -54,14 +54,14 @@ All continuous regression outputs from the frozen Phase 6 production models ($h 
 | **11** | **Confusion Matrix Structural Symmetry** | **PASS** | 6×6 confusion matrices verified; $\pm 1$ class accuracy: 1h (100.0%), 6h (100.0%), 24h (99.06%). |
 | **12** | **Station-Level Spatial Consistency** | **PASS** | All 7 DPCC/CPCB monitoring stations audited with 0 critical misses and high high-tier fidelity. |
 | **13** | **Zero-Leakage & Temporal Test Isolation** | **PASS** | Evaluation conducted strictly on held-out test split (Nov 1 – Dec 31, 2025); zero retrospective contamination. |
-| **14** | **Artifact Inventory & Cryptographic Checksums** | **PASS** | Row-level classified Parquet files, CSV metrics, and Python scripts validated with SHA-256 signatures. |
+| **14** | **Artifact Inventory & SHA-256 Checksums** | **PASS** | Row-level classified Parquet files, CSV metrics, and Python scripts validated with SHA-256 checksums. |
 | **15** | **Documentation, Findings & Memory Synchronization** | **PASS** | `docs/phase_7_findings.md`, `CLAUDE.md`, and memory entries fully aligned with audited empirical metrics. |
 
 ---
 
-## 3. Artifact Inventory & Cryptographic Manifest
+## 3. Artifact Inventory & SHA-256 Manifest
 
-The classification pipeline generated versioned Parquet datasets and metric files under `reports/classification/`. All files were verified for existence, non-emptiness, row counts, and cryptographic SHA-256 integrity:
+The classification pipeline generated versioned Parquet datasets and metric files under `reports/classification/`. All files were verified for existence, non-emptiness, row counts, and SHA-256 checksums:
 
 ```text
 ┌────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
@@ -322,7 +322,7 @@ At 24 hours, $\text{AUROC} = 0.8340$ and $\text{AUPRC} = 0.7785$ demonstrate rob
 
 ## 11. Station-Level Performance & Spatial Equity
 
-Performance was audited across all 7 DPCC/CPCB monitoring stations in Delhi to guarantee spatial reliability:
+Performance was audited across all 7 DPCC/CPCB monitoring stations in Delhi to check spatial consistency:
 
 ```text
 ┌────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐

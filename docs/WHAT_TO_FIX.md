@@ -32,7 +32,7 @@ if it **beats that simple guess**, so always show the comparison.
 7. **The model never saw a winter before being tested on one.**
    → Rebuild AQI for 2023–2024 from the raw pollutant data you already have, and train on past winters.
 
-8. **Tone of the docs.** Words like "guarantee", "100% compliance" and "cryptographic integrity" read as
+8. **Tone of the docs.** Over-claiming words (all-caps compliance verdicts, zero-miss language, checksum hype) read as
    AI-generated hype. → Plain language, plus a "Limitations" section near the top of the README.
 
 9. **Tests don't test anything** (they just print).

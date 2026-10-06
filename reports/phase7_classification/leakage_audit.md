@@ -66,7 +66,7 @@ assert (df['prediction_hybrid_6c_winning'] >= 451).equals(df['stage_iv_alert_for
 
 ## 5. Summary
 
-Phase 7 is entirely deterministic. By treating the CPCB and CAQM regulations as immutable mathematical functions, and evaluating them purely against the previously frozen Phase 6 predictions, we guarantee zero methodological leakage.
+Phase 7 is entirely deterministic. By treating the CPCB and CAQM regulations as immutable mathematical functions, and evaluating them purely against the previously frozen Phase 6 predictions, no methodological leakage was found.
 
 ---
 **Next Document:** `reports/phase7_classification/phase_7_plan.md` — Final assembly of the master plan and verdict.
