@@ -5,10 +5,24 @@ from PostgreSQL air_quality_db across 7 Delhi CAAQMS stations.
 """
 
 import os
+import sys
 import numpy as np
 import pandas as pd
 import psycopg2
 from pathlib import Path
+
+# Allow `python src/features/build_features.py` (script dir, not repo root, is on sys.path).
+_PROJECT_ROOT = Path(__file__).resolve().parents[2]
+if str(_PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(_PROJECT_ROOT))
+
+from src.features.compute_cpcb_aqi import (
+    DEFAULT_RAW_DIR,
+    POLLUTANT_COLUMNS,
+    STATION_IDS,
+    _station_for_folder,
+    load_official_aqi,
+)
 
 # Database credentials
 DB_PARAMS = {
@@ -34,6 +48,28 @@ TOP_NEIGHBORS = {
     'Punjabi Bagh': 'R K Puram',
     'R K Puram': 'Punjabi Bagh',
 }
+
+# The CAAQMS columns the feature engineering expects, mapped from the raw CSV headers.
+RAW_CSV_TO_CAAQMS = {
+    **POLLUTANT_COLUMNS,
+    "NO (µg/m³)": "no",
+    "NOx (ppb)": "nox",
+    "AT (°C)": "temperature",
+    "RH (%)": "humidity",
+    "WS (m/s)": "wind_speed",
+    "SR (W/mt2)": "solar_radiation",
+}
+
+OFFLINE_START = pd.Timestamp("2024-01-01 00:00:00", tz='Asia/Kolkata')
+OFFLINE_END = pd.Timestamp("2025-12-31 23:00:00", tz='Asia/Kolkata')
+
+
+def _stations_frame():
+    """Minimal stations table (id, name); coordinates are not needed for features."""
+    return pd.DataFrame(
+        [{"station_id": sid, "station_name": name, "city": "Delhi"}
+         for name, sid in sorted(STATION_IDS.items(), key=lambda kv: kv[1])]
+    )
 
 
 def load_raw_data_from_db():
@@ -91,12 +127,79 @@ def load_raw_data_from_db():
     return stations_df, caaqms_df, aqi_df
 
 
-def engineer_station_features(station_id, station_name, caaqms_sub, aqi_sub):
+def load_raw_data_offline(start=None, end=None):
+    """Extracts CAAQMS + AQI from the raw CSVs and the recomputed AQI parquet.
+
+    Used when PostgreSQL is unavailable. The target AQI is the official series
+    for 2025 and the CPCB-recomputed series (``aqi_source='recomputed'``) for
+    2023-2024, so the training window can include a prior winter.
+    """
+    start = start if start is not None else OFFLINE_START
+    end = end if end is not None else OFFLINE_END
+    years = list(range(pd.Timestamp(start).year, pd.Timestamp(end).year + 1))
+
+    caaqms_frames = []
+    folders = sorted(os.listdir(DEFAULT_RAW_DIR))
+    for folder in folders:
+        station = _station_for_folder(folder)
+        raw_dir = Path(DEFAULT_RAW_DIR) / folder / "Raw Data"
+        if station is None or not raw_dir.is_dir():
+            continue
+        for year in years:
+            for csv_path in raw_dir.glob(f"{year}_*_1H.csv"):
+                frame = pd.read_csv(csv_path).rename(columns=RAW_CSV_TO_CAAQMS)
+                keep = ["Timestamp"] + [c for c in RAW_CSV_TO_CAAQMS.values() if c in frame.columns]
+                caaqms_frames.append(
+                    frame[keep].assign(station_id=STATION_IDS[station], station_name=station)
+                )
+    caaqms_df = pd.concat(caaqms_frames, ignore_index=True).rename(columns={"Timestamp": "timestamp"})
+    caaqms_df["timestamp"] = pd.to_datetime(caaqms_df["timestamp"])
+    caaqms_df = caaqms_df.loc[
+        (caaqms_df["timestamp"] >= pd.Timestamp(start).tz_localize(None))
+        & (caaqms_df["timestamp"] <= pd.Timestamp(end).tz_localize(None))
+    ]
+
+    aqi_parts = []
+    official = load_official_aqi([2025])
+    official = official.rename(columns={"aqi_official": "aqi_value"})
+    official["aqi_source"] = "official"
+    official = official.merge(_stations_frame()[["station_id", "station_name"]], on="station_name")
+    aqi_parts.append(official[["station_id", "station_name", "timestamp", "aqi_value", "aqi_source"]])
+
+    recomputed_path = PROCESSED_DATA_DIR / "recomputed_aqi.parquet"
+    if recomputed_path.exists():
+        recomputed = pd.read_parquet(recomputed_path)
+        recomputed["aqi_source"] = "recomputed"
+        aqi_parts.append(
+            recomputed[["station_id", "station_name", "timestamp", "aqi_value", "aqi_source"]]
+        )
+    aqi_df = pd.concat(aqi_parts, ignore_index=True)
+
+    # Official AQI wins wherever both exist; recomputed only backfills pre-2025.
+    aqi_df["_priority"] = (aqi_df["aqi_source"] == "official").astype(int)
+    aqi_df = (
+        aqi_df.sort_values("_priority")
+        .drop_duplicates(["station_id", "timestamp"], keep="last")
+        .drop(columns="_priority")
+    )
+
+    for column in ("timestamp",):
+        caaqms_df[column] = pd.to_datetime(caaqms_df[column]).dt.tz_localize("Asia/Kolkata")
+        aqi_df[column] = pd.to_datetime(aqi_df[column]).dt.tz_localize("Asia/Kolkata")
+
+    print(
+        f"Loaded {len(caaqms_df):,} CAAQMS records and {len(aqi_df):,} AQI records offline."
+    )
+    return _stations_frame(), caaqms_df, aqi_df
+
+
+def engineer_station_features(station_id, station_name, caaqms_sub, aqi_sub, full_idx=None):
     """
     Constructs causal temporal, lag, rolling, and meteorological features for a single station.
     Strictly uses historical values (<= t) for feature calculation.
     """
-    full_idx = pd.date_range("2024-01-01 00:00:00", "2025-12-31 23:00:00", freq='h', tz='Asia/Kolkata')
+    if full_idx is None:
+        full_idx = pd.date_range("2024-01-01 00:00:00", "2025-12-31 23:00:00", freq='h', tz='Asia/Kolkata')
 
     c_indexed = caaqms_sub.sort_values('timestamp').drop_duplicates(subset=['timestamp']).set_index('timestamp').reindex(full_idx)
     a_indexed = aqi_sub.sort_values('timestamp').drop_duplicates(subset=['timestamp']).set_index('timestamp').reindex(full_idx)
@@ -110,6 +213,11 @@ def engineer_station_features(station_id, station_name, caaqms_sub, aqi_sub):
     # Base series
     aqi_s = a_indexed['aqi_value']
     pm25_s = c_indexed['pm25']
+    feat_dict['aqi_source'] = (
+        a_indexed['aqi_source'].ffill().bfill().values
+        if 'aqi_source' in a_indexed.columns
+        else 'official'
+    )
 
     # -------------------------------------------------------------
     # Group A: Recent AQI Lags & Current Value (10 features)
@@ -199,14 +307,23 @@ def engineer_station_features(station_id, station_name, caaqms_sub, aqi_sub):
     feat_dict['target_aqi_1h'] = aqi_s.shift(-1).values
     feat_dict['target_aqi_6h'] = aqi_s.shift(-6).values
     feat_dict['target_aqi_24h'] = aqi_s.shift(-24).values
+    # Raw PM2.5 targets: unlike the smoothed AQI these have real hourly dynamics,
+    # so model skill vs persistence is actually measurable (improvement plan T2.3).
+    feat_dict['target_pm25_1h'] = pm25_s.shift(-1).values
+    feat_dict['target_pm25_6h'] = pm25_s.shift(-6).values
+    feat_dict['target_pm25_24h'] = pm25_s.shift(-24).values
 
     return pd.DataFrame(feat_dict)
 
 
-def build_feature_matrix():
-    """Orchestrates multi-station feature engineering and cross-station spatial signals."""
-    stations_df, caaqms_df, aqi_df = load_raw_data_from_db()
-
+def assemble_feature_matrix(stations_df, caaqms_df, aqi_df, full_start, full_end,
+                            window_start, window_end, output_path, write_manifest=True):
+    """Builds the per-station + cross-station feature matrix for a date window."""
+    full_idx = pd.date_range(
+        pd.Timestamp(full_start).tz_convert("Asia/Kolkata").floor("h"),
+        pd.Timestamp(full_end).tz_convert("Asia/Kolkata").floor("h"),
+        freq='h', tz='Asia/Kolkata',
+    )
     station_matrices = []
     print("\n--- Engineering Features per Station ---")
     for _, srow in stations_df.iterrows():
@@ -217,7 +334,7 @@ def build_feature_matrix():
         c_sub = caaqms_df[caaqms_df['station_id'] == sid].copy()
         a_sub = aqi_df[aqi_df['station_id'] == sid].copy()
 
-        feat_df = engineer_station_features(sid, sname, c_sub, a_sub)
+        feat_df = engineer_station_features(sid, sname, c_sub, a_sub, full_idx=full_idx)
         station_matrices.append(feat_df)
 
     full_df = pd.concat(station_matrices, ignore_index=True)
@@ -271,24 +388,24 @@ def build_feature_matrix():
     ], inplace=True)
 
     # -------------------------------------------------------------
-    # Filter to Valid Target Frame (2025 where current AQI exists)
+    # Filter to the requested window where a current AQI exists
     # -------------------------------------------------------------
-    print("\n--- Filtering to 2025 Evaluation Frame ---")
-    in_2025 = (full_df['timestamp'] >= pd.Timestamp("2025-01-01 00:00:00", tz='Asia/Kolkata')) & \
-              (full_df['timestamp'] <= pd.Timestamp("2025-12-31 23:00:00", tz='Asia/Kolkata'))
+    print(f"\n--- Filtering to {window_start.date()} .. {window_end.date()} ---")
+    in_window = (full_df['timestamp'] >= pd.Timestamp(window_start)) & \
+                (full_df['timestamp'] <= pd.Timestamp(window_end))
     has_current_aqi = full_df['aqi_curr'].notna()
 
-    dataset_2025 = full_df[in_2025 & has_current_aqi].copy().sort_values(['station_id', 'timestamp']).reset_index(drop=True)
+    dataset = full_df[in_window & has_current_aqi].copy().sort_values(['station_id', 'timestamp']).reset_index(drop=True)
 
     # Save output parquet
-    parquet_path = PROCESSED_DATA_DIR / "features_2025.parquet"
-    dataset_2025.to_parquet(parquet_path, index=False)
-    print(f"Saved feature matrix to: {parquet_path} (Shape: {dataset_2025.shape})")
+    dataset.to_parquet(output_path, index=False)
+    print(f"Saved feature matrix to: {output_path} (Shape: {dataset.shape})")
 
     # Summary of columns by group
-    feature_cols = [c for c in dataset_2025.columns if c not in [
+    feature_cols = [c for c in dataset.columns if c not in [
         'station_id', 'station_name', 'timestamp',
-        'target_aqi_1h', 'target_aqi_6h', 'target_aqi_24h'
+        'target_aqi_1h', 'target_aqi_6h', 'target_aqi_24h',
+        'target_pm25_1h', 'target_pm25_6h', 'target_pm25_24h',
     ]]
     print(f"Total Engineered Feature Columns: {len(feature_cols)}")
 
@@ -315,17 +432,45 @@ def build_feature_matrix():
     manifest_df = pd.DataFrame({
         "feature_name": feature_cols,
         "group": [get_feature_group(c) for c in feature_cols],
-        "dtype": [str(dataset_2025[c].dtype) for c in feature_cols],
-        "non_null_count": [int(dataset_2025[c].notna().sum()) for c in feature_cols],
-        "missing_pct": [round(dataset_2025[c].isna().mean() * 100, 2) for c in feature_cols]
+        "dtype": [str(dataset[c].dtype) for c in feature_cols],
+        "non_null_count": [int(dataset[c].notna().sum()) for c in feature_cols],
+        "missing_pct": [round(dataset[c].isna().mean() * 100, 2) for c in feature_cols]
     })
-    manifest_df.to_csv(REPORTS_DIR / "feature_manifest.csv", index=False)
-    print(f"Feature manifest saved to: {REPORTS_DIR / 'feature_manifest.csv'}")
+    if write_manifest:
+        manifest_df.to_csv(REPORTS_DIR / "feature_manifest.csv", index=False)
+        print(f"Feature manifest saved to: {REPORTS_DIR / 'feature_manifest.csv'}")
 
     print("\n--- Feature Count by Group ---")
     print(manifest_df['group'].value_counts())
 
-    return dataset_2025
+    return dataset
+
+
+def build_feature_matrix(source="db", start=None, end=None, output_path=None):
+    """Orchestrates multi-station feature engineering and cross-station signals.
+
+    ``source='db'`` keeps the original PostgreSQL behaviour (2025 output frame);
+    ``source='offline'`` reads the raw CSVs plus the recomputed AQI parquet so
+    the extended 2024-2025 training window can be built without Postgres.
+    """
+    start = start if start is not None else OFFLINE_START
+    end = end if end is not None else OFFLINE_END
+    output_path = Path(output_path) if output_path is not None else PROCESSED_DATA_DIR / "features_2025.parquet"
+
+    if source == "offline":
+        stations_df, caaqms_df, aqi_df = load_raw_data_offline(start, end)
+        window_start, window_end = start, end
+    else:
+        stations_df, caaqms_df, aqi_df = load_raw_data_from_db()
+        window_start = pd.Timestamp("2025-01-01 00:00:00", tz='Asia/Kolkata')
+        window_end = pd.Timestamp("2025-12-31 23:00:00", tz='Asia/Kolkata')
+
+    return assemble_feature_matrix(
+        stations_df, caaqms_df, aqi_df,
+        full_start=start, full_end=end,
+        window_start=window_start, window_end=window_end,
+        output_path=output_path,
+    )
 
 
 if __name__ == "__main__":

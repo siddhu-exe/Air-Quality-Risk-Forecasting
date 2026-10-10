@@ -29,6 +29,15 @@ Og Data/
 backups/
 *.dump
 
+# Large regenerable feature matrix (rebuild via build_features.py offline)
+data/processed/features_extended.parquet
+data/processed/features_exogenous.parquet
+
+# Portable bundle for the Colab notebook (upload to Google Drive)
+tier_2_colab_bundle*.zip
+tier_2_patch*.zip
+tier2_reports*.zip
+
 # IDE, OS, and Jupyter artifacts
 .DS_Store
 Thumbs.db
@@ -48,4 +57,3 @@ Thumbs.db
 
 # Kaggle dataset packaging directory (untracked, local-only export)
 /kaggle/
-

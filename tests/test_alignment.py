@@ -77,7 +77,8 @@ def test_future_spike_does_not_leak_into_earlier_features():
 
     feature_cols = [
         c for c in base.columns
-        if not c.startswith("target_") and c not in ("station_id", "station_name")
+        if not c.startswith("target_")
+        and c not in ("station_id", "station_name", "aqi_source")
     ]
     before = base.index < spike_time
     assert before.sum() >= 24
