@@ -147,4 +147,4 @@ Do not skip "done when". If a check fails, stop and report instead of adjusting 
 - [ ] Causal report reframed, clustered SEs
 - [ ] `pytest` green with real asserts
 - [ ] Limitations section at the top of README
-- [ ] (Tier 2) Training includes prior winters; intervals reported
+- [x] (Tier 2) Training includes prior winters; intervals reported (extended 24h model, rolling-origin CIs, conformal intervals; see `docs/TIER_2/TIER_2_AUDIT.md`)
