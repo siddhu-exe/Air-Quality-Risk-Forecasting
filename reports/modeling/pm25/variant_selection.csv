@@ -1,0 +1,13 @@
+horizon,target_form,calendar,val_mae,val_persistence_mae,val_mae_skill
+1h,level,True,13.381,15.39,0.1306
+1h,level,False,13.409,15.39,0.1287
+1h,residual,True,13.256,15.39,0.1387
+1h,residual,False,13.239,15.39,0.1397
+6h,level,True,25.543,38.139,0.3303
+6h,level,False,26.731,38.139,0.2991
+6h,residual,True,25.887,38.139,0.3212
+6h,residual,False,26.855,38.139,0.2959
+24h,level,True,32.409,35.919,0.0977
+24h,level,False,32.935,35.919,0.0831
+24h,residual,True,31.62,35.919,0.1197
+24h,residual,False,32.592,35.919,0.0926

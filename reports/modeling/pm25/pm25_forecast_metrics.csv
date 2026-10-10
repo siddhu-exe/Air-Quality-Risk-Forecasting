@@ -1,0 +1,7 @@
+horizon,split,n,target_form,calendar,model_mae,model_rmse,model_r2,persistence_mae,persistence_rmse,skill_mae,skill_mae_ci_lo,skill_mae_ci_hi,skill_rmse
+1h,val,9241,residual,False,13.239,23.687,0.914,15.39,27.972,0.1397,0.1151,0.1628,0.1532
+1h,test,9854,residual,False,24.971,37.308,0.896,31.265,46.29,0.2013,0.1815,0.2194,0.1941
+6h,val,9130,level,True,25.543,46.483,0.666,38.139,68.296,0.3303,0.2581,0.3874,0.3194
+6h,test,9746,level,True,63.711,86.414,0.441,101.69,133.469,0.3735,0.3224,0.4176,0.3526
+24h,val,9076,residual,True,31.62,55.41,0.564,35.919,65.138,0.1197,0.0591,0.1777,0.1494
+24h,test,9615,residual,True,82.285,108.8,0.113,75.292,102.561,-0.0929,-0.2195,0.01,-0.0608
