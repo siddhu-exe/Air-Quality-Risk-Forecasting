@@ -62,6 +62,14 @@ SPECS = [
         pred_col="prediction_hybrid_6c_winning",
         persistence_col="prediction_naive_persistence",
     ),
+    HorizonSpec(
+        horizon="24h",
+        model_label="50/50 Hybrid, +2024 winters (extended train)",
+        path=REPO_ROOT / "reports/modeling/24h/final/final_predictions_extended.parquet",
+        truth_col="target_aqi_24h",
+        pred_col="prediction_hybrid_6c_winning",
+        persistence_col="prediction_naive_persistence",
+    ),
 ]
 
 
@@ -184,7 +192,8 @@ def build_rows(n_boot: int, seed: int) -> pd.DataFrame:
         "skill_mae", "skill_mae_ci_lo", "skill_mae_ci_hi",
         "skill_rmse", "skill_rmse_ci_lo", "skill_rmse_ci_hi",
     ]
-    return pd.DataFrame(rows)[columns]
+    # Several models can share a horizon; the persistence reference is then identical, keep one.
+    return pd.DataFrame(rows)[columns].drop_duplicates().reset_index(drop=True)
 
 
 def write_csv(df: pd.DataFrame) -> None:

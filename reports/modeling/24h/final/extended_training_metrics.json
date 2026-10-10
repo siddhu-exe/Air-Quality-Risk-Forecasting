@@ -1,0 +1,26 @@
+{
+  "val": {
+    "mae": 28.7955,
+    "rmse": 40.0094,
+    "r2": 0.8525,
+    "mape": 17.76,
+    "bias": -5.36,
+    "mae_extreme_ge300": 35.7316,
+    "mae_severe_ge400": 43.0124,
+    "count": 9590
+  },
+  "test": {
+    "mae": 34.0182,
+    "rmse": 44.6802,
+    "r2": 0.3681,
+    "mape": 9.72,
+    "bias": -5.9,
+    "mae_extreme_ge300": 31.4509,
+    "mae_severe_ge400": 31.8636,
+    "count": 9800
+  },
+  "meta": {
+    "n_train": 94146,
+    "embargo_hours": 24
+  }
+}
