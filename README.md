@@ -1,74 +1,42 @@
 # Delhi Air Quality Risk Forecasting
 
-This project forecasts air quality across Delhi 1 to 24 hours in advance and evaluates the impact of citywide pollution control policies. Instead of treating air quality as a generic regression problem, it investigates why standard machine learning breaks down during severe winter smog episodes and how to build models that actually hold up. It also includes a methodological study of why naive before/after evaluations of Delhi's Diwali firecracker ban are unreliable, and an interactive evaluation dashboard.
+**1h / 6h / 24h AQI forecasts for 7 Delhi monitoring stations, CPCB/GRAP risk alerts with cost-aware thresholds, and an honest causal look at the Diwali firecracker ban.**
 
-## Project Links
+![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue)
+![PostgreSQL 16](https://img.shields.io/badge/PostgreSQL-16-336791)
+![Tests](https://img.shields.io/badge/tests-pytest-informational)
+![License MIT](https://img.shields.io/badge/license-MIT-green)
 
-- **Interactive Dashboard:** Run locally with `streamlit run app.py` (deployable to Streamlit Community Cloud)
-- **Public Kaggle Dataset:** [Delhi Air Quality Monitoring Dataset (2023–2026)](https://www.kaggle.com/datasets/siddharthdongardive/delhi-air-quality-monitoring-dataset-2023-2026)
-- **GitHub Repository:** [https://github.com/Siddharth23052005/Air-quality-risk-forecasting](https://github.com/siddhu-exe/Air-quality-risk-forecasting)
+Delhi's winter smog regularly pushes AQI past 400. This repository takes raw government telemetry through ETL,
+leakage-safe feature engineering, multi-horizon forecasting, regulatory risk classification and causal policy
+evaluation, and it reports where each step works and where it doesn't.
 
----
+**Dataset:** [Delhi Air Quality Monitoring Dataset (2023–2026) on Kaggle](https://www.kaggle.com/datasets/siddharthdongardive/delhi-air-quality-monitoring-dataset-2023-2026) ·
+**Code:** [GitHub](https://github.com/siddhu-exe/Air-Quality-Risk-Forecasting)
 
-## Overview
+## Highlights
 
-Delhi experiences some of the most hazardous urban air pollution events in the world, with winter PM2.5 concentrations routinely exceeding 400 to 500 µg/m³. Reliable advance warnings are critical for public health advisories and emergency policy enforcement under the Graded Response Action Plan (GRAP).
+- **Beats persistence, modestly.** The 24h hybrid (50% persistence + 50% Ridge) has MAE skill **+0.11** over copying the last
+  value on the held-out Nov–Dec 2025 winter, and the gain holds in the 2024 winter too (rolling-origin backtest).
+- **Fixes a real failure.** Gradient-boosted trees capped at the training maximum (~347 AQI) and got 24h MAE 98.24 on winter; the
+  linear hybrid brought it to 34.11.
+- **No leakage, no test-set tuning.** Thresholds and hyper-parameters are chosen on validation; the test window is scored once.
+- **Honest causal result.** The Diwali-ban effect is **not identifiable** with this data (the ban applied in every year studied).
+- **Reports negatives.** Raw PM2.5 beats persistence at 1h/6h but not 24h; weather, longer training and extra tuning barely move the 24h forecast.
 
-However, off-the-shelf machine learning pipelines frequently fail in this setting. Tree-based models hit mathematical ceilings during extreme spikes, standard evaluation protocols suffer from temporal leakage, and naive before-and-after policy evaluations confuse seasonal winter meteorology with policy failure.
+## Contents
 
-This repository implements a full data and modeling pipeline across 7 continuous monitoring stations in Delhi. It covers raw telemetry ingestion into PostgreSQL 16, causal feature engineering, multi-horizon forecasting (1h, 6h, 24h), CPCB regulatory classification, cost-sensitive alert optimization, and econometric causal policy evaluation.
-
----
-
-## Limitations (Read First)
-
-- **The target is smoothed.** Official AQI is a 24-hour rolling average, so consecutive hours are nearly identical (lag-1 autocorrelation ≈ 0.998). "Copy the last value" is therefore a very strong baseline, and model skill must be judged against persistence, not R² alone.
-- **Persistence is hard to beat.** At 1h the tuned model loses to persistence on RMSE and R²; at 24h the hybrid beats it on both (MAE skill +0.11, RMSE skill +0.12).
-- **The frozen models lack prior winters.** The production 1h/6h/24h models train on 2025-01..08, which contains no winter peak, so tree models cannot extrapolate beyond ~347 AQI. Tier 2 recomputes AQI for 2024 (CPCB method from raw telemetry) and retrains the 24h model on it; that extended model is reported separately and does **not** replace the frozen artifacts the dashboards read. The recompute matches official AQI well overall (MAE < 10) but is worse in Feb–May (monthly MAE 12–15), so 2024 labels are noisier than 2025 labels (see `reports/features/aqi_recompute_validation.md`).
-- **Few test windows.** The headline number is one Nov–Dec 2025 window. A rolling-origin backtest (winter 2024 and winter 2025 folds, `reports/modeling/24h/rolling_origin_backtest.md`) shows the 24h skill over persistence is consistent across both winters, but that is still only two winters.
-- **No forecast meteorology.** Production models use ground telemetry only. The Tier 2 ablation tests observed ERA5 weather (and an oracle upper bound), not forecast weather; fire counts are not run (they need a NASA FIRMS key).
-- **Backtest only.** Everything is evaluated on historical data; there is no live ingestion, deployed forecast, or comparison against operational government forecasts (IITM AQEWS/SAFAR).
-- **Geographic scope.** 7 urban monitoring stations within the National Capital Territory of Delhi.
-
----
-
-## Project Workflow
-
-```text
-Raw CPCB / DPCC Telemetry (105 Source Files)
-    │
-    ▼
-Data Engineering & Ingestion (ETL, QC Flags, ISO 8601 Normalization)
-    │
-    ▼
-PostgreSQL 16 Relational Data Layer (Idempotent Loading, Lineage Tracking)
-    │
-    ▼
-Exploratory Data Analysis (Seasonal Profiling, Correlation, Missingness)
-    │
-    ├────────────────────────────────────────┬────────────────────────────────────────┐
-    ▼                                        ▼                                        ▼
-Econometric Causal Analysis       Causal Feature Engineering               Multi-Horizon Forecasting
-(Diwali Ban, ITS, Placebos)       (124 Features, Strict Zero-Leakage)      (1h, 6h, 24h Architectures)
-                                             │                                        │
-                                             └───────────────────┬────────────────────┘
-                                                                 ▼
-                                                    Regulatory Risk Classification
-                                                    (CPCB Categories & GRAP Stages I–IV)
-                                                                 │
-                                                                 ▼
-                                                    Cost-Aware Threshold Optimization
-                                                    (Validation-Selected Thresholds)
-                                                                 │
-                                                                 ▼
-                                                    Interactive Streamlit Dashboard
-```
+[Key results](#key-results) · [Quick start](#quick-start) · [How it works](#how-it-works) · [Findings](#findings) ·
+[Limitations](#limitations) · [Data](#data) · [Repository structure](#repository-structure) ·
+[Tech stack](#tech-stack) · [Future work](#future-work) · [License and attribution](#license-and-attribution)
 
 ---
 
-## Key Results
+## Key results
 
-Models were evaluated out-of-sample on the held-out peak winter crisis test set (November 1 – December 31, 2025, across all 7 Delhi continuous monitoring stations). Because the AQI target is already a 24-hour rolling average, the naive-persistence reference (predict the current AQI) is reported for every horizon, and skill scores are measured against it: `skill = 1 - metric_model / metric_persistence`, so a positive value means the model beats persistence. CIs are 95% day-block bootstrap intervals.
+Evaluated out-of-sample on the held-out winter test set (**Nov 1 – Dec 31, 2025**, all 7 stations). Official AQI is already a
+24-hour rolling average (lag-1 autocorrelation ≈ 0.998), so **naive persistence is reported for every horizon** and skill is
+`1 − metric_model / metric_persistence` (positive = beats persistence). CIs are 95% day-block bootstrap intervals.
 
 | Horizon | Model | N | MAE | MAE 95% CI | RMSE | RMSE 95% CI | R² | Bias | MAE (AQI≥300) | MAE skill | RMSE skill |
 | :--- | :--- | ---: | ---: | :---: | ---: | :---: | ---: | ---: | ---: | ---: | ---: |
@@ -80,26 +48,132 @@ Models were evaluated out-of-sample on the held-out peak winter crisis test set 
 | 24h | Naive persistence | 9800 | 38.34 | [33.09, 44.01] | 50.75 | [43.63, 57.66] | 0.185 | -1.92 | 35.3 | 0.000 | 0.000 |
 | 24h | 50/50 Hybrid, +2024 winters (extended train, Tier 2) | 9800 | 34.02 | [29.50, 39.00] | 44.68 | [38.52, 50.91] | 0.368 | -5.90 | 31.5 | 0.113 | 0.120 |
 
+At 1h the tuned model loses to persistence on RMSE and R²; the real gains are at 6h and 24h.
 Source of truth: `reports/metrics/headline_metrics.csv`, regenerated by `./venv/bin/python src/evaluation/build_metrics_table.py`.
-
-### Key Classification & Alerting Metrics
-
-Severe (AQI ≥ 401) detection is reported at the alert threshold selected on the **validation** split (the 5:1 cost ratio gives τ = 274.5 AQI), then evaluated **once** on the winter test set. Recall is always shown with precision and the false-alarm count:
-
-- **Model:** recall 99.8%, precision 42.9%, FPR 92.7% (5,347 false-alarm hours on test).
-- **Naive persistence** at the same threshold: recall 99.6%, precision 43.0%, FPR 92.1% (5,314 false-alarm hours) — the alert rule adds little over copying the last value.
-- The validation window (Sep–Oct, 2.4% Severe hours) is far cleaner than the winter test window (41.1% Severe hours). That prevalence shift is why the validation-selected threshold is aggressive and false alarms are high on test.
-
-Source: `reports/classification/metrics/cost_optimal_thresholds_summary.csv` (`selected_on = val`). An earlier version selected the threshold on the test set itself; that leakage has been removed. The episode lead-time metric is being reworked separately.
+Every number quoted in this README comes from a file in `reports/`, not from hand-typed values.
 
 ---
 
-## Tier 2 Experiments (Beyond the Frozen Models)
+## Quick start
 
-Tier 2 asks whether more data, other targets, weather and uncertainty estimates improve on the frozen models. Every
-number below comes from a script output in `reports/modeling/` or `reports/metrics/`; selection used validation only and
-test was scored once. Details and caveats: [`docs/TIER_2/`](docs/TIER_2/README.md) and the audit in
-[`docs/TIER_2/TIER_2_AUDIT.md`](docs/TIER_2/TIER_2_AUDIT.md). None of these replace the frozen production models.
+**Requirements:** Python 3.11+, Node 18+ (React frontend only), PostgreSQL 16 (only to rebuild the database from raw
+files; the apps and most scripts run from files already in `data/` and `reports/`).
+
+```bash
+git clone git@github.com:siddhu-exe/Air-Quality-Risk-Forecasting.git
+cd Air-Quality-Risk-Forecasting
+python -m venv venv && source venv/bin/activate
+pip install -r requirements.txt
+```
+
+### Run the apps
+
+Both UIs read the **pre-computed files in `reports/`**, not the database or live models.
+
+```bash
+# Streamlit dashboard (5 tabs)
+streamlit run app.py
+
+# FastAPI backend + React frontend
+pip install -r backend/requirements.txt
+uvicorn backend.main:app --reload --port 8000        # run from the repo root
+cd frontend && npm install && npm run dev            # proxies /api to localhost:8000
+```
+
+### Run the tests
+
+```bash
+./venv/bin/python -m pytest
+```
+
+### Reproduce the pipeline
+
+| Step | Command | Output |
+| :--- | :--- | :--- |
+| ETL (needs raw files in `Og Data/` and `POSTGRES_*` in `.env`) | `python etl/pipeline.py --dry-run`, then `python etl/run_full_load.py` | PostgreSQL 16 |
+| Features | `python src/features/build_features.py`, `python src/features/export_ml_datasets.py` | `data/processed/` |
+| Baselines and models | `python src/models/baselines.py`, `python src/models/phase_6c_refinement.py` | `data/Artifacts/`, `reports/modeling/` |
+| Classification and thresholds | `python src/models/phase_7_classification.py`, `python src/analysis/cost_aware_threshold_analysis.py` | `reports/classification/` |
+| Causal analysis | `python src/analysis/diwali_causal_analysis.py` | `reports/causal/` |
+| Headline table | `python src/evaluation/build_metrics_table.py` | `reports/metrics/` |
+| Tier 2 experiments (heavy) | run `notebooks/tier_2_colab.ipynb` in Google Colab | `reports/modeling/{24h,pm25,exogenous,probabilistic}/` |
+
+Tier 2 training is compute-heavy, so it is done in Colab, not on a laptop. The `T2_PROFILE` environment variable selects
+`standard` (default), `max` (larger search) or `smoke` (code check); non-standard profiles write to a `<profile>/` subfolder.
+Per-phase specs and findings are in [`docs/`](docs/) and `reports/**/*.md`.
+
+---
+
+## How it works
+
+```mermaid
+flowchart TD
+    A[Raw CPCB / DPCC spreadsheets<br/>105 files, 7 stations] --> B[ETL: header mapping, unit and<br/>timestamp normalisation, QC flags]
+    B --> C[(PostgreSQL 16<br/>idempotent load, lineage)]
+    C --> D[EDA]
+    D --> E[Causal feature engineering<br/>124 features, zero leakage]
+    D --> F[Diwali causal analysis<br/>ITS, placebos]
+    E --> G[Forecasting 1h / 6h / 24h]
+    G --> H[CPCB categories and GRAP stages I-IV]
+    H --> I[Cost-aware thresholds<br/>chosen on validation]
+    I --> J[Streamlit / FastAPI + React]
+    F --> J
+```
+
+- **Splits (Asia/Kolkata):** train 2024-01-01 to 2025-08-31 for extended models (frozen models: 2025-01 to 08), validation
+  Sep 1 – Oct 31 2025, test Nov 1 – Dec 31 2025, with a 24h embargo so no training label overlaps validation or test.
+- **2024 target:** the official `aqi_hourly` table only covers 2025, so 2023–2024 AQI is recomputed from raw telemetry
+  with the CPCB method (`src/features/compute_cpcb_aqi.py`), validated in `reports/features/aqi_recompute_validation.md`.
+- **Leakage rules:** `reports/phase5_features/leakage_audit.md` (read it before adding features).
+- **Frozen vs experimental:** the dashboards read the frozen models' outputs; Tier 2 experiments never overwrite them.
+
+---
+
+## Findings
+
+### What went wrong during modeling
+
+Tree models cannot predict above the maximum they saw in training (~347 AQI), so they under-predicted the 450–500 AQI
+winter spikes and scored MAE 98.24 and R² −0.06 at 24h. Raw calendar features (e.g. month) made it worse by sending winter
+rows into low-pollution monsoon leaves. The fix is to drop raw calendar features and blend persistence 50/50 with an
+L2-regularised Ridge model on 49 causal features: the linear part extrapolates, persistence keeps local inertia. 24h MAE
+fell from 98.24 to 34.11.
+Details: [`reports/modeling/PHASE_6_FINAL_AUDIT.md`](reports/modeling/PHASE_6_FINAL_AUDIT.md).
+
+### Causal analysis: the Diwali ban
+
+A naive before/after comparison shows pollution jumping after Diwali 2025 (+135.6 AQI; +97.3 µg/m³ PM2.5), which would make
+the ban look like a failure. The design fails its own checks: pre-trends are violated (AQI already rising +20.4 points/day in
+the 14 days before), and a placebo on a non-event date returns a "significant" +24.3 AQI shift. With date-clustered standard
+errors and trend plus weather controls (interrupted time series), the level jump is indistinguishable from zero (−10.6 AQI,
+p = 0.51; +17.0 µg/m³ PM2.5, p = 0.59). **The ban's effect is not identifiable here.**
+
+Hourly tracers show firecrackers caused an acute burst on festival night (PM2.5 up 8.0x to 960.7 µg/m³, SO₂ up 5.3x to
+73.5 µg/m³) that dispersed within 18–24 hours; the weeks-long crisis that followed was driven by seasonal meteorology.
+Details: [`reports/causal/diwali_ban_causal_analysis.md`](reports/causal/diwali_ban_causal_analysis.md).
+
+### Risk classification and alerting
+
+Forecasts map to the 6 CPCB categories (Good … Severe) and CAQM GRAP Stages I–IV. The Severe cutoff minimises expected
+asymmetric cost on validation (Sep–Oct 2025), then is applied once to the winter test set. Validation has 2.4% Severe hours,
+the test window 41.1%, which makes thresholds hard to transfer.
+
+| Operating Policy | Decision Cutoff (AQI) | Val Severe Recall | Val Severe Precision | Test Severe Recall | Test Severe Precision | Test Missed Severe Hours | Test False Alarm Hours |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Statutory Fixed CPCB** | 401.0 | 20.8% | 32.2% | 61.08% | 73.86% | 1,568 h | 871 h |
+| **Validation-optimal (5:1 Loss Ratio)** | **274.5** | **100.0%** | 9.81% | **99.83%** | 42.93% | **7 h** | 5,347 h |
+| **Pragmatic Compromise** | 380.0 | 49.1% | 33.3% | 78.90% | 64.40% | 850 h | 1,757 h |
+
+The aggressive cutoff buys recall at the cost of precision. At the same 274.5 cutoff, naive persistence scores recall 99.63%,
+precision 43.03% and 5,314 false-alarm hours, essentially the same as the model, so this rule is **not** evidence of skill
+beyond persistence. An earlier version selected the threshold on the test set; that leakage has been removed.
+Details: [`reports/classification/cost_aware_threshold_analysis.md`](reports/classification/cost_aware_threshold_analysis.md).
+
+### Tier 2 experiments (beyond the frozen models)
+
+Do more data, other targets, weather or uncertainty estimates help? Selection used validation only; test was scored once.
+None of these replace the frozen production models. See [`docs/TIER_2/`](docs/TIER_2/README.md) and the
+[audit](docs/TIER_2/TIER_2_AUDIT.md).
 
 | Experiment | Result |
 | :--- | :--- |
@@ -110,174 +184,105 @@ test was scored once. Details and caveats: [`docs/TIER_2/`](docs/TIER_2/README.m
 | 80% prediction intervals (24h AQI) | Conformal test coverage 0.761 (target 0.80), width 142 vs 119 for a persistence band that covers 0.780 |
 | P(AQI ≥ 401) | Brier 0.194 vs 0.196 for persistence (difference CI [−0.028, +0.024]); under-forecasts severe in the lowest probability bins |
 
-A larger-compute rerun (random hyper-parameter search on validation, `T2_PROFILE=max`) lowered validation error by
-1–2% but did not improve held-out winter skill, and made the weather-ablation and Brier results slightly worse; the
-results above remain the headline (see [`docs/TIER_2/README.md`](docs/TIER_2/README.md)).
-
-The honest summary: more winters and weather barely move the 24h point forecast, raw PM2.5 is forecastable at 1h and 6h, and the
-probabilistic outputs are not yet better than simple persistence baselines.
+A larger-compute rerun (random hyper-parameter search on validation, `T2_PROFILE=max`) lowered validation error by 1–2% but
+did not improve held-out winter skill, and made the weather-ablation and Brier results slightly worse, so the results above
+remain the headline. **Summary:** more winters and weather barely move the 24h point forecast, raw PM2.5 is forecastable at
+1h and 6h, and the probabilistic outputs are not yet better than simple persistence baselines.
 
 ---
 
-## What Went Wrong During Modeling
+## Limitations
 
-**Standard gradient boosting trees hit a hard mathematical ceiling during peak winter, underpredicting severe crises by over 136 AQI points.**
-
-When I first trained LightGBM and XGBoost to predict AQI 24 hours ahead, they broke down completely on the winter test set, producing an MAE of 98.24 and an R² of -0.06. Because decision trees are step functions bounded by the maximum value observed during training (around 347 AQI), they were physically incapable of predicting the severe 450 to 500 AQI spikes that occurred in November and December. Adding raw calendar features like month made it worse by trapping winter test records into low-pollution monsoon leaves.
-
-I resolved this by removing raw calendar indicators and building a 50/50 hybrid model that blends Naive Persistence with an L2-regularized linear Ridge regression on 49 curated causal features. The regularized linear model provides unbounded extrapolation into extreme pollution levels while persistence maintains strong local temporal inertia. This reduced the 24-hour MAE from 98.24 to 34.11, beating persistence across all 7 Delhi stations.
-
-*Full breakdown and ablation logs:* [`reports/modeling/PHASE_6_FINAL_AUDIT.md`](reports/modeling/PHASE_6_FINAL_AUDIT.md)
-
----
-
-## Causal Analysis
-
-**The Diwali firecracker ban cannot be evaluated with this data: the ban was in force in every year studied, so there is no untreated Delhi period to compare against.**
-
-A naive before/after comparison suggests pollution jumped after Diwali 2025 (+135.6 AQI points; +97.3 µg/m³ PM2.5), which would make the ban look like a failure. But the design fails its own checks: pre-trends are violated (AQI already rising +20.4 points/day and PM2.5 +11.2 µg/m³/day in the 14 days before Diwali), and an in-time placebo on a non-event date returns a "significant" +24.3 AQI shift. With date-clustered standard errors and trend + weather controls (interrupted time series), the estimated level jump is statistically indistinguishable from zero (−10.6 AQI, p = 0.51; +17.0 µg/m³ PM2.5, p = 0.59). The honest conclusion is that the ban's effect is **not identifiable** here; claims that boundary-layer compression or stubble burning "caused" the post-Diwali crisis remain untested hypotheses, not findings.
-
-*Full breakdown:* [`reports/causal/diwali_ban_causal_analysis.md`](reports/causal/diwali_ban_causal_analysis.md)
-
-Hourly chemical tracer telemetry showed that firecrackers caused an acute burst on festival night—with PM2.5 surging 8.0x to 960.7 µg/m³ and SO₂ jumping 5.3x to 73.5 µg/m³—but this smoke cloud dispersed within 18 to 24 hours. The multi-week crisis that followed was driven by seasonal meteorology trapping background emissions, not lingering festival smoke.
-
-*Full econometric models and regression tables:* [`reports/causal/diwali_ban_causal_analysis.md`](reports/causal/diwali_ban_causal_analysis.md)
+- **The target is smoothed.** AQI is a 24-hour rolling average, so persistence is a very strong baseline; judge skill against it, not R² alone.
+- **Persistence is hard to beat.** At 1h the tuned model loses to persistence on RMSE and R²; at 24h the hybrid wins on both (MAE skill +0.11, RMSE skill +0.12).
+- **The frozen models lack prior winters.** They train on 2025-01..08, which has no winter peak. Tier 2 recomputes 2024 AQI and retrains the 24h model, but that model is reported separately. The recompute matches official AQI well overall (MAE < 10) but is worse in Feb–May (monthly MAE 12–15), so 2024 labels are noisier (see `reports/features/aqi_recompute_validation.md`).
+- **Few test windows.** The headline is one Nov–Dec 2025 window; the rolling-origin backtest adds winter 2024, still only two winters.
+- **No forecast meteorology.** Production models use ground telemetry only. The ablation uses observed ERA5 weather (and an oracle upper bound), not forecast weather; fire counts were not run (they need a NASA FIRMS key).
+- **Backtest only.** There is no live ingestion, deployed forecast, or comparison with operational government forecasts (IITM AQEWS/SAFAR).
+- **Geographic scope.** 7 urban stations within the National Capital Territory of Delhi.
 
 ---
 
-## Risk Classification & Alerting
+## Data
 
-**Alert thresholds are selected on the validation split and evaluated once on the test set, and recall is always reported with precision and the false-alarm count.**
+The raw dataset is 105 CPCB and DPCC spreadsheets for 7 stations (2023–2026). The ETL standardises headers, converts
+pollutants to common units (µg/m³, mg/m³) and normalises timestamps to ISO 8601 in Asia/Kolkata (`UTC+05:30`). Sensor error
+sentinels (e.g. `-999`) are nullified per parameter and logged in `qc_flags`, so valid concurrent measurements survive.
 
-Continuous AQI forecasts are mapped to the 6 statutory CPCB categories (Good, Satisfactory, Moderate, Poor, Very Poor, Severe) and CAQM Graded Response Action Plan (GRAP) Stages I through IV. The Severe decision cutoff is chosen by minimizing expected asymmetric cost on validation (Sep–Oct 2025); only then is it applied to the winter test set. A prevalence shift makes this hard: validation has 2.4% Severe hours, the test window 41.1%.
+A cleaned public copy is on Kaggle: **[Delhi Air Quality Monitoring Dataset (2023–2026)](https://www.kaggle.com/datasets/siddharthdongardive/delhi-air-quality-monitoring-dataset-2023-2026)**
+(220,042 hourly records; `caaqms_hourly.csv`, `aqi_hourly.csv`, `stations.csv`, `source_files.csv`, `column_metadata.csv`;
+CAAQMS data Jan 2023 – Aug 2026, official AQI for full-year 2025; internal IDs and local paths stripped).
 
-| Operating Policy | Decision Cutoff (AQI) | Val Severe Recall | Val Severe Precision | Test Severe Recall | Test Severe Precision | Test Missed Severe Hours | Test False Alarm Hours |
-| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Statutory Fixed CPCB** | 401.0 | 20.8% | 32.2% | 61.08% | 73.86% | 1,568 h | 871 h |
-| **Validation-optimal (5:1 Loss Ratio)** | **274.5** | **100.0%** | 9.81% | **99.83%** | 42.93% | **7 h** | 5,347 h |
-| **Pragmatic Compromise** | 380.0 | 49.1% | 33.3% | 78.90% | 64.40% | 850 h | 1,757 h |
-
-The aggressive validation-optimal cutoff buys high recall at the cost of precision. At the same 274.5 cutoff, naive persistence scores recall 99.63%, precision 43.03% and 5,314 false-alarm hours on test — essentially the same as the model — so this alert rule should not be read as evidence of predictive skill beyond persistence.
-
-*Full optimization curve, loss matrices, and sensitivity sweeps:* [`reports/classification/cost_aware_threshold_analysis.md`](reports/classification/cost_aware_threshold_analysis.md)
-
----
-
-## Data Engineering
-
-The raw dataset comprises 105 government telemetry spreadsheets from CPCB and DPCC across 7 monitoring stations (2023–2026). The ETL pipeline standardizes heterogeneous headers, converts pollutant concentrations into uniform units (µg/m³ and mg/m³), and normalizes irregular datetime representations into ISO 8601 timestamps anchored to Asia/Kolkata (`UTC+05:30`).
-
-Non-destructive quality control isolates corrupted sensor error sentinels (e.g. `-999` or calibration drift flags) by nullifying only the affected parameter while recording an audit record in `qc_flags`, leaving valid concurrent measurements in the same observation intact. The relational layer is managed in PostgreSQL 16 with composite unique constraints on `(station_id, timestamp)`, enabling idempotent `ON CONFLICT DO UPDATE` ingestion that prevents duplicate records and allows retroactive corrections.
-
----
-
-## Database Architecture
-
-The relational data layer runs on PostgreSQL 16 using a 4-table schema designed for lineage traceability and idempotent loading.
+<details>
+<summary><b>Database schema (PostgreSQL 16)</b></summary>
 
 ```text
-┌─────────────────────────┐         1:N         ┌────────────────────────────────┐
-│        stations         │────────────────────►│          source_files          │
-│ station_id (PK)         │                     │ source_file_id (PK)            │
-│ station_name, city, ... │                     │ station_id (FK), filename, ... │
-└─────────────────────────┘                     └────────────────────────────────┘
-             │                                                  │
-             │ 1:N                                              │ 1:N
-             ▼                                                  ▼
-┌────────────────────────────────────────────────────────────────────────────────┐
-│                       caaqms_hourly / aqi_hourly                               │
-│ caaqms_hourly_id / aqi_hourly_id (PK)                                          │
-│ station_id (FK) ──► references stations                                        │
-│ source_file_id (FK) ──► references source_files (Lineage Traceability)         │
-│ timestamp (TIMESTAMPTZ, Asia/Kolkata)                                          │
-│ pm25, pm10, no2, so2, co, o3, temp, humidity, wind_speed, qc_flags, ...        │
-│ CONSTRAINT: UNIQUE(station_id, timestamp)  ──► Idempotent ON CONFLICT Loading  │
-└────────────────────────────────────────────────────────────────────────────────┘
+stations (station_id PK) ──1:N──► source_files (source_file_id PK, station_id FK, filename, ...)
+    │ 1:N                              │ 1:N
+    ▼                                  ▼
+caaqms_hourly / aqi_hourly
+    station_id FK, source_file_id FK (lineage), timestamp (TIMESTAMPTZ, Asia/Kolkata),
+    pm25, pm10, no2, so2, co, o3, temp, humidity, wind_speed, qc_flags, ...
+    UNIQUE(station_id, timestamp)  →  idempotent ON CONFLICT DO UPDATE loading
 ```
 
-- **Source Lineage (`source_files`):** Every hourly measurement references its raw source file and ingestion batch for complete end-to-end auditability.
-- **Idempotent Ingestion:** A composite `UNIQUE(station_id, timestamp)` constraint prevents duplicate records and allows retroactive corrections to update in place.
-- **Non-Destructive QC (`qc_flags`):** Sensor error sentinels nullify only damaged channels while logging a JSON flag, preserving valid concurrent measurements in the same hour.
+- **Source lineage:** every measurement references its raw file and ingestion batch.
+- **Idempotent ingestion:** the unique constraint prevents duplicates and lets corrections update in place.
+- **Non-destructive QC:** only the damaged channel is nulled, with a JSON flag.
+
+Schema DDL is in `sql/` (numbered, apply in order). Credentials come from `.env` (`POSTGRES_USER`, `POSTGRES_PASSWORD`,
+`POSTGRES_DB`, `POSTGRES_HOST`, `POSTGRES_PORT`).
+</details>
 
 ---
 
-## Dashboard
-
-The project includes an interactive 5-tab Streamlit dashboard (`dashboard/app.py` or root entrypoint `app.py`):
-1. **Overview:** Current station-level AQI summaries, recent trends, and headline model metrics.
-2. **Forecasts:** Interactive multi-horizon forecast views (1h, 6h, 24h) comparing actual vs predicted AQI with CPCB tier overlays and GRAP action stages.
-3. **Diwali Policy Finding:** Econometric replay of the Diwali firecracker ban vs winter meteorological inversion, including chemical tracer surge analysis and placebo tests.
-4. **Risk Threshold:** Interactive cost-sensitive threshold simulator allowing users to adjust public health loss ratios and inspect precision-recall trade-offs.
-5. **Methodology:** Complete architecture documentation, database schema diagram, and verified evaluation tables.
-
-To launch the dashboard locally:
-```bash
-streamlit run app.py
-```
-
----
-
-## Dataset
-
-A clean public version of this dataset is hosted on Kaggle:
-**[Delhi Air Quality Monitoring Dataset (2023–2026)](https://www.kaggle.com/datasets/siddharthdongardive/delhi-air-quality-monitoring-dataset-2023-2026)**
-
-- **Total Observations:** 220,042 validated hourly records across 7 continuous monitoring stations.
-- **Files Included:** `caaqms_hourly.csv` (24 columns), `aqi_hourly.csv` (5 columns), `stations.csv`, `source_files.csv`, and `column_metadata.csv`.
-- **Coverage:** January 2023 through August 2026 for CAAQMS multi-pollutant and weather parameters; full-year 2025 for official CPCB AQI observations.
-- **Sanitization:** All internal database IDs, local host paths, and intermediate ML features were completely stripped prior to packaging.
-
----
-
-## Repository Structure
+## Repository structure
 
 ```text
 .
-├── app.py                      # Root entrypoint for Streamlit Community Cloud
-├── dashboard/                  # Interactive Streamlit evaluation dashboard
-├── data/
-│   ├── processed/              # Causal 124-feature Parquet matrix (features_2025.parquet)
-│   └── ml/                     # Versioned ML training datasets (1h, 6h, 24h Parquets)
-├── docs/                       # Architecture diagrams and technical reference notes
-├── etl/                        # Data discovery, transformation, and PostgreSQL loading scripts
-├── models/                     # Serialized production model artifacts (LightGBM, Ridge)
-├── notebooks/                  # Model training, hyperparameter tuning, and Kaggle quickstart
-├── reports/                    # Comprehensive audit reports, figures, and CSV metrics
-│   ├── causal/                 # Diwali econometric analysis and regression tables
-│   ├── classification/         # CPCB/GRAP metrics, episode lead times, cost-aware analysis
-│   ├── eda/                    # Exploratory data analysis charts and statistical profiling
-│   └── modeling/               # Multi-horizon baseline benchmarks and ablation logs
-├── sql/                        # Canonical PostgreSQL migrations (001_schema through 006)
-├── src/                        # Core codebase for feature engineering, modeling, and evaluation
-├── tests/                      # Automated timestamp checks and data validation scripts
-├── requirements.txt            # Runtime dependencies
-└── README.md                   # Canonical project documentation
+├── app.py                  # Streamlit Cloud entrypoint
+├── dashboard/              # Streamlit dashboard (legacy UI)
+├── backend/                # FastAPI app serving pre-computed reports
+├── frontend/               # React + TypeScript + Vite dashboard
+├── etl/                    # Discovery, transforms and PostgreSQL loading
+├── sql/                    # Numbered schema migrations
+├── src/
+│   ├── eda/                # Exploratory analysis
+│   ├── features/           # Feature matrix, CPCB AQI recompute, exogenous drivers
+│   ├── models/             # Baselines, LightGBM, hybrid, PM2.5, quantile, splits, tuning
+│   ├── analysis/           # Cost-aware thresholds, Diwali causal analysis
+│   └── evaluation/         # Headline metrics table, rolling-origin backtest
+├── models/                 # Serialized production models (LightGBM, Ridge)
+├── data/                   # processed/ (feature matrices, ML datasets), Artifacts/ (training outputs)
+├── notebooks/              # Colab training notebooks (incl. tier_2_colab.ipynb)
+├── reports/                # Metrics, figures and findings per phase (read by the UIs)
+├── docs/                   # Plans, per-phase findings, Tier 1 and Tier 2 write-ups
+├── tests/                  # pytest suite
+└── requirements.txt
 ```
 
 ---
 
-## Tech Stack
+## Tech stack
 
-- **Data Layer:** PostgreSQL 16, SQL, psycopg2, SQLAlchemy
-- **Machine Learning & Modeling:** LightGBM, Scikit-learn, Statsmodels, Optuna
-- **Data Processing & Storage:** Python 3.11, Pandas, NumPy, PyArrow (Parquet)
-- **Web Application & Visualization:** Streamlit, Plotly, Matplotlib, Seaborn
-
----
+- **Data:** PostgreSQL 16, SQL, psycopg2, SQLAlchemy, Pandas, NumPy, PyArrow (Parquet)
+- **Modeling:** LightGBM, scikit-learn, Statsmodels, Optuna
+- **Serving:** Streamlit, Plotly, FastAPI, React, TypeScript, Vite, Tailwind, Recharts
 
 ---
 
-## Future Work
+## Future work
 
-- **Live Telemetry Ingestion:** Implementing automated polling workers to stream real-time CPCB telemetry directly into PostgreSQL.
-- **Numerical Weather Prediction (NWP) Features:** Integrating forecast wind vectors and boundary layer height predictions from GFS/ECMWF to improve 24-hour horizon accuracy.
-- **Expanded Geographic Coverage:** Extending data ingestion and models across all 40+ monitoring stations in the broader National Capital Region (NCR).
-- **Sequence Models:** Evaluating temporal fusion transformers and causal sequence-to-sequence neural architectures for multi-horizon joint forecasting.
+- **Live telemetry ingestion:** polling workers that stream CPCB data into PostgreSQL.
+- **Forecast weather:** GFS/ECMWF wind and boundary-layer height for the 24h horizon.
+- **More stations:** extend beyond the 7 sites to the 40+ in the NCR.
+- **Sequence models:** temporal fusion transformers and seq2seq models for joint multi-horizon forecasts.
 
 ---
 
-## Data Attribution & License
+## License and attribution
 
-- **Data Provenance:** Environmental telemetry is published by the Central Pollution Control Board (CPCB) and Delhi Pollution Control Committee (DPCC), Ministry of Environment, Forest and Climate Change, Government of India, under the Open Government Data (OGD) Platform India terms.
-- **Source Portal:** [https://airquality.cpcb.gov.in/caaqms/](https://airquality.cpcb.gov.in/caaqms/)
-- **Code License:** Released under the [MIT License](LICENSE).
+- **Data:** environmental telemetry is published by the Central Pollution Control Board (CPCB) and Delhi Pollution Control
+  Committee (DPCC), Ministry of Environment, Forest and Climate Change, Government of India, under the Open Government Data
+  (OGD) Platform India terms. Source portal: <https://airquality.cpcb.gov.in/caaqms/>
+- **Code:** MIT License (see `LICENSE`).
