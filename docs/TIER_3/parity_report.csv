@@ -1,0 +1,9 @@
+horizon,split,variant,issue_hours,rows,max_abs_diff,mean_abs_diff,rows_over_tolerance
+1h,test,live path,45,313,0.09228399789611785,0.0025850742723109643,35
+1h,test,rolling from training start,45,313,0.0,0.0,0
+24h,test,live path,46,316,2.3305801732931286e-12,2.9959719655910046e-13,0
+24h,test,rolling from training start,46,316,2.3305801732931286e-12,2.9959719655910046e-13,0
+24h,validation,live path,46,303,5.7980287238024175e-12,6.686605797842739e-13,0
+24h,validation,rolling from training start,46,303,5.7980287238024175e-12,6.686605797842739e-13,0
+6h,test,live path,46,319,0.5742815117556574,0.005206937802166752,6
+6h,test,rolling from training start,46,319,0.0,0.0,0
