@@ -43,6 +43,10 @@ export default {
       letterSpacing: {
         caps: '0.08em',
       },
+      spacing: {
+        // 72px page bottom padding from the design.
+        18: '4.5rem',
+      },
       maxWidth: {
         page: '1360px',
       },
@@ -51,6 +55,14 @@ export default {
       },
       minWidth: {
         target: '44px',
+      },
+      keyframes: {
+        'fade-in': { from: { opacity: '0' }, to: { opacity: '1' } },
+        'slide-in-right': { from: { transform: 'translateX(100%)' }, to: { transform: 'translateX(0)' } },
+      },
+      animation: {
+        'fade-in': 'fade-in 200ms ease-out',
+        'slide-in-right': 'slide-in-right 250ms cubic-bezier(0.22, 1, 0.36, 1)',
       },
     },
   },
