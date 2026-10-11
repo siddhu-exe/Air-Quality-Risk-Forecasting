@@ -1,0 +1,40 @@
+# Forecast job, MANUAL ONLY for now (same reason as ingest.yml: no source is fresh yet, so an hourly run would only be red).
+# TODO(cron): when the ingest cron is enabled, run this at minute 25 (after the :10 ingest), e.g.
+#   schedule:
+#     - cron: "25 * * * *"
+# Reads history with the writer role, verifies the model hashes (config/model_hashes.json), writes aq.forecasts.
+name: forecast
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Dry run (read-only role, nothing written)"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: forecast
+  cancel-in-progress: false
+
+jobs:
+  forecast:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements-forecast.txt
+      - run: pip install -r requirements-forecast.txt
+      - name: Forecast
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DATABASE_URL_READONLY: ${{ secrets.DATABASE_URL_READONLY }}
+          LIVE_WEATHER_FILL: ${{ vars.LIVE_WEATHER_FILL }}
+        run: python -m src.live.forecast ${{ inputs.dry_run && '--dry-run' || '' }}

@@ -142,7 +142,8 @@ def predict_lgb(frame: pd.DataFrame, keys: list, horizon: int) -> np.ndarray:
     chosen = _select(frame, keys).reset_index()
     for name in frame["station_name"].unique():
         chosen[f"station_{name.replace(' ', '_')}"] = (chosen["station_name"] == name).astype(float)
-    return model.predict(chosen[list(model.feature_name_)])
+    names = model.feature_name() if hasattr(model, "feature_name") else model.feature_name_     # the stored models are lightgbm.Booster
+    return model.predict(chosen[list(names)])
 
 
 # --------------------------------------------------------------------------- run

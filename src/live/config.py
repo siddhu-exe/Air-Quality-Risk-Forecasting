@@ -12,7 +12,7 @@ from pathlib import Path
 
 CONFIG_PATH = Path(__file__).resolve().parents[2] / "config" / "live.toml"
 VALID_SOURCES = ("openaq", "data_gov_in")
-VALID_WEATHER_FILL = ("open-meteo", "none")
+VALID_WEATHER = ("open-meteo", "none")
 
 
 class ConfigError(ValueError):
@@ -25,7 +25,8 @@ class IngestConfig:
     fallback: str = ""
     lookback_hours: int = 6
     stale_after_hours: float = 3.0
-    weather_fill: str = "open-meteo"
+    weather_display: str = "open-meteo"   # ingest stores Open-Meteo values in empty weather cells (tagged), for the app to display
+    weather_fill: str = "none"            # what the MODELS see: "none" = station/source cells only, filled cells are masked
     allow_unverified: bool = False
 
     def __post_init__(self):
@@ -36,8 +37,9 @@ class IngestConfig:
             raise ConfigError("source must be set")
         if self.fallback == self.source:
             raise ConfigError("fallback must differ from source")
-        if self.weather_fill not in VALID_WEATHER_FILL:
-            raise ConfigError(f"weather_fill={self.weather_fill!r}: must be one of {VALID_WEATHER_FILL}")
+        for name, value in (("weather_display", self.weather_display), ("weather_fill", self.weather_fill)):
+            if value not in VALID_WEATHER:
+                raise ConfigError(f"{name}={value!r}: must be one of {VALID_WEATHER}")
         if not 1 <= self.lookback_hours <= 72:
             raise ConfigError("lookback_hours must be between 1 and 72")
         if self.stale_after_hours <= 0:
@@ -55,7 +57,8 @@ def load_config(path: Path = CONFIG_PATH, env: dict | None = None) -> IngestConf
     if path.exists():
         values = dict(tomllib.loads(path.read_text()).get("ingest", {}))
     mapping = {"LIVE_SOURCE": "source", "LIVE_FALLBACK": "fallback", "LIVE_LOOKBACK_HOURS": "lookback_hours",
-               "LIVE_WEATHER_FILL": "weather_fill", "LIVE_ALLOW_UNVERIFIED": "allow_unverified"}
+               "LIVE_WEATHER_FILL": "weather_fill", "LIVE_WEATHER_DISPLAY": "weather_display",
+               "LIVE_ALLOW_UNVERIFIED": "allow_unverified"}
     for variable, key in mapping.items():
         if env.get(variable, "").strip():
             values[key] = env[variable].strip()

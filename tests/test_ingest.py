@@ -77,7 +77,7 @@ def weather_stub():
 
 
 def cfg(**kw):
-    return IngestConfig(**{"source": "openaq", "weather_fill": "none", **kw})
+    return IngestConfig(**{"source": "openaq", "weather_display": "none", **kw})
 
 
 def hours(n=6):
@@ -183,7 +183,7 @@ def test_unexpected_errors_are_recorded_then_raised():
 
 # ------------------------------------------------------------------ weather fill
 def test_weather_gaps_are_filled_from_open_meteo_and_marked():
-    result, st = run(synthetic(hours()), cfg(weather_fill="open-meteo"))
+    result, st = run(synthetic(hours()), cfg(weather_display="open-meteo"))
     rows = st.readings[0]
     ito = rows[rows.station_name == "ITO"]
     assert (ito.temperature == 25.0).all() and (ito.weather_source == "open-meteo").all()
@@ -194,8 +194,8 @@ def test_weather_gaps_are_filled_from_open_meteo_and_marked():
     assert st.last_run["details"]["weather"] == "open-meteo"
 
 
-def test_weather_fill_can_be_switched_off():
-    result, st = run(synthetic(hours()), cfg(weather_fill="none"))
+def test_weather_display_can_be_switched_off():
+    result, st = run(synthetic(hours()), cfg(weather_display="none"))
     rows = st.readings[0]
     assert rows.solar_radiation.isna().all() and rows[rows.station_name == "ITO"].weather_source.isna().all()
 
@@ -204,7 +204,7 @@ def test_a_weather_outage_does_not_fail_the_ingest():
     def down():
         raise RuntimeError("open-meteo 429")
     st = FakeStore()
-    result = ingest.run(cfg(weather_fill="open-meteo"), st, now=NOW, factory=lambda n: make_source(synthetic(hours()))(), weather_fetch=down)
+    result = ingest.run(cfg(weather_display="open-meteo"), st, now=NOW, factory=lambda n: make_source(synthetic(hours()))(), weather_fetch=down)
     assert result["status"] == "success" and result["details"]["weather"].startswith("unavailable")
 
 
