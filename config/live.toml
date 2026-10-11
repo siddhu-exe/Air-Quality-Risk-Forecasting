@@ -1,0 +1,10 @@
+# Live pipeline settings. Environment variables override these (LIVE_SOURCE, LIVE_FALLBACK, LIVE_LOOKBACK_HOURS,
+# LIVE_WEATHER_FILL, LIVE_ALLOW_UNVERIFIED), so the source can be switched from the GitHub Actions UI or a repo
+# variable without a code change.
+[ingest]
+source = "openaq"          # "openaq" | "data_gov_in"
+fallback = ""              # optional second source, used only if the primary fails or returns nothing fresh
+lookback_hours = 6         # most recent hours (re)fetched each run; upserts make overlap harmless
+stale_after_hours = 3      # a station whose newest reading is older than this is stale; a run with no fresh station fails
+weather_fill = "open-meteo"  # fill missing solar/ITO weather from Open-Meteo; "none" leaves gaps (audit decides, D1)
+allow_unverified = false   # a source whose hour convention is not verified against real data is refused when false
