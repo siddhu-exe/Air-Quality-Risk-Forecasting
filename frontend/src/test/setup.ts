@@ -18,6 +18,18 @@ class JsdomSafeRequest extends NodeRequest {
 }
 globalThis.Request = JsdomSafeRequest as typeof Request
 
+// jsdom has no PointerEvent, so fireEvent.pointerMove would drop clientX and pointerType.
+if (!('PointerEvent' in window)) {
+  class PointerEventPolyfill extends MouseEvent {
+    readonly pointerType: string
+    constructor(type: string, init: PointerEventInit = {}) {
+      super(type, init)
+      this.pointerType = init.pointerType ?? 'mouse'
+    }
+  }
+  Object.defineProperty(window, 'PointerEvent', { value: PointerEventPolyfill, configurable: true })
+}
+
 // jsdom does not implement scrolling; the layout scrolls to the top on section change.
 window.scrollTo = vi.fn()
 

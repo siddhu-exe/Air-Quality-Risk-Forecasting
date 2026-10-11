@@ -15,7 +15,7 @@ function Reading({ label, value }: { label: string; value: string }) {
 /** Weather at the station, or a plain explanation for stations without sensors. */
 export function WeatherCard({ weather }: { weather: Weather | null }) {
   return (
-    <Card as="section" aria-labelledby="weather-title" className="flex min-w-0 flex-[1_1_300px] flex-col gap-3.5 px-7 py-6">
+    <Card as="section" aria-labelledby="weather-title" className="flex min-w-0 flex-[1_1_300px] flex-col gap-3.5 px-5 py-6 md:px-7">
       <h2 id="weather-title" className="text-17 font-semibold">
         Weather at the station
       </h2>

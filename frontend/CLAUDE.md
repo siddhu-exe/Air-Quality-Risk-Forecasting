@@ -1,124 +1,117 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Guidance for working in `frontend/`. The repo-wide context is in `../CLAUDE.md`.
 
----
+## What this is
 
-## Project Context
+The Delhi Air Forecast dashboard: four pages (Overview, Stations, Operations, Model health) that show hourly AQI and PM2.5 forecasts for the CAAQMS stations, the GRAP outlook, and how the models are doing against "copy-last-value" (persistence). It is a React + Vite single-page app. It replaced the old dark "Precision Atmospheric" UI, the Diwali and threshold screens, Recharts and Zustand; do not bring them back.
 
-This is the **React + Vite frontend** for the Delhi Air Quality Risk Forecasting system — migrating from an existing Streamlit dashboard (`../dashboard/app.py`) to a production-grade single-page application. The app visualises multi-horizon AQI forecasts (1h / 6h / 24h), CPCB/GRAP regulatory alerts, econometric Diwali policy analysis, and cost-sensitive threshold exploration across 7 Delhi monitoring stations.
+The design is the source of truth. It is archived in `../docs/design/`:
 
-The design system is fully specified in `stitch_air_quality_intelligence_dashboard/precision_atmospheric_analytics/DESIGN.md` and the three reference HTML prototypes in the same directory. **All styling decisions must follow those specs** — do not deviate on colour, typography, or spacing without a written reason.
+- `Delhi Air Forecast Dashboard.html` is the packed bundle.
+- `pages/*.dc.html` are the readable page sources; open the matching one before changing a page.
 
----
+Match the design. If the code and the design disagree, the design wins unless the user says otherwise.
 
 ## Commands
 
 ```bash
-# Install dependencies
 npm install
-
-# Development server (Vite HMR)
-npm run dev
-
-# Production build
-npm run build
-
-# Preview production build
-npm run preview
-
-# Lint
+npm run dev          # Vite on http://localhost:3000, sample data by default
+npm run build        # tsc --noEmit, then vite build
+npm run type-check
 npm run lint
-
-# Run a single test file
-npm test -- src/components/AQICard.test.tsx
+npm test             # vitest run (jsdom)
+npm test -- src/lib/chart.test.ts   # one file
 ```
 
----
+Before calling work done, run `type-check`, `lint`, `test` and `build`. Run them one after another: the dev laptop is weak, so do not run them in parallel or alongside a dev server. The first visit to each lazy page is slow under jsdom, which is why `testTimeout` is 20 s and Testing Library's `asyncUtilTimeout` is 5 s.
 
-## Architecture
+## Stack
 
-### Tech Stack
-- **Framework:** React 18 + Vite
-- **Language:** TypeScript
-- **Styling:** Tailwind CSS (config mirrors the Precision Atmospheric Analytics design tokens — see `tailwind.config.ts`)
-- **Charts:** Recharts (preferred) or Plotly.js for complex geo/time-series views
-- **State:** Zustand for global state (horizon selector, active station, GRAP alert state)
-- **Routing:** React Router v6 — single shell with tab-based section switching (no full page reload)
-- **Data fetching:** React Query (`@tanstack/react-query`) with a mock data layer while a live API is unavailable
-- **Fonts:** `Inter` (prose/labels) + `JetBrains Mono` (metrics/telemetry values) loaded via Google Fonts
+React 18, Vite 5, TypeScript (strict), Tailwind CSS v3.4, TanStack Query v5, React Router v7 (data router, lazy routes), zod, Radix Dialog (mobile menu), `tailwind-merge` + `clsx`. Tests: Vitest, Testing Library, jsdom. Fonts: Geist, Geist Mono, Instrument Serif. Charts are hand-built SVG; there is no chart library.
 
-### Design Tokens
-The canonical token set lives in `DESIGN.md` and is compiled into `tailwind.config.ts`. Custom classes follow the naming convention from the prototype HTML files:
-- `font-label-code` / `text-label-code` — monospaced telemetry values
-- `text-metric-display` — large KPI numerics
-- `font-label-caps` / `text-label-caps` — uppercase section headers with `0.06em` tracking
-- Surface hierarchy: `surface-container-lowest` → `surface-container-low` → `surface-container` → `surface-container-high` → `surface-container-highest`
-- AQI tier colours: `#10B981` Good · `#F59E0B` Moderate · `#F97316` Poor · `#F43F5E` Very Poor · `#A855F7` Severe
+`@/` is an alias for `src/`.
 
-### Directory Layout (target structure)
+## Layout
+
 ```
 src/
-├── components/          # Shared UI primitives (KPICard, AQIBadge, DataTable, AlertBanner…)
-├── features/
-│   ├── forecasts/       # Multi-horizon forecast view (1h / 6h / 24h)
-│   ├── causal/          # Diwali ITS econometric view
-│   ├── thresholds/      # Cost-aware threshold simulator
-│   ├── stations/        # Station diagnostic explorer
-│   └── overview/        # Live KPI strip + GRAP status
-├── hooks/               # Custom React hooks (useHorizon, useStation, useAlerts…)
-├── store/               # Zustand slices
-├── data/                # Static JSON/CSV proxies and mock generators
-│   └── mock/            # Mirrors ../reports/classification/ and ../reports/causal/ CSVs
-├── lib/                 # Utility functions (AQI tier mapping, GRAP stage logic, formatters)
-├── types/               # Shared TypeScript interfaces (AQIReading, Forecast, Station…)
-└── assets/
+  app/          App, providers, query client, router (routes.tsx), RootLayout, error/fallback screens
+  api/          schemas.ts (zod contract), http.ts (real client), mock/ (sample client + fixtures),
+                queries.ts (TanStack hooks), describeError.ts
+  config/       env.ts (parsed VITE_* variables)
+  design/       tokens.ts, the single source of truth for colour, type and spacing
+  components/
+    ui/         Card, Page, Skeleton, ErrorState, StaleBanner, SegmentedControl, ProgressBar, Eyebrow
+    aqi/        CategoryPill, AqiScaleBar, tierClasses.ts (AQI tier class maps)
+    charts/     ForecastChart (+ ForecastPlot, SeriesTable), Sparkline, RangeBar, FreshnessStrip
+    layout/     SiteHeader, SectionNav, MobileNav, StatusCluster, SkipLink, Logo
+  features/     overview/, stations/, operations/, model-health/: one folder per page
+  lib/          pure logic and formatting (aqi, advice, chart, format, ranking, leadTime, skill, projection, cn)
+  styles/       index.css (Tailwind layers, focus ring, reduced motion)
+  test/         setup.ts, renderApp.tsx (renderAt(path) with the real routes and providers)
 ```
 
-### Data Layer
-While a live API does not exist, the frontend loads static data mirroring the real backend outputs:
+Put logic that can be a pure function in `lib/` and test it there. Components should mostly arrange data that `lib/` already shaped.
 
-| Report file (backend) | Frontend proxy location |
-|---|---|
-| `reports/classification/{1h,6h,24h}/classified_predictions.parquet` | `src/data/mock/predictions_{1,6,24}h.json` |
-| `reports/causal/diwali_hourly_timeseries.csv` | `src/data/mock/diwali_hourly.json` |
-| `reports/causal/regression_models_summary.csv` | `src/data/mock/diwali_regression.json` |
-| `reports/classification/metrics/cost_threshold_sweep_24h.csv` | `src/data/mock/threshold_sweep.json` |
-| `reports/classification/episodes/grap_episode_lead_times.csv` | `src/data/mock/episodes.json` |
+## Data layer
 
-All data-fetching hooks live in `src/data/` and expose a uniform `{ data, isLoading, error }` shape so they can be swapped for real API calls later.
+- The contract is `src/api/schemas.ts` (zod). It describes the planned `/api/v1/*` endpoints from `../docs/TIER_3/PLAN.md` (section 5). **The backend does not serve these yet**, and `../backend/` is not part of frontend work.
+- `VITE_USE_MOCK` defaults to `true`: pages are served by `api/mock/`, which runs the fixtures through the same schemas, so a fixture that drifts from the contract fails in tests. Set `VITE_USE_MOCK=false` to call the real API at `VITE_API_BASE_URL` (default `/api/v1`, proxied by Vite to `http://localhost:8000`). Copy `.env.example` to `.env.local`.
+- Pages read data only through the hooks in `api/queries.ts` (`useOverview`, `useStations`, `useStationForecast`, `useGrapAlerts`, `useModelHealth`, `useBacktest`, `useHealth`). Do not call `fetch` from components.
+- Loading, error and stale are all handled: each page shows a skeleton, an `ErrorState` with "Try again", and a `StaleBanner` when the server says the data is stale. Show ages against the server clock (`generatedAt`), not the browser's.
+- All times are `Asia/Kolkata`. Format them with `lib/format.ts`; never call `toLocaleString` directly.
 
-### Key Business Logic (in `src/lib/`)
-- `aqi.ts` — CPCB 6-tier classification (Good 0–50, Satisfactory 51–100, Moderate 101–200, Poor 201–300, Very Poor 301–400, Severe 401+) and GRAP Stage I–IV mapping
-- `thresholds.ts` — asymmetric 5:1 loss ratio optimisation; cost-optimal cutoff is **341.5 AQI** (do not hard-code elsewhere)
-- `formatters.ts` — ISO 8601 → `Asia/Kolkata` display formatting using `date-fns-tz`
+## Styling rules
 
-### Navigation / Sections
-Mirrors the Streamlit 5-tab layout:
-1. **Real-Time & Forecasts** — KPI bento strip, per-station AQI, horizon selector (1h/6h/24h), GRAP banner
-2. **Model Performance** — forecast accuracy table, P-R curves, confusion matrices
-3. **Causal Impact** — Diwali ITS charts, chemical tracer surge, placebo overlay
-4. **Risk Threshold** — interactive cost-sweep slider, operating-point comparison
-5. **Methodology** — static markdown renderer with schema diagram and audit tables
+- **No raw hex values or arbitrary colours in components.** Colours, type sizes and spacing come from `design/tokens.ts`, which feeds `tailwind.config.ts` and the SVG charts.
+- Tailwind class names follow the nested token keys: `bg-grap-bg`, `border-grap-rule`, `bg-status-active-bg`, `text-fresh-late`, `bg-inverse` / `text-inverse-text`, `fill-map-land`. There is no `bg-grap`. When a class has no effect, check the token key before anything else.
+- Type sizes are pixel-named (`text-13`, `text-17`, `text-136`). `lib/cn.ts` registers them with `tailwind-merge`; add any new size to that list too, or `text-13 text-ink-muted` will silently drop the size.
+- AQI tier colours are literal class strings in `components/aqi/tierClasses.ts` so Tailwind can see them. Do not build class names with template strings.
+- Responsive layout is one DOM tree with Tailwind classes (`hidden md:flex`, `md:hidden`). jsdom has no CSS, so tests see both variants: use `getAllBy…(…)[0]` or `within(...)`.
+- Cards use `px-5 md:px-7`. The breakpoint for the phone layout is `md` (768 px); the Severe alerts table switches at `lg`.
 
-### Sidebar
-Fixed left sidebar (`w-64`) shows live station telemetry list and GRAP mitigation status — always visible on ≥ 1280 px, collapses to a drawer on tablet/mobile.
+## Accessibility rules
 
----
+- Never use colour alone: status is also words (and sr-only text such as "(late)").
+- Charts are `role="img"` with a generated description (`describeSeries`), and each has a "View as table" twin. The hover readout is for pointer users only and is `aria-hidden`.
+- Tables are real `<table>`s with `th scope`. Scrollable regions are focusable (`tabIndex={0}`, with the lint rule disabled and a comment saying why).
+- The map is `role="group"` with a generated label and per-pin links. Station pills are links with `aria-current`, inside a labelled `nav`.
+- Focus ring is global (`:focus-visible` in `styles/index.css`). `prefers-reduced-motion` is handled globally in the same file; do not add motion that bypasses it.
+- Interactive targets are at least 44 px (`min-h-target`) on touch layouts.
 
-## Reference Prototypes
+## Charts
 
-Three fully-styled static HTML files exist in `stitch_air_quality_intelligence_dashboard/` and are the visual ground-truth:
-- `delhi_air_quality_risk_forecasting_data_first/code.html` — main dashboard shell, KPI strip, station sidebar
-- `diwali_causal_impact_lab_minimal/code.html` — causal analysis panel
-- `model_performance_cost_optimization_minimal/code.html` — model metrics and threshold view
+`lib/chart.ts` holds the geometry and is pure and tested: viewBox 960 x 340, plot area x 56 to 936, y 10 to 300. Default domains are AQI 150 to 500 and PM2.5 50 to 450, widened in steps of 50 when data leaves them. The shaded zones start at AQI 300 and 400, and PM2.5 120 and 250. `buildChartModel` returns paths, ticks and per-hour `samples`; `nearestSample` drives the readout and `buildSeriesRows` feeds the table. Change the maths in `lib/chart.ts` and its test, not in the component.
 
-When building a new component, open the corresponding HTML prototype first and extract the exact Tailwind classes — do not redesign.
+## Copy and data honesty
 
----
+- Copy that depends on data is generated from the data (`lib/leadTime.ts`, `lib/ranking.ts`, the summary sentences). Do not hard-code numbers into sentences.
+- A withheld forecast shows an em dash and says why (the 24h PM2.5 forecast is withheld because the model did not beat copy-last in backtests). Always report skill against copy-last.
+- The drafted advice text for AQI bands other than "Very Poor" (`lib/advice.ts`, marked REVIEW BEFORE LAUNCH) and the GRAP stage ranges are pending the project owner's review. GRAP thresholds live in one config and are labelled "not an official advisory".
+- Design copy kept as written pending review: "Alert fires if skill stays below 0 for 7 days", "Fine particles peak around 7 am and 11 pm", "Nov–Dec 2025".
 
-## Backend Integration Notes
-- The Streamlit backend (`../dashboard/app.py`) reads from `../reports/` Parquet and CSV files; these same files are the source of truth for the mock data layer.
-- Station IDs: `Anand Vihar`, `ITO`, `Punjabi Bagh`, `RK Puram`, `Mandir Marg`, `Dwarka`, `Okhla Phase 2`
-- All timestamps are `Asia/Kolkata` (UTC+5:30); display in IST, store in UTC.
-- Model artifacts live in `../models/`; they are not loaded by the frontend — only their pre-computed prediction CSVs are consumed.
+## Testing
+
+- Pure logic: unit tests next to the file (`lib/*.test.ts`).
+- Components and pages: Testing Library with `renderAt('/stations/bawana')` from `src/test/renderApp.tsx`, which uses the real routes, providers and mock client.
+- `src/test/setup.ts` works around three jsdom gaps (React Router's `Request`, `scrollTo`, `PointerEvent`). Pointer tests need a stubbed `getBoundingClientRect` because there is no layout.
+
+## Verifying visually
+
+```bash
+npx vite --port 3011 &        # note the PID and kill it by PID afterwards
+google-chrome --headless=new --disable-gpu --no-sandbox --hide-scrollbars \
+  --virtual-time-budget=8000 --window-size=1440,1100 --screenshot=out.png http://localhost:3011/stations/bawana
+```
+
+Headless Chrome will not lay out narrower than about 500 px, so "phone" screenshots are really 500 px wide; check 390 px in browser dev tools. Never use `pkill -f` with a pattern that also appears in your own command line: it kills the shell.
+
+## Deployment
+
+`vercel.json` serves the static build with an SPA rewrite and immutable caching for `/assets/`. On Vercel set `VITE_API_BASE_URL` to the full API URL and `VITE_USE_MOCK=false` once the API exists.
+
+## Status
+
+Built in phases: 1 foundation and tokens, 2 data layer and layout, 3 the four pages, 4 chart readout, table view and phone layouts. Remaining: 5, CI workflow, test gaps (mobile menu, focus handling) and a review pass. Update this section when that lands.

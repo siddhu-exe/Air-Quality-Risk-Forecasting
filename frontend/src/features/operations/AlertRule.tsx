@@ -31,7 +31,7 @@ export function AlertRule({ backtest }: { backtest: Backtest }) {
   if (!rule) return null
 
   return (
-    <Card as="section" aria-labelledby="rule-title" className="flex min-w-0 flex-[999_1_560px] flex-col gap-[18px] px-7 py-6">
+    <Card as="section" aria-labelledby="rule-title" className="flex min-w-0 flex-[999_1_560px] flex-col gap-[18px] px-5 py-6 md:px-7">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 id="rule-title" className="text-17 font-semibold">
           Alert rule

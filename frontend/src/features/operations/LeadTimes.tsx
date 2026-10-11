@@ -17,7 +17,7 @@ function Row({ label, value, fill, muted }: { label: string; value: number; fill
 /** Share of past Severe episodes each method warned about, and how early. */
 export function LeadTimes({ leadTimes }: { leadTimes: Backtest['leadTimes'] }) {
   return (
-    <Card as="section" aria-labelledby="lead-title" className="flex min-w-0 flex-[1_1_380px] flex-col gap-[18px] px-7 py-6">
+    <Card as="section" aria-labelledby="lead-title" className="flex min-w-0 flex-[1_1_380px] flex-col gap-[18px] px-5 py-6 md:px-7">
       <h2 id="lead-title" className="text-17 font-semibold">
         Early warning, past winter
       </h2>

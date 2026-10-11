@@ -15,9 +15,48 @@ const STATUS: Record<AlertStatus, { label: string; className: string }> = {
 /** The bar spans the part of the scale where Severe decisions are made. */
 const RANGE_DOMAIN = [200, 500] as const
 
+/** Phone and narrow tablet: one stacked entry per station instead of a seven-column table. */
+function AlertList({ alerts }: { alerts: GrapAlerts['alerts'] }) {
+  return (
+    <ul className="flex flex-col lg:hidden">
+      {alerts.map((alert) => {
+        const status = STATUS[alert.status]
+        return (
+          <li key={alert.stationId} className="flex flex-col gap-2.5 border-t border-line-soft py-4">
+            <div className="flex items-center justify-between gap-3">
+              <Link to={`/stations/${alert.stationId}`} className="text-15 font-medium text-ink">
+                {alert.name}
+              </Link>
+              <span className={`rounded-full px-2.5 py-0.5 text-13 ${status.className}`}>{status.label}</span>
+            </div>
+            <p className="text-14 text-ink-2">
+              <span className="font-mono text-17 font-medium text-ink">{formatAqi(alert.forecast24h)}</span> forecast for{' '}
+              {formatWeekdayClock(alert.validFor)}
+            </p>
+            <div className="flex flex-col gap-1">
+              <RangeBar lo={alert.lo} hi={alert.hi} domain={RANGE_DOMAIN} mark={SEVERE_THRESHOLD} className="w-full" />
+              <span className="font-mono text-12 text-ink-muted">
+                80% range {formatAqi(alert.lo)}–{formatAqi(alert.hi)}
+              </span>
+            </div>
+            <span className="flex items-center gap-2 text-14">
+              <ProgressBar value={alert.pSevere} fillClassName="h-full bg-aqi-severe" className="max-w-[160px] flex-1" />
+              <span className="font-mono">{formatPercent(alert.pSevere)}</span>
+              <span className="text-ink-muted">chance of Severe</span>
+            </span>
+            <p className="text-13 text-ink-muted">
+              Copy-last says {categoryOf(alert.persistence).label} ({formatAqi(alert.persistence)})
+            </p>
+          </li>
+        )
+      })}
+    </ul>
+  )
+}
+
 export function SevereAlerts({ data }: { data: GrapAlerts }) {
   return (
-    <Card as="section" aria-labelledby="alerts-title" className="flex flex-col gap-3 px-7 py-6">
+    <Card as="section" aria-labelledby="alerts-title" className="flex flex-col gap-3 px-5 py-6 md:px-7">
       <div className="flex flex-wrap items-baseline justify-between gap-3">
         <h2 id="alerts-title" className="text-17 font-semibold">
           Severe alerts · next 24 hours
@@ -30,7 +69,7 @@ export function SevereAlerts({ data }: { data: GrapAlerts }) {
       {data.alerts.length === 0 ? (
         <p className="py-6 text-ink-2">No station currently has that chance of reaching Severe in the next 24 hours.</p>
       ) : (
-        <div className="overflow-x-auto">
+        <div className="hidden overflow-x-auto lg:block">
           <table className="w-full min-w-[860px] border-collapse text-14">
             <thead>
               <tr className="text-left text-13 text-ink-muted">
@@ -80,6 +119,7 @@ export function SevereAlerts({ data }: { data: GrapAlerts }) {
           </table>
         </div>
       )}
+      {data.alerts.length > 0 && <AlertList alerts={data.alerts} />}
 
       <p className="text-13 text-ink-muted">
         The range bar spans AQI {RANGE_DOMAIN[0]}–{RANGE_DOMAIN[1]}; the thin line marks {SEVERE_THRESHOLD}. Rows where

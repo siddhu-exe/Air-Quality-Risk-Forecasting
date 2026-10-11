@@ -30,5 +30,7 @@ export default defineConfig({
     setupFiles: ['./src/test/setup.ts'],
     css: false,
     include: ['src/**/*.test.{ts,tsx}'],
+    // The first visit to each lazy page compiles its module graph; slow machines need headroom.
+    testTimeout: 20_000,
   },
 })

@@ -13,7 +13,7 @@ const JOB_STATUS: Record<JobStatus, { label: string; dot: string }> = {
 /** Scheduled jobs; the status word carries the meaning, the dot only reinforces it. */
 export function JobsList({ jobs }: { jobs: ModelHealth['jobs'] }) {
   return (
-    <Card as="section" aria-labelledby="jobs-title" className="flex flex-col px-7 py-6">
+    <Card as="section" aria-labelledby="jobs-title" className="flex flex-col px-5 py-6 md:px-7">
       <h2 id="jobs-title" className="mb-2 text-17 font-semibold">
         Scheduled jobs
       </h2>
@@ -41,7 +41,7 @@ export function JobsList({ jobs }: { jobs: ModelHealth['jobs'] }) {
 
 export function ModelsList({ models }: { models: ModelHealth['models'] }) {
   return (
-    <Card as="section" aria-labelledby="models-title" className="flex flex-col px-7 py-6">
+    <Card as="section" aria-labelledby="models-title" className="flex flex-col px-5 py-6 md:px-7">
       <h2 id="models-title" className="mb-2 text-17 font-semibold">
         Models in service
       </h2>

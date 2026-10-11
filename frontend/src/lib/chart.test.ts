@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildChartModel, CHART, chartDomain, describeSeries } from './chart'
+import { buildChartModel, buildSeriesRows, CHART, chartDomain, describeSeries, nearestSample } from './chart'
 
 const NOW = Date.parse('2026-10-11T14:00:00+05:30')
 const at = (h: number): string => new Date(NOW + h * 3_600_000).toISOString()
@@ -74,5 +74,44 @@ describe('describeSeries', () => {
     expect(describeSeries('Anand Vihar', 'AQI', model, 450)).toContain('falling to 388')
     expect(describeSeries('Anand Vihar', 'AQI', model, 386)).toContain('steady at 388')
     expect(describeSeries('Anand Vihar', 'AQI', model, 318)).toContain('forecast 412 at +24h')
+  })
+})
+
+describe('chart samples', () => {
+  const model = buildChartModel(input('aqi', 380, 24, 410))
+
+  it('has one sample per hour, with "now" counted once, as measured', () => {
+    expect(model.samples).toHaveLength(73 + 24)
+    const atNow = model.samples.filter((s) => Math.abs(s.x - model.nowX) < 0.001)
+    expect(atNow).toHaveLength(1)
+    expect(atNow[0]?.kind).toBe('measured')
+  })
+
+  it('gives forecast hours a likely range and measured hours none', () => {
+    expect(model.samples[0]).toMatchObject({ kind: 'measured', value: 380 })
+    expect(model.samples[0]?.lo).toBeUndefined()
+    expect(model.samples.at(-1)).toMatchObject({ kind: 'forecast', value: 410, lo: 370, hi: 414 })
+  })
+
+  it('finds the sample nearest a position, including past either edge', () => {
+    const target = model.samples[50]
+    expect(target).toBeDefined()
+    expect(nearestSample(model.samples, (target?.x ?? 0) + 1)).toBe(target)
+    expect(nearestSample(model.samples, -100)).toBe(model.samples[0])
+    expect(nearestSample(model.samples, 5000)).toBe(model.samples.at(-1))
+    expect(nearestSample([], 100)).toBeUndefined()
+  })
+})
+
+describe('buildSeriesRows', () => {
+  it('merges "now" into one row and keeps time order', () => {
+    const rows = buildSeriesRows(input('aqi', 380, 24, 410))
+    expect(rows).toHaveLength(73 + 24)
+    const now = rows[72]
+    expect(now?.measured).toBe(380)
+    expect(now?.forecast?.median).toBe(380)
+    expect(rows[71]?.forecast).toBeUndefined()
+    expect(rows[73]?.measured).toBeUndefined()
+    expect(rows.at(-1)?.forecast?.median).toBe(410)
   })
 })

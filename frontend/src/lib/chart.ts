@@ -46,6 +46,19 @@ interface Band {
   height: number
 }
 
+/** One hoverable hour on the chart. "Now" counts as measured. */
+export interface ChartSample {
+  t: string
+  x: number
+  /** Where the dot sits: the measured value, or the forecast median. */
+  y: number
+  kind: 'measured' | 'forecast'
+  value: number
+  /** Likely range, forecast hours only. */
+  lo?: number
+  hi?: number
+}
+
 export interface ChartModel {
   domain: Domain
   nowX: number
@@ -56,6 +69,8 @@ export interface ChartModel {
   bandPath: string
   persistencePath: string
   ticks: { y: number; labelY: number; label: string }[]
+  /** Every hour on the chart, left to right, for the hover readout. */
+  samples: ChartSample[]
   severeZone: Band
   veryPoorZone: Band
   horizonHours: number
@@ -93,6 +108,15 @@ export function buildChartModel({ target, history, forecast }: ChartInput): Char
   const upper = forecast.map((p) => point(x(p.t), y(p.hi)))
   const lower = forecast.map((p) => point(x(p.t), y(p.lo))).reverse()
   const nowY = y(last.value)
+  const samples: ChartSample[] = [
+    ...history.map((p): ChartSample => ({ t: p.t, x: x(p.t), y: y(p.value), kind: 'measured', value: p.value })),
+    // Hour 0 of the forecast is "now", already covered by the last measured hour.
+    ...forecast
+      .filter((p) => hoursBetween(p.t, nowIso) > 0)
+      .map(
+        (p): ChartSample => ({ t: p.t, x: x(p.t), y: y(p.median), kind: 'forecast', value: p.median, lo: p.lo, hi: p.hi }),
+      ),
+  ]
   const zones = ZONE_START[target]
 
   const tickValues: number[] = []
@@ -109,6 +133,7 @@ export function buildChartModel({ target, history, forecast }: ChartInput): Char
     bandPath: `M${upper.join(' L')} L${lower.join(' L')} Z`,
     persistencePath: `M${point(x(nowIso), nowY)} L${point(CHART.right, nowY)}`,
     ticks: tickValues.map((value) => ({ y: y(value), labelY: y(value) + 4, label: String(value) })),
+    samples,
     severeZone: { y: y(domain.hi), height: y(zones.severe) - y(domain.hi) },
     veryPoorZone: { y: y(zones.severe), height: y(zones.veryPoor) - y(zones.severe) },
     horizonHours,
@@ -130,4 +155,32 @@ export function describeSeries(
   return `${subject}: ${measure} over the past 72 hours ${trend} ${Math.round(model.nowValue)}, forecast ${Math.round(
     model.endValue,
   )} at ${model.endLabel}`
+}
+
+/** The sample closest to a horizontal position in chart units. */
+export function nearestSample(samples: readonly ChartSample[], x: number): ChartSample | undefined {
+  let best: ChartSample | undefined
+  for (const sample of samples) {
+    if (!best || Math.abs(sample.x - x) < Math.abs(best.x - x)) best = sample
+  }
+  return best
+}
+
+export interface SeriesRow {
+  t: string
+  measured?: number
+  forecast?: { median: number; lo: number; hi: number }
+}
+
+/** The chart's numbers as table rows, oldest first; "now" carries both the reading and the forecast's hour 0. */
+export function buildSeriesRows({ history, forecast }: Pick<ChartInput, 'history' | 'forecast'>): SeriesRow[] {
+  const rows = new Map<string, SeriesRow>()
+  for (const p of history) rows.set(p.t, { t: p.t, measured: p.value })
+  for (const p of forecast) {
+    const forecastCell = { median: p.median, lo: p.lo, hi: p.hi }
+    const row = rows.get(p.t)
+    if (row) row.forecast = forecastCell
+    else rows.set(p.t, { t: p.t, forecast: forecastCell })
+  }
+  return [...rows.values()].sort((a, b) => Date.parse(a.t) - Date.parse(b.t))
 }

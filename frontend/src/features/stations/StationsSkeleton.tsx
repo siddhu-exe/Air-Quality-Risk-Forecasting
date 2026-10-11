@@ -8,7 +8,7 @@ export function StationDetailSkeleton() {
       <span className="sr-only" role="status">
         Loading the station forecast
       </span>
-      <Card className="flex flex-col gap-4 px-7 py-6">
+      <Card className="flex flex-col gap-4 px-5 py-6 md:px-7">
         <Skeleton className="h-6 w-72" />
         <Skeleton className="h-[340px] w-full" />
       </Card>

@@ -10,12 +10,12 @@ const concentration = new Intl.NumberFormat('en-IN', { maximumFractionDigits: 1 
 /** Each pollutant's concentration and its CPCB sub-index; the AQI is the highest sub-index. */
 export function PollutantsTable({ pollutants }: { pollutants: readonly Pollutant[] }) {
   return (
-    <Card as="section" aria-labelledby="pollutants-title" className="min-w-0 flex-[999_1_560px] px-7 py-6">
+    <Card as="section" aria-labelledby="pollutants-title" className="min-w-0 flex-[999_1_560px] px-5 py-6 md:px-7">
       <h2 id="pollutants-title" className="mb-3 text-17 font-semibold">
         Pollutants now
       </h2>
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[480px] border-collapse text-14">
+      <div>
+        <table className="w-full border-collapse text-14">
           <thead>
             <tr className="text-left text-13 text-ink-muted">
               <th scope="col" className="py-2 font-medium">
@@ -24,7 +24,7 @@ export function PollutantsTable({ pollutants }: { pollutants: readonly Pollutant
               <th scope="col" className="py-2 text-right font-medium">
                 Concentration
               </th>
-              <th scope="col" className="py-2 pl-6 font-medium">
+              <th scope="col" className="py-2 pl-4 font-medium md:pl-6">
                 Sub-index
               </th>
             </tr>
@@ -41,12 +41,12 @@ export function PollutantsTable({ pollutants }: { pollutants: readonly Pollutant
                     {concentration.format(pollutant.concentration)}{' '}
                     <span className="text-ink-muted">{pollutant.unit}</span>
                   </td>
-                  <td className="py-3 pl-6">
+                  <td className="py-3 pl-4 md:pl-6">
                     <span className="flex items-center gap-2.5">
                       <ProgressBar
                         value={pollutant.subIndex / AQI_SCALE_MAX}
                         fillClassName={`h-full ${TIER_FILL[categoryOf(pollutant.subIndex).key]}`}
-                        className="max-w-[220px] flex-1"
+                        className="min-w-10 max-w-[220px] flex-1"
                       />
                       <span className="w-8 text-right font-mono">{Math.round(pollutant.subIndex)}</span>
                     </span>

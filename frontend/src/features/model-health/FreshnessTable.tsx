@@ -15,14 +15,33 @@ interface FreshnessTableProps {
 
 export function FreshnessTable({ rows, generatedAt }: FreshnessTableProps) {
   return (
-    <Card as="section" aria-labelledby="freshness-title" className="min-w-0 flex-[999_1_560px] px-7 py-6">
+    <Card as="section" aria-labelledby="freshness-title" className="min-w-0 flex-[999_1_560px] px-5 py-6 md:px-7">
       <div className="mb-2 flex flex-wrap items-baseline justify-between gap-3">
         <h2 id="freshness-title" className="text-17 font-semibold">
           Data freshness
         </h2>
         <span className="text-13 text-ink-muted">Hourly ingest from CPCB</span>
       </div>
-      <div className="overflow-x-auto">
+      <ul className="flex flex-col md:hidden">
+        {rows.map((row) => {
+          const age = msBetween(generatedAt, row.lastReadingAt)
+          const late = age >= LATE_AFTER_MS
+          return (
+            <li key={row.stationId} className="flex flex-col gap-2 border-t border-line-soft py-3.5">
+              <div className="flex items-baseline justify-between gap-3">
+                <span className="text-15 font-medium">{row.name}</span>
+                <span className={cn('font-mono text-14', late ? 'text-fresh-late' : 'text-ink-2')}>
+                  {formatAge(age)}
+                  {late && <span className="sr-only"> (late)</span>}
+                </span>
+              </div>
+              <FreshnessStrip hourly={row.hourly} />
+              {row.note && <p className="text-13 text-ink-2">{row.note}</p>}
+            </li>
+          )
+        })}
+      </ul>
+      <div className="hidden overflow-x-auto md:block">
         <table className="w-full min-w-[560px] border-collapse text-14">
           <thead>
             <tr className="text-left text-13 text-ink-muted">
