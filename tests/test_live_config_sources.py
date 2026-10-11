@@ -22,7 +22,7 @@ def _toml(tmp_path, body='[ingest]\nsource = "openaq"\n'):
 
 def test_the_repository_config_loads_and_defaults_to_openaq():
     cfg = cfgmod.load_config(env={})
-    assert cfg.source == "openaq" and cfg.allow_unverified is False and cfg.weather_fill == "open-meteo"
+    assert cfg.source == "openaq" and cfg.allow_unverified is False and cfg.weather_display == "open-meteo" and cfg.weather_fill == "none"
 
 
 def test_environment_overrides_the_file_and_blank_variables_are_ignored(tmp_path):
@@ -33,7 +33,7 @@ def test_environment_overrides_the_file_and_blank_variables_are_ignored(tmp_path
     assert cfgmod.load_config(path, {"LIVE_LOOKBACK_HOURS": "12"}).lookback_hours == 12
 
 
-@pytest.mark.parametrize("env", [{"LIVE_SOURCE": "mystery"}, {"LIVE_FALLBACK": "openaq"}, {"LIVE_WEATHER_FILL": "gfs"},
+@pytest.mark.parametrize("env", [{"LIVE_SOURCE": "mystery"}, {"LIVE_FALLBACK": "openaq"}, {"LIVE_WEATHER_FILL": "gfs"}, {"LIVE_WEATHER_DISPLAY": "gfs"},
                                  {"LIVE_LOOKBACK_HOURS": "0"}, {"LIVE_LOOKBACK_HOURS": "500"}])
 def test_invalid_settings_are_rejected(tmp_path, env):
     with pytest.raises(cfgmod.ConfigError):

@@ -57,7 +57,7 @@ def build_rows(frame: pd.DataFrame, source: LiveSource, cfg: IngestConfig, weath
     details: dict = {}
     row_flags = [dict() for _ in range(len(frame))]
     frame = frame.reset_index(drop=True)
-    if cfg.weather_fill == "open-meteo":
+    if cfg.weather_display == "open-meteo":
         try:
             frame, row_flags = weather_mod.fill_missing(frame, weather_fetch())
             details["weather"] = "open-meteo"

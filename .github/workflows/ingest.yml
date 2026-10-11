@@ -42,4 +42,5 @@ jobs:
           LIVE_SOURCE: ${{ inputs.source || vars.LIVE_SOURCE }}
           LIVE_FALLBACK: ${{ vars.LIVE_FALLBACK }}
           LIVE_WEATHER_FILL: ${{ vars.LIVE_WEATHER_FILL }}
+          LIVE_WEATHER_DISPLAY: ${{ vars.LIVE_WEATHER_DISPLAY }}
         run: python -m src.live.ingest
