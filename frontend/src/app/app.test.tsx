@@ -1,23 +1,11 @@
-import { render, screen, within } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { createMemoryRouter, RouterProvider } from 'react-router-dom'
-import { Providers } from './providers'
-import { routes } from './routes'
-
-function renderAt(path: string) {
-  const router = createMemoryRouter(routes, { initialEntries: [path] })
-  render(
-    <Providers>
-      <RouterProvider router={router} />
-    </Providers>,
-  )
-  return router
-}
+import { renderAt } from '@/test/renderApp'
 
 describe('app shell', () => {
   it('renders the overview with the section nav and a skip link', async () => {
     renderAt('/')
-    expect(await screen.findByRole('heading', { level: 1, name: 'Overview' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 1, name: /Forecast AQI 374/ })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Skip to content' })).toHaveAttribute('href', '#main')
 
     const nav = screen.getAllByRole('navigation', { name: 'Sections' })[0] as HTMLElement
@@ -28,7 +16,7 @@ describe('app shell', () => {
 
   it('marks Stations current on a station sub-route', async () => {
     renderAt('/stations/anand-vihar')
-    expect(await screen.findByRole('heading', { level: 1, name: 'Stations' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 1, name: 'Anand Vihar' })).toBeInTheDocument()
     const nav = screen.getAllByRole('navigation', { name: 'Sections' })[0] as HTMLElement
     expect(within(nav).getByRole('link', { name: 'Stations' })).toHaveAttribute('aria-current', 'page')
     expect(within(nav).getByRole('link', { name: 'Overview' })).not.toHaveAttribute('aria-current')
@@ -37,7 +25,7 @@ describe('app shell', () => {
   it('navigates between sections, updates the title and moves focus to the page', async () => {
     const user = userEvent.setup()
     renderAt('/')
-    await screen.findByRole('heading', { level: 1, name: 'Overview' })
+    await screen.findByRole('heading', { level: 1, name: /Forecast AQI 374/ })
 
     const nav = screen.getAllByRole('navigation', { name: 'Sections' })[0] as HTMLElement
     await user.click(within(nav).getByRole('link', { name: 'Operations' }))
@@ -61,7 +49,7 @@ describe('app shell', () => {
   it('opens the mobile menu as a dialog, navigates and closes it', async () => {
     const user = userEvent.setup()
     renderAt('/')
-    await screen.findByRole('heading', { level: 1, name: 'Overview' })
+    await screen.findByRole('heading', { level: 1, name: /Forecast AQI 374/ })
 
     await user.click(screen.getByRole('button', { name: 'Open menu' }))
     const dialog = await screen.findByRole('dialog', { name: 'Menu' })

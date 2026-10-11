@@ -3,6 +3,9 @@ import {
   formatClock,
   formatDay,
   formatPercent,
+  formatWhen,
+  formatRate,
+  formatCount,
   formatSigned,
   formatSkillIndex,
   formatUpdated,
@@ -62,5 +65,44 @@ describe('number formatting', () => {
 
   it('measures hours between timestamps', () => {
     expect(hoursBetween('2026-10-12T14:00:00+05:30', '2026-10-11T14:00:00+05:30')).toBe(24)
+  })
+})
+
+describe('formatWhen', () => {
+  const ref = '2026-10-11T14:00:00+05:30'
+
+  it('says today and tomorrow on the IST calendar', () => {
+    expect(formatWhen('2026-10-11T15:00:00+05:30', ref)).toBe('15:00 today')
+    expect(formatWhen('2026-10-12T14:00:00+05:30', ref)).toBe('14:00 tomorrow')
+  })
+
+  it('judges the day in IST, not UTC', () => {
+    // 00:30 IST on the 12th is still the 11th in UTC.
+    expect(formatWhen('2026-10-11T19:00:00Z', ref)).toBe('00:30 tomorrow')
+  })
+
+  it('falls back to weekday and time beyond tomorrow', () => {
+    expect(formatWhen('2026-10-14T09:00:00+05:30', ref)).toBe('Wed 09:00')
+  })
+})
+
+describe('formatRate', () => {
+  it('does not round a near-miss up to 100%', () => {
+    expect(formatRate(0.998)).toBe('99.8%')
+    expect(formatRate(0.9996)).toBe('99.9%')
+    expect(formatRate(1)).toBe('100%')
+  })
+
+  it('rounds ordinary rates and flags tiny ones', () => {
+    expect(formatRate(0.614)).toBe('61%')
+    expect(formatRate(0.002)).toBe('<1%')
+    expect(formatRate(0)).toBe('0%')
+  })
+})
+
+describe('formatCount', () => {
+  it('groups thousands', () => {
+    expect(formatCount(1568)).toBe('1,568')
+    expect(formatCount(7)).toBe('7')
   })
 })

@@ -88,3 +88,43 @@ export function msBetween(laterIso: string, earlierIso: string): number {
 export function hoursBetween(toIso: string, fromIso: string): number {
   return msBetween(toIso, fromIso) / 3_600_000
 }
+
+const dateKeyFormat = new Intl.DateTimeFormat('en-CA', {
+  timeZone: IST,
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+})
+
+/** Whole IST calendar days from `fromIso` to `toIso` (0 = same day, 1 = next day). */
+function calendarDaysBetween(toIso: string, fromIso: string): number {
+  const asUtcDay = (iso: string): number => {
+    const p = parts(dateKeyFormat, toDate(iso))
+    return Date.UTC(Number(p.year), Number(p.month) - 1, Number(p.day))
+  }
+  return Math.round((asUtcDay(toIso) - asUtcDay(fromIso)) / 86_400_000)
+}
+
+/** "15:00 today", "14:00 tomorrow", else "Wed 14:00", judged on the IST calendar. */
+export function formatWhen(iso: string, referenceIso: string): string {
+  const days = calendarDaysBetween(iso, referenceIso)
+  if (days === 0) return `${formatClock(iso)} today`
+  if (days === 1) return `${formatClock(iso)} tomorrow`
+  return formatWeekdayClock(iso)
+}
+
+/**
+ * A rate as a percentage that never rounds up to a claim it does not make:
+ * 99.8% stays "99.8%" (not "100%"), and only an exact 1 reads "100%".
+ */
+export function formatRate(fraction: number): string {
+  const pct = fraction * 100
+  if (fraction > 0.99 && fraction < 1) return `${(Math.floor(pct * 10) / 10).toFixed(1)}%`
+  if (fraction > 0 && fraction < 0.005) return '<1%'
+  return `${Math.round(pct)}%`
+}
+
+/** 1568 -> "1,568". */
+export function formatCount(n: number): string {
+  return n.toLocaleString('en-IN')
+}

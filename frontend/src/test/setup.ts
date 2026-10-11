@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom/vitest'
-import { cleanup } from '@testing-library/react'
+import { cleanup, configure } from '@testing-library/react'
 import { afterEach, vi } from 'vitest'
 
 /**
@@ -20,6 +20,10 @@ globalThis.Request = JsdomSafeRequest as typeof Request
 
 // jsdom does not implement scrolling; the layout scrolls to the top on section change.
 window.scrollTo = vi.fn()
+
+// The first visit to each lazy page transforms its module graph, which can
+// take over Testing Library's 1 s default under jsdom.
+configure({ asyncUtilTimeout: 5000 })
 
 afterEach(() => {
   cleanup()
