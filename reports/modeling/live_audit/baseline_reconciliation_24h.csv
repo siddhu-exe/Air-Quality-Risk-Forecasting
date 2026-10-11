@@ -1,0 +1,5 @@
+row_set,n,model_mae,persistence_mae,skill_mae
+"Tier 2 stored frozen predictions, all validation rows",9590,29.023767508144275,30.708029197080293,0.054847599568394245
+"Audit baseline (rebuilt features, frozen model), same rows",9590,29.0237675081443,30.708029197080293,0.05484759956839347
+"Audit baseline, strict: label also inside the validation window",9422,28.454479857214654,29.9354701761834,0.049472759580940884
+"Tier 2 EXTENDED model (trained with 2024 data; a different model), all rows",9590,28.795499246047292,30.708029197080293,0.06228110370609008

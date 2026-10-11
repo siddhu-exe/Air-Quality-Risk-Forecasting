@@ -38,6 +38,10 @@ tier_2_colab_bundle*.zip
 tier_2_patch*.zip
 tier2_reports*.zip
 
+# Colab bundles and result zips for the Tier 3 audits (regenerate with scripts/generate_d1_audit_notebook.py)
+tier3_*bundle*.zip
+d1_audit_results*.zip
+
 # IDE, OS, and Jupyter artifacts
 .DS_Store
 Thumbs.db
