@@ -1,0 +1,25 @@
+# One-off connectivity/schema probe for the live data sources, run from a GitHub-hosted runner.
+# Manual trigger only. Informational: it never fails the build because a source is unreachable.
+name: probe-sources
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install requests
+      - name: Probe data.gov.in and OpenAQ
+        env:
+          DATA_GOV_IN_API_KEY: ${{ secrets.DATA_GOV_IN_API_KEY }}
+          OPENAQ_API_KEY: ${{ secrets.OPENAQ_API_KEY }}
+        run: python -m src.live.probe_sources
