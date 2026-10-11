@@ -153,6 +153,26 @@ forecast job serves the frozen AQI models only, and PM2.5 / intervals / P(severe
 - **Azure ingest-job option** written up in `OPTION_azure_ingest_job_india.md`; applies only if runners are blocked and
   OpenAQ stays stale.
 
+- **Decisions 2026-10-11 (after the audit).** D1 option A accepted: no retrain. `weather_fill = "none"` for forecast inputs (filling hurt
+  the 1h/6h models on validation); Open-Meteo values are still stored in `live_readings` for display (`weather_display = "open-meteo"`,
+  tagged `weather_source`/`qc_flags`), and the forecast job masks every `filled:*` cell before the models see it. OpenAQ is the
+  primary source once fresh; data.gov.in is a fallback only after its fields, units and hour convention are verified. `curl
+  https://api.data.gov.in/` from the development laptop (Indian network): no HTTP status; the default route timed out after 20 s
+  and IPv4 was refused at connect (`000`, exit 28 / 7). The probe workflow is on `main`; the GitHub-runner result is pending.
+- **Stage 3 (forecast job) built, not yet scheduled.** `src/live/{models,forecast,forecast_store,parity,calibrate_gate}.py`,
+  `config/{model_hashes,forecast_gate}.json`, `forecast.yml` (manual, dry run by default), `requirements-forecast.txt`.
+  *Parity with the stored backtest predictions* (`docs/TIER_3/parity_report.md`): 24h hybrid reproduces them to 6e-12 (validation and
+  test, ~300 rows each). 1h/6h reproduce them exactly (0.0) when the rolling windows start where training's did; with the job's
+  short history window 35 of 313 (1h, max 0.09 AQI) and 6 of 319 (6h, max 0.57 AQI) rows differ because pandas' rolling mean/std
+  differ in their last digits and flip a LightGBM split sitting on a threshold. Tolerance not loosened; limit documented.
+  *Finding:* the 24h model's multi-day features are ROW-based (n rows back, on rows that have an AQI), not hour-based; an hour-based
+  version missed the stored predictions by up to 53 AQI, so the job keeps the training behaviour.
+  *Gate:* skip a station if the share of missing core features exceeds 0.22 (99th percentile over 9,853 validation rows), or a
+  required group is absent for the whole window, or it has < 169 AQI rows, is stale (> 3 h) or has no AQI at the issue hour.
+  *Run against the backfilled DB* (read-only replay of 2026-10-07 12:00): 5 of 7 stations forecast, Jahangirpuri skipped (stale, 9 h), Punjabi
+  Bagh skipped (22.2% core features missing against a 22.0% limit). Write path proven inside a rolled-back transaction as `job_writer`
+  (registry upsert, 15 forecast rows, re-insert of the same hour writes nothing). Forecasts are immutable once written.
+
 ## 1. Components and data flow
 
 ```
