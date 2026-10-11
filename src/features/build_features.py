@@ -127,12 +127,11 @@ def load_raw_data_from_db():
     return stations_df, caaqms_df, aqi_df
 
 
-def load_raw_data_offline(start=None, end=None):
-    """Extracts CAAQMS + AQI from the raw CSVs and the recomputed AQI parquet.
+def load_caaqms_offline(start=None, end=None):
+    """Hourly CAAQMS telemetry (pollutants + station weather) from the raw CSVs, Asia/Kolkata-aware.
 
-    Used when PostgreSQL is unavailable. The target AQI is the official series
-    for 2025 and the CPCB-recomputed series (``aqi_source='recomputed'``) for
-    2023-2024, so the training window can include a prior winter.
+    Split out of ``load_raw_data_offline`` so callers that do not need the AQI target (e.g. the
+    feature-availability audit) avoid reading the official-AQI spreadsheets.
     """
     start = start if start is not None else OFFLINE_START
     end = end if end is not None else OFFLINE_END
@@ -159,6 +158,21 @@ def load_raw_data_offline(start=None, end=None):
         & (caaqms_df["timestamp"] <= pd.Timestamp(end).tz_localize(None))
     ]
 
+    caaqms_df["timestamp"] = pd.to_datetime(caaqms_df["timestamp"]).dt.tz_localize("Asia/Kolkata")
+    return caaqms_df
+
+
+def load_raw_data_offline(start=None, end=None):
+    """Extracts CAAQMS + AQI from the raw CSVs and the recomputed AQI parquet.
+
+    Used when PostgreSQL is unavailable. The target AQI is the official series
+    for 2025 and the CPCB-recomputed series (``aqi_source='recomputed'``) for
+    2023-2024, so the training window can include a prior winter.
+    """
+    start = start if start is not None else OFFLINE_START
+    end = end if end is not None else OFFLINE_END
+    caaqms_df = load_caaqms_offline(start, end)
+
     aqi_parts = []
     official = load_official_aqi([2025])
     official = official.rename(columns={"aqi_official": "aqi_value"})
@@ -183,9 +197,7 @@ def load_raw_data_offline(start=None, end=None):
         .drop(columns="_priority")
     )
 
-    for column in ("timestamp",):
-        caaqms_df[column] = pd.to_datetime(caaqms_df[column]).dt.tz_localize("Asia/Kolkata")
-        aqi_df[column] = pd.to_datetime(aqi_df[column]).dt.tz_localize("Asia/Kolkata")
+    aqi_df["timestamp"] = pd.to_datetime(aqi_df["timestamp"]).dt.tz_localize("Asia/Kolkata")
 
     print(
         f"Loaded {len(caaqms_df):,} CAAQMS records and {len(aqi_df):,} AQI records offline."
@@ -316,29 +328,8 @@ def engineer_station_features(station_id, station_name, caaqms_sub, aqi_sub, ful
     return pd.DataFrame(feat_dict)
 
 
-def assemble_feature_matrix(stations_df, caaqms_df, aqi_df, full_start, full_end,
-                            window_start, window_end, output_path, write_manifest=True):
-    """Builds the per-station + cross-station feature matrix for a date window."""
-    full_idx = pd.date_range(
-        pd.Timestamp(full_start).tz_convert("Asia/Kolkata").floor("h"),
-        pd.Timestamp(full_end).tz_convert("Asia/Kolkata").floor("h"),
-        freq='h', tz='Asia/Kolkata',
-    )
-    station_matrices = []
-    print("\n--- Engineering Features per Station ---")
-    for _, srow in stations_df.iterrows():
-        sid = srow['station_id']
-        sname = srow['station_name']
-        print(f"Processing station: {sname} (ID: {sid})...")
-
-        c_sub = caaqms_df[caaqms_df['station_id'] == sid].copy()
-        a_sub = aqi_df[aqi_df['station_id'] == sid].copy()
-
-        feat_df = engineer_station_features(sid, sname, c_sub, a_sub, full_idx=full_idx)
-        station_matrices.append(feat_df)
-
-    full_df = pd.concat(station_matrices, ignore_index=True)
-
+def add_cross_station_features(full_df):
+    """Group G: cross-station spatial signals from strictly lagged (<= t-1) values. Pure (no I/O)."""
     # -------------------------------------------------------------
     # Group G: Cross-Station Spatial Network Signals (6 features)
     # Computed using strictly lagged lag-1h values (<= t-1) to avoid leakage
@@ -387,15 +378,49 @@ def assemble_feature_matrix(stations_df, caaqms_df, aqi_df, full_start, full_end
         'net_total_pm25_lag_1h', 'net_count_pm25_lag_1h'
     ], inplace=True)
 
-    # -------------------------------------------------------------
-    # Filter to the requested window where a current AQI exists
-    # -------------------------------------------------------------
+    return full_df
+
+
+def compute_feature_frame(stations_df, caaqms_df, aqi_df, full_start, full_end,
+                          window_start, window_end):
+    """Builds the per-station + cross-station feature matrix for a date window. Pure: no file I/O.
+
+    This is the single feature path: training (via ``assemble_feature_matrix``), the Tier 3 forecast job
+    and the feature-availability audit all call it, so serving cannot drift from training.
+    """
+    full_idx = pd.date_range(
+        pd.Timestamp(full_start).tz_convert("Asia/Kolkata").floor("h"),
+        pd.Timestamp(full_end).tz_convert("Asia/Kolkata").floor("h"),
+        freq='h', tz='Asia/Kolkata',
+    )
+    station_matrices = []
+    print("\n--- Engineering Features per Station ---")
+    for _, srow in stations_df.iterrows():
+        sid = srow['station_id']
+        sname = srow['station_name']
+        print(f"Processing station: {sname} (ID: {sid})...")
+
+        c_sub = caaqms_df[caaqms_df['station_id'] == sid].copy()
+        a_sub = aqi_df[aqi_df['station_id'] == sid].copy()
+
+        feat_df = engineer_station_features(sid, sname, c_sub, a_sub, full_idx=full_idx)
+        station_matrices.append(feat_df)
+
+    full_df = pd.concat(station_matrices, ignore_index=True)
+    full_df = add_cross_station_features(full_df)
+
     print(f"\n--- Filtering to {window_start.date()} .. {window_end.date()} ---")
     in_window = (full_df['timestamp'] >= pd.Timestamp(window_start)) & \
                 (full_df['timestamp'] <= pd.Timestamp(window_end))
     has_current_aqi = full_df['aqi_curr'].notna()
+    return full_df[in_window & has_current_aqi].copy().sort_values(['station_id', 'timestamp']).reset_index(drop=True)
 
-    dataset = full_df[in_window & has_current_aqi].copy().sort_values(['station_id', 'timestamp']).reset_index(drop=True)
+
+def assemble_feature_matrix(stations_df, caaqms_df, aqi_df, full_start, full_end,
+                            window_start, window_end, output_path, write_manifest=True):
+    """Builds the feature matrix for a date window and writes it (and the manifest) to disk."""
+    dataset = compute_feature_frame(stations_df, caaqms_df, aqi_df, full_start, full_end,
+                                    window_start, window_end)
 
     # Save output parquet
     dataset.to_parquet(output_path, index=False)
