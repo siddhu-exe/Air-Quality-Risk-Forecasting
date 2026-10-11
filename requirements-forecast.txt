@@ -1,0 +1,7 @@
+# Runtime dependencies of the forecast job (GitHub Actions). Versions match the local venv; lightgbm is the version the
+# parity test ran with (the frozen 1h/6h models are lightgbm.Booster pickles).
+-r requirements-live.txt
+scikit-learn==1.9.0
+joblib==1.6.0
+lightgbm==4.7.0
+pyarrow

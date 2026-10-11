@@ -1,0 +1,25 @@
+{
+  "max_core_missing_share": 0.22,
+  "derivation": "99th percentile of the per-row worst core-missing share over 9,853 validation rows (2025-09-01..2025-10-31), rounded up to 0.01",
+  "percentiles_of_worst_share": {
+    "50": 0.0,
+    "90": 0.0667,
+    "95": 0.1111,
+    "99": 0.2105,
+    "99.9": 0.3263,
+    "100": 0.3778
+  },
+  "share_of_validation_rows_with_any_core_missing": 0.4892,
+  "core_features": {
+    "1": 95,
+    "6": 95,
+    "24": 45
+  },
+  "audited_absent_prefixes": [
+    "nox_",
+    "temp_",
+    "humidity_",
+    "wind_speed_",
+    "solar_rad_"
+  ]
+}
