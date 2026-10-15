@@ -199,6 +199,7 @@ remain the headline. **Summary:** more winters and weather barely move the 24h p
 - **Few test windows.** The headline is one Nov–Dec 2025 window; the rolling-origin backtest adds winter 2024, still only two winters.
 - **No forecast meteorology.** Production models use ground telemetry only. The ablation uses observed ERA5 weather (and an oracle upper bound), not forecast weather; fire counts were not run (they need a NASA FIRMS key).
 - **Backtest only.** There is no live ingestion, deployed forecast, or comparison with operational government forecasts (IITM AQEWS/SAFAR).
+- **Backtest skill does not transfer to the live feed as is.** The numbers above are scored on the official AQI. The live pipeline recomputes AQI from pollutants, which sits ~5.5 points higher; with the frozen models and recomputed AQI as input and label, validation skill vs persistence is about +0.04 (1h), +0.07 (6h) and +0.04 (24h) with intervals that include zero (`reports/modeling/live_audit/waqi_roundtrip_audit.md`). A re-fit on the live AQI definition is in progress (`docs/TIER_3/PLAN.md`).
 - **Geographic scope.** 7 urban stations within the National Capital Territory of Delhi.
 
 ---

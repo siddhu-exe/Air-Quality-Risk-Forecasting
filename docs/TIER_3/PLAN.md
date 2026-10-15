@@ -9,6 +9,19 @@ Everything marked **TODO(verify)** could not be confirmed from a primary source 
 and must be checked before the stage that depends on it. No number from a model is typed in this
 document; metric values live in `reports/metrics/headline_metrics.csv`.
 
+
+> **Correction, 2026-10-15 (D1 numbers).** The D1 audit scored every scenario against the *official* AQI, but the live pipeline
+> recomputes AQI from pollutants (`compute_aqi`), and the recomputed series sits on average 5.5 AQI points above the official one
+> (MAE 8.0 on validation rows; `reports/modeling/live_audit/waqi_roundtrip_aqi_error.csv`). The frozen models were trained on the
+> official series. So the D1 headline skills (1h +0.342, 6h +0.200 vs persistence) are **not what live delivers**. With recomputed AQI as
+> input and label (persistence on the same series), the frozen models score, on validation, with no input degradation at all:
+> 1h +0.044 [-0.053, +0.135], 6h +0.066 [-0.055, +0.171], 24h +0.038 [-0.011, +0.079] (95% day-block CIs, all rows;
+> `waqi_roundtrip_audit.csv`, scenario `control_recomputed`, basis `own`). All three intervals include zero. Feeding recomputed AQI
+> to the frozen models scored against official labels is worse still (1h -1.94). Decision 2026-10-15: re-fit the same architectures on
+> recomputed AQI as input and target (`src/models/live_retrain.py`, new versions under `models/live/`), with a calibration of
+> recomputed to official as a side check (`src/evaluation/calibration_side_check.py`); results go to
+> `docs/TIER_3/LIVE_CONSISTENT_RETRAIN.md` once the Colab run is back. Until then the live forecast uses no claim of skill at 1h/6h.
+
 ---
 
 ## 0. Read this first: four blockers found in the read-through
