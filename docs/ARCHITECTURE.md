@@ -35,7 +35,7 @@ table (`reports/metrics/headline_metrics.csv`, `docs/TIER_3/LIVE_CONSISTENT_RETR
 | Evaluation | `src/evaluation/` | Headline metrics table, rolling-origin backtest, live audits (WAQI round trip, calibration side check). |
 | Classification and causal | `src/models/phase_7_classification.py`, `src/analysis/` | CPCB tiers, GRAP stages, cost-aware thresholds, Diwali ITS analysis. |
 | Live pipeline | `src/live/`, `db/migrations/`, `config/live.toml` | Source adapters, QC, AQI recompute, forecast job, parity check. |
-| Serving | `backend/`, `frontend/`, `app.py` + `dashboard/` (legacy) | See `README.md`. The legacy Streamlit app and `backend/main.py` are removed when the new API lands. |
+| Serving | `backend/app/`, `frontend/` | Read-only FastAPI `/api/v1` over the live database (Azure Container Apps) and the React dashboard (Vercel). The earlier Streamlit app and file-serving API were removed in Stage 5. |
 
 ## Data and ETL rules that must hold
 

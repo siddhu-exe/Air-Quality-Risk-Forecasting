@@ -11,14 +11,15 @@ Format: [Keep a Changelog](https://keepachangelog.com). Dates are when the work 
 - Live-consistent retrain: AQI 1h/6h/24h, PM2.5 and quantile models in `models/live/` with sha256 in `config/live_model_hashes.json` (`docs/TIER_3/LIVE_CONSISTENT_RETRAIN.md`).
 - React frontend (`frontend/`), running on sample data until the API exists.
 - `LICENSE` (MIT), `pyproject.toml` (ruff, pytest), `Makefile`, pre-commit hooks, CI, `docs/ARCHITECTURE.md`, decision records.
-
 - Scoring: `src/live/score.py` (matured forecasts, rolling skill, alert rules, GitHub issues), `score.yml` (manual), and `src/live/replay.py` (re-forecast and score stored hours, `run_type = 'replay'`); migration 008 adds `y_window_update` and `run_type`.
+- API: read-only `GET /api/v1/*` (`backend/app/`, ADR 0008), `backend/Dockerfile`, manual `deploy-backend.yml`, Azure setup guide.
 
 ### Changed
 - The forecast job serves `src/live/serving.py`: AQI 1h is the rule-based window-update forecast, AQI 6h/24h and PM2.5 1h/6h are the live-consistent models, switched in `config/live.toml` `[forecast]` (ADR 0006); `src/live/parity_live.py` checks them against the training path.
 - numpy 2.1.3 and pandas 2.2.3 (the versions the live models were pickled with).
 - Frozen-model D1 skill numbers are corrected for the recomputed-AQI basis (`docs/TIER_3/PLAN.md`).
 - Internal phase notes removed from `docs/`; plan history moved to `docs/history/`.
+- The legacy Streamlit app and file-serving `backend/main.py` are removed (copies in the external archive).
 - Diwali analysis reads database settings from the environment instead of source code.
 
 ### Fixed

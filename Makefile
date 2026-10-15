@@ -27,7 +27,7 @@ type-check: ## frontend TypeScript check
 check: lint type-check test ## everything CI runs
 
 run-api: ## FastAPI on :8000 (from the repo root)
-	$(PY) -m uvicorn backend.main:app --reload --port 8000
+	$(PY) -m uvicorn backend.app.main:app --reload --port 8000
 
 run-frontend: ## Vite dev server
 	cd frontend && npm run dev

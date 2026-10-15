@@ -37,22 +37,18 @@ Test split is the held-out winter window Nov 1 – Dec 31, 2025; timestamps are 
 
 ## Serving layers
 
-Both UIs read the **pre-computed files in `reports/`**, not the database or live models:
-
-- **Streamlit** (legacy): `dashboard/app.py`, with `app.py` at root as the Streamlit Cloud entrypoint.
-- **FastAPI** (`backend/main.py`): loads the Parquet/CSV files in `reports/` into an in-memory dict at startup and serves `/api/stations`, `/api/forecasts`, `/api/causal/diwali`, `/api/thresholds/{sweep,operating-points}`, `/api/episodes`, `/health`. If a file is missing, startup only logs the error and endpoints return 503 — so changing a report's path/name breaks the API silently.
-- **React frontend** (`frontend/`, TypeScript + Vite + Tailwind + TanStack Query + React Router, hand-built SVG charts): the new Delhi Air Forecast dashboard (Overview, Stations, Operations, Model health), rebuilt from `docs/design/`. It reads the planned `/api/v1/*` contract, which the backend does not serve yet, so it runs on built-in sample data (`VITE_USE_MOCK=true`) until Tier 3 stage 5. Vite proxies `/api` to `http://localhost:8000`. **See `frontend/CLAUDE.md`** for the design source, token and styling rules.
+- **FastAPI** (`backend/app/`): read-only `GET /api/v1/*` over the live database (`DATABASE_URL_READONLY`, role `api_readonly`); `service.py` builds the responses, `repository.py` holds the SELECTs, `models.py` the camelCase contract. Every forecast is `ok`, `unavailable` with the job's reason, or `withheld` (PM2.5 24h); AQI 24h is labelled experimental and always carries plain persistence (ADR 0006). Image: `backend/Dockerfile`; deploy: `.github/workflows/deploy-backend.yml`, setup in `docs/TIER_3/AZURE_SETUP.md`. The old Streamlit app and file-serving `backend/main.py` are gone.
+- **React frontend** (`frontend/`, TypeScript + Vite + Tailwind + TanStack Query + React Router, hand-built SVG charts): Delhi Air Forecast dashboard (Overview, Stations, Operations, Model health) from `docs/design/`. Its zod schemas (`frontend/src/api/schemas.ts`) still describe the earlier contract (24h interval, P(severe)); Stage 6 rewires them to the API above. It runs on sample data (`VITE_USE_MOCK=true`) until then. Vite proxies `/api` to `http://localhost:8000`. **See `frontend/CLAUDE.md`** for the design source, token and styling rules.
 
 ## Commands
 
 ```bash
 # Python env (a venv/ exists in repo root)
-pip install -r requirements.txt          # root: ETL, EDA, modeling, Streamlit
+pip install -r requirements.txt          # root: ETL, EDA, modeling
 pip install -r backend/requirements.txt  # API only
 
 # Run the apps
-streamlit run app.py
-uvicorn backend.main:app --reload --port 8000     # run from repo root; paths resolve relative to backend/..
+uvicorn backend.app.main:app --reload --port 8000  # run from the repo root; needs DATABASE_URL_READONLY
 cd frontend && npm install && npm run dev         # also: npm run build | lint | type-check | test
 
 # ETL

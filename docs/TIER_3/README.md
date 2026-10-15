@@ -43,7 +43,7 @@ Dev machine: set `FORCE_IPV4=1` (IPv6/NAT64 hangs). Local venv has no LightGBM: 
 
 1. Run `ingest.yml` by hand, check `job_runs`, then add the `10 * * * *` cron in the same commit that selects the source. Same for `forecast.yml` (`25 * * * *`).
 2. Stage 4: `score.py` + `score.yml` (score matured forecasts into `forecast_scores` / `skill_rolling`; open an issue when 24h skill < 0 for 7 days or 3 jobs fail in a row).
-3. Stage 5: FastAPI `/api/v1` reading the DB, Dockerfile, deploy workflow (you create the Azure resources); delete the legacy Streamlit app and `backend/main.py`. Stage 6: point the frontend (already on `main`, sample-data fallback) at the API and rewrite `frontend/CLAUDE.md`. Stage 7: model registry, final docs.
+3. Stage 5: FastAPI `/api/v1` reading the DB (`backend/app/`, ADR 0008), `backend/Dockerfile`, `deploy-backend.yml` (manual) are built; you create the Azure resources from `docs/TIER_3/AZURE_SETUP.md`; the legacy Streamlit app and `backend/main.py` are deleted. Stage 6: point the frontend (already on `main`, sample-data fallback) at the API and rewrite `frontend/CLAUDE.md`. Stage 7: model registry, final docs.
 4. Wire the accepted live-consistent models into `src/live/models.py` / `forecast.py` (AQI 1h/6h/24h and PM2.5 1h/6h; no 24h PM2.5, no intervals or P(severe)), with their own hash file and parity tests.
 
 ## Known limits to carry

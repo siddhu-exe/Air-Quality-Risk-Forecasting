@@ -79,15 +79,11 @@ python -m venv venv && ./venv/bin/python -m pip install -r requirements-dev.txt
 cp .env.example .env              # fill in only what you need; never commit it
 make data                         # download and SHA-256-verify the large datasets (needed by the phase scripts, not by the tests)
 make test                         # pytest + frontend tests
-make run-api                      # legacy API on :8000
+make run-api                      # API on :8000 (needs DATABASE_URL_READONLY)
 make run-frontend                 # React dev server (sample data)
 ```
 
 `make help` lists every target. Reproducing the research pipeline step by step is in [`docs/DATA.md`](docs/DATA.md) and `docs/TIER_2/README.md`; heavy training runs in Colab.
-
-## Legacy components
-
-The Streamlit app (`app.py`, `dashboard/`) and the old `backend/main.py` (serves pre-computed `reports/` files) are **legacy**. Both are removed when the new API lands (Stage 5).
 
 ## Limitations
 
@@ -107,7 +103,7 @@ src/models/      research and live-consistent training code, splits
 src/evaluation/  headline metrics, backtests, live audits
 etl/ sql/ db/    research ETL and PostgreSQL schema; Supabase migrations
 models/          frozen models (hashes in config/model_hashes.json); models/live/ live-consistent models
-backend/ frontend/  API (legacy until Stage 5) and React dashboard
+backend/ frontend/  read-only FastAPI (`/api/v1`) and React dashboard
 docs/            ARCHITECTURE, decisions/, FINDINGS, DATA, TIER_2, TIER_3, history/
 reports/         generated metrics, figures and findings
 ```

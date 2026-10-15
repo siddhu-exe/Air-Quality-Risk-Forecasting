@@ -1,4 +1,4 @@
-# Research pipeline: ETL, EDA, modeling, legacy Streamlit app. Versions are those of the development venv.
+# Research pipeline: ETL, EDA, modeling. Versions are those of the development venv.
 # Live jobs use requirements-live.txt / requirements-forecast.txt; dev and CI use requirements-dev.txt.
 # Not pinned here: lightgbm and optuna (Colab training; the forecast job pins lightgbm in requirements-forecast.txt).
 
@@ -19,7 +19,3 @@ matplotlib==3.11.1
 seaborn==0.13.2
 jupyter==1.1.1
 
-# legacy Streamlit app (removed in Tier 3 stage 5)
-streamlit==1.63.0
-plotly==7.0.0
-pillow==12.3.0
