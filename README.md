@@ -28,9 +28,10 @@ See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) and the [decision records](do
 
 Skill = 1 - MAE_model / MAE_persistence on the same rows; CIs are 95% day-block bootstrap intervals. The test window (2025-11-01 .. 2025-12-31) is scored once; every choice is made on validation (2025-09-01 .. 2025-10-31).
 
-### Live basis: models retrained on recomputed AQI (the models the live service will use)
+### Live basis: models retrained on recomputed AQI (what the live service serves)
 
 The live pipeline can only compute AQI from pollutants, which sits above the official AQI. These are the live-consistent models on the live input view (no NOx/NO/solar, no ITO weather).
+**Served products** ([ADR 0006](docs/decisions/0006-live-forecast-products.md)): AQI 1h is a *rule-based (24h-window update)* forecast, not the 1h model below, because the rule beats it; AQI 6h is the model (real skill); AQI 24h is the model, labelled low-skill; PM2.5 1h and 6h are the headline live forecast. No 24h PM2.5, interval or P(severe).
 Source: `reports/modeling/live_retrain/live_retrain_metrics.csv`, write-up in [`docs/TIER_3/LIVE_CONSISTENT_RETRAIN.md`](docs/TIER_3/LIVE_CONSISTENT_RETRAIN.md).
 
 | Horizon | Split | Inputs | Model | Rows | MAE | Persistence MAE | Skill | Skill 95% CI |

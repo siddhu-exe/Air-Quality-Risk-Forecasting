@@ -1,6 +1,6 @@
 # Live-consistent retrain
 
-Status: results in; AQI 6h, 24h and PM2.5 1h/6h approved, **AQI 1h decision pending** after the window-update baseline (see Recommendation). Written 2026-10-15.
+Status: decided 2026-10-15 (see Recommendation and ADR 0006). Written 2026-10-15.
 
 ## Why
 
@@ -128,11 +128,11 @@ Full output: `reports/modeling/live_quantile/`.
 ## Recommendation (for the owner's decision)
 
 - **AQI 6h: switch to the live-consistent model.** Test skill on the live-masked view is +0.303, CI above zero, and it also beats window-update persistence (+0.304, CI [+0.243, +0.357]), so the skill is not the window arithmetic. The frozen model is indistinguishable from persistence on the recomputed basis.
-- **AQI 1h: the live-consistent model beats plain persistence (+0.339) but loses to window-update persistence (-0.467 against it).** The claim for the 1h model is therefore "better than persistence, worse than the window identity". Options (decision pending): serve window-update persistence at 1h (no model), or refit the 1h/6h models with `H(t)` and the leaving hours as inputs, chosen on validation (the test window has been looked at for this baseline, so a refit's test score would be a second look and must be reported as such).
+- **AQI 1h: the live-consistent model beats plain persistence (+0.339) but loses to window-update persistence (-0.467 against it).** The claim for the 1h model is therefore "better than persistence, worse than the window identity". Decision: serve window-update persistence at 1h, labelled "rule-based (24h-window update)", with no model file. A refit with `H(t)` and the leaving hours as inputs is not pursued; ADR 0007 proposes a structural forecast instead, to be evaluated on data collected after 2026-10-15.
 - **AQI 24h: live-consistent hybrid, labelled low-skill.** Test +0.090 live-masked (CI [+0.051, +0.126]); validation +0.051. The frozen hybrid scores +0.080 on unmasked inputs, so the gain is small; the case for switching is basis consistency, not accuracy.
 - **PM2.5 1h and 6h: publish as the headline live forecast.** Test skill +0.202 (1h) and +0.364 (6h), CIs above zero, validation agrees. PM2.5 is the measured quantity with no AQI-basis ambiguity.
 - **PM2.5 24h: do not publish.** Project rule (no 24h PM2.5 forecast) and the result agrees: test skill -0.102, CI includes zero. The model file is kept in `models/live/pm25/` but must not be wired into the forecast job.
 - **24h interval and P(AQI >= 401): do not ship yet.** The conformal 80% interval covers 77.0% on test (target 80%); the severe-event Brier score is not distinguishable from persistence (difference CI includes zero), and the test severe rate (40.8%) is far from validation (3.2%), so the classifier is calibrated on a different regime.
 - Caveat for every number above: skill is against persistence on a winter test window with a very different level from validation, and no source is fresh yet, so none of these models has run on live data.
 
-Nothing is wired into `src/live/models.py` or the forecast job yet; the frozen models remain the ones the job loads until this decision is made.
+Decision (2026-10-15): AQI 1h is served as the rule-based window-update forecast (no model); the 1h LightGBM stays in `models/live/` but cannot be selected. AQI 6h and 24h (low-skill label) and PM2.5 1h/6h are served as the live-consistent models. PM2.5 24h, the interval and P(severe) are off in `config/live.toml`. Model health scores AQI 1h and 6h against window-update persistence as well as plain persistence. A structural forecast that feeds PM2.5-model forecasts into the window-update formula is proposed in ADR 0007 and not built. Details: `docs/decisions/0006-live-forecast-products.md`; the job serves `src/live/serving.py`.

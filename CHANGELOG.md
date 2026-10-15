@@ -5,6 +5,7 @@ Format: [Keep a Changelog](https://keepachangelog.com). Dates are when the work 
 ## [Unreleased] - Tier 3 (live pipeline)
 
 ### Added
+- Window-update persistence baseline, feature-gain attribution and AQI causality tests (`src/evaluation/window_update_baseline.py`, `tests/test_aqi_causality.py`).
 - Live pipeline: source adapters, QC, AQI recompute, forecast job and parity check (`src/live/`), Supabase schema (`db/migrations/`), manual GitHub Actions workflows.
 - WAQI round-trip audit, station check and calibration side check (`reports/modeling/live_audit/`, `docs/TIER_3/`).
 - Live-consistent retrain: AQI 1h/6h/24h, PM2.5 and quantile models in `models/live/` with sha256 in `config/live_model_hashes.json` (`docs/TIER_3/LIVE_CONSISTENT_RETRAIN.md`).
@@ -12,6 +13,8 @@ Format: [Keep a Changelog](https://keepachangelog.com). Dates are when the work 
 - `LICENSE` (MIT), `pyproject.toml` (ruff, pytest), `Makefile`, pre-commit hooks, CI, `docs/ARCHITECTURE.md`, decision records.
 
 ### Changed
+- The forecast job serves `src/live/serving.py`: AQI 1h is the rule-based window-update forecast, AQI 6h/24h and PM2.5 1h/6h are the live-consistent models, switched in `config/live.toml` `[forecast]` (ADR 0006); `src/live/parity_live.py` checks them against the training path.
+- numpy 2.1.3 and pandas 2.2.3 (the versions the live models were pickled with).
 - Frozen-model D1 skill numbers are corrected for the recomputed-AQI basis (`docs/TIER_3/PLAN.md`).
 - Internal phase notes removed from `docs/`; plan history moved to `docs/history/`.
 - Diwali analysis reads database settings from the environment instead of source code.

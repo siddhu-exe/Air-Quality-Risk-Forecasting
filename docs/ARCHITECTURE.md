@@ -81,9 +81,11 @@ AQI from pollutants, which sits above the official series, so the frozen skill d
 
 1. `src/live/` ingests hourly pollutant readings behind one source interface (`config/live.toml`), applies QC and writes `aq.*`.
 2. AQI is recomputed from QC'd pollutants (`compute_aqi`, method `rolling_subindex_mean`).
-3. `src/live/forecast.py` builds features through the same `compute_feature_frame` as training, checks every model file against its
-   recorded sha256 (a mismatch stops the job), and writes forecasts. Weather is not filled in for model inputs (`weather_fill = "none"`).
-4. `python -m src.live.parity` compares live scoring with the stored backtest predictions.
+3. `src/live/forecast.py` builds features through the same `compute_feature_frame` as training, serves the products in `src/live/serving.py`
+   (checked against `config/live_model_hashes.json`; a mismatch stops the job) and writes forecasts. Weather is not filled in for model
+   inputs (`weather_fill = "none"`). Products (`[forecast]` in `config/live.toml`, ADR 0006): AQI 1h is a rule-based window-update forecast,
+   AQI 6h and 24h and PM2.5 1h and 6h are the live-consistent models; PM2.5 24h, intervals and P(severe) are off.
+4. `python -m src.live.parity_live` compares the served products with the training path (`python -m src.live.parity` does the same for the frozen models).
 
 The workflows are manual (`workflow_dispatch`) until a source is shown to be fresh from a runner; the cron is added in the same
 commit that switches the source. Status: `docs/TIER_3/README.md`.
