@@ -1,0 +1,4 @@
+# Development and CI: everything `make test` and `make lint` need.
+-r requirements-forecast.txt
+pytest==9.1.1
+ruff==0.17.0

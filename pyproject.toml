@@ -12,7 +12,7 @@ pythonpath = ["."]
 [tool.ruff]
 line-length = 120
 target-version = "py311"
-extend-exclude = ["venv", "node_modules", "frontend", "local_pg_data", "kaggle", "Og Data", "notebooks"]
+extend-exclude = ["*.md", "venv", "node_modules", "frontend", "local_pg_data", "kaggle", "Og Data", "notebooks"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP"]
