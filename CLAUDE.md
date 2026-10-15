@@ -28,7 +28,7 @@ Both UIs read the **pre-computed files in `reports/`**, not the database or live
 
 - **Streamlit** (legacy): `dashboard/app.py`, with `app.py` at root as the Streamlit Cloud entrypoint.
 - **FastAPI** (`backend/main.py`): loads the Parquet/CSV files in `reports/` into an in-memory dict at startup and serves `/api/stations`, `/api/forecasts`, `/api/causal/diwali`, `/api/thresholds/{sweep,operating-points}`, `/api/episodes`, `/health`. If a file is missing, startup only logs the error and endpoints return 503 — so changing a report's path/name breaks the API silently.
-- **React frontend** (`frontend/`, TypeScript + Vite + Tailwind + React Query + Zustand + Recharts): replaces the Streamlit dashboard. Vite proxies `/api` to `http://localhost:8000`. **See `frontend/CLAUDE.md`** for design-token and styling rules (follow `frontend/stitch_*/…/DESIGN.md`).
+- **React frontend** (`frontend/`, TypeScript + Vite + Tailwind + TanStack Query + React Router, hand-built SVG charts): the new Delhi Air Forecast dashboard (Overview, Stations, Operations, Model health), rebuilt from `docs/design/`. It reads the planned `/api/v1/*` contract, which the backend does not serve yet, so it runs on built-in sample data (`VITE_USE_MOCK=true`) until Tier 3 stage 5. Vite proxies `/api` to `http://localhost:8000`. **See `frontend/CLAUDE.md`** for the design source, token and styling rules.
 
 ## Commands
 
@@ -40,7 +40,7 @@ pip install -r backend/requirements.txt  # API only
 # Run the apps
 streamlit run app.py
 uvicorn backend.main:app --reload --port 8000     # run from repo root; paths resolve relative to backend/..
-cd frontend && npm install && npm run dev         # also: npm run build | lint | type-check
+cd frontend && npm install && npm run dev         # also: npm run build | lint | type-check | test
 
 # ETL
 python etl/pipeline.py --dry-run
@@ -61,7 +61,7 @@ Phase scripts are run directly (e.g. `python src/models/baselines.py`); there is
 
 `pytest.ini` sets `pythonpath = .`, so bare `pytest` also works; `python -m pytest` is still the safest form.
 
-These run on files already in `data/` and `reports/`, not Postgres. There is no frontend test script.
+These run on files already in `data/` and `reports/`, not Postgres. The frontend has its own Vitest suite: `cd frontend && npm test`.
 
 ## Ignore
 
