@@ -8,6 +8,7 @@ interrupted time series, meteorological controls, and in-time placebo tests.
 
 import os
 import sys
+from pathlib import Path
 import psycopg2
 import numpy as np
 import pandas as pd
@@ -23,21 +24,34 @@ plt.rcParams['font.sans-serif'] = 'DejaVu Sans'
 plt.rcParams['font.family'] = 'sans-serif'
 plt.rcParams['figure.dpi'] = 300
 
-DB_PARAMS = {
-    'host': 'localhost',
-    'port': 5433,
-    'dbname': 'air_quality_db',
-    'user': 'aq_admin',
-    'password': 'aq_secure_pass_2026'
-}
+REPO_ROOT = Path(__file__).resolve().parents[2]
 
-OUTPUT_DIR = '/home/siddharth/Desktop/Projects/projects/Air quality risk forecasting/reports/causal'
+
+def _db_params() -> dict:
+    """Local research database settings from POSTGRES_* in the environment or the git-ignored .env."""
+    env = dict(os.environ)
+    env_file = REPO_ROOT / '.env'
+    if env_file.exists():
+        for line in env_file.read_text().splitlines():
+            key, sep, val = line.strip().partition('=')
+            if sep and not key.startswith('#'):
+                env.setdefault(key.strip(), val.strip())
+    return {
+        'host': env.get('POSTGRES_HOST', 'localhost'),
+        'port': int(env.get('POSTGRES_PORT', 5433)),
+        'dbname': env['POSTGRES_DB'],
+        'user': env['POSTGRES_USER'],
+        'password': env['POSTGRES_PASSWORD'],
+    }
+
+
+OUTPUT_DIR = str(REPO_ROOT / 'reports' / 'causal')
 FIGURES_DIR = os.path.join(OUTPUT_DIR, 'figures')
 os.makedirs(FIGURES_DIR, exist_ok=True)
 
 
 def get_db_connection():
-    return psycopg2.connect(**DB_PARAMS)
+    return psycopg2.connect(**_db_params())
 
 
 def extract_data():
