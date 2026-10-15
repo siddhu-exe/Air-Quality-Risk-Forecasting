@@ -61,3 +61,10 @@ Thumbs.db
 
 # Kaggle dataset packaging directory (untracked, local-only export)
 /kaggle/
+
+# Build artefacts, local data mirrors and per-session worktrees
+__pycache__/
+*.pyc
+physionet.org/
+data/processed/features_live*.parquet
+.worktrees/
