@@ -8,6 +8,7 @@ persistence. Persistence and window-update references are the values frozen on t
 from __future__ import annotations
 
 import csv
+import statistics
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -20,6 +21,7 @@ from backend.app.settings import Settings
 REPORTS_DIR = Path(__file__).resolve().parents[2] / "reports"
 HISTORY_HOURS = 72
 FORECAST_LOOKBACK_HOURS = 12  # newest forecast considered; older means the job has stopped
+LAG_DAYS = 14
 NO_FORECAST_REASON = "no forecast was issued for this product in the latest run"
 
 
@@ -362,11 +364,13 @@ class Service:
                     else ("no readings yet" if age is None else f"no reading for {age:.0f} h"),
                 )
             )
+        source_lag = self._source_lag(now, readings)
         possible = 24 * len(stations)
         issued = self.repo.forecast_station_hours(now - timedelta(hours=24))
         return models.ModelHealth(
             **self._meta(now),
             skill=skill,
+            source_lag=source_lag,
             forecast_coverage=min(1.0, issued / possible) if possible else None,
             freshness=freshness,
             jobs=self._jobs(),
@@ -380,6 +384,43 @@ class Service:
                 )
                 for m in self.repo.registry()
             ],
+        )
+
+    def _source_lag(self, now: datetime, readings: dict[int, dict]) -> models.SourceLag:
+        ages = sorted(self._age_hours(r["ts"], now) for r in readings.values())
+        runs = self.repo.ingest_runs(now - timedelta(days=LAG_DAYS))
+        by_day: dict[str, list[float]] = {}
+        run_counts: dict[str, int] = {}
+        for run in runs:
+            details = run.get("details") or {}
+            station_ages = [float(a) for a in (details.get("age_hours") or {}).values() if a is not None]
+            if not station_ages:
+                continue
+            day = f"{run['started_at']:%Y-%m-%d}"
+            station_ages.sort()
+            by_day.setdefault(day, []).append(statistics.median(station_ages))  # the run's median station age
+            run_counts[day] = run_counts.get(day, 0) + 1
+            by_day[day + "#max"] = by_day.get(day + "#max", []) + [station_ages[-1]]
+        daily = [
+            models.LagDay(
+                day=day,
+                median_hours=statistics.median(values),
+                max_hours=max(by_day[day + "#max"]),
+                runs=run_counts[day],
+            )
+            for day, values in sorted(by_day.items())
+            if not day.endswith("#max")
+        ]
+        used = next(
+            (r["details"].get("source_used") for r in reversed(runs) if (r.get("details") or {}).get("source_used")),
+            None,
+        )
+        return models.SourceLag(
+            source=used,
+            newest_reading_at=max((r["ts"] for r in readings.values()), default=None),
+            current_median_hours=statistics.median(ages) if ages else None,
+            current_max_hours=ages[-1] if ages else None,
+            daily=daily,
         )
 
     # ------------------------------------------------------------------ static evidence

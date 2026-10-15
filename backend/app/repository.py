@@ -47,6 +47,10 @@ SELECT_FORECAST_STATION_HOURS = (
     "select count(distinct (issue_time, station_id)) from aq.forecasts where run_type = 'live' and issue_time > %s"
 )
 SELECT_REGISTRY = "select model_version, model_name, horizon, target, sha256 from aq.model_registry where active order by horizon, target"
+SELECT_INGEST_RUNS = """
+select started_at, status, details from aq.job_runs
+where job = 'ingest' and run_type = 'live' and started_at > %s order by started_at
+"""
 SELECT_NEWEST_READING = "select max(ts) from aq.live_readings"
 SELECT_NEWEST_FORECAST = "select max(issue_time) from aq.forecasts where run_type = 'live'"
 ALL_QUERIES = [v for k, v in dict(globals()).items() if k.startswith("SELECT_")]
@@ -67,6 +71,7 @@ class Repository(Protocol):
     def hourly_presence(self, since: datetime) -> dict[int, set[datetime]]: ...
     def forecast_station_hours(self, since: datetime) -> int: ...
     def registry(self) -> list[dict]: ...
+    def ingest_runs(self, since: datetime) -> list[dict]: ...
     def newest_reading(self) -> datetime | None: ...
     def newest_forecast(self) -> datetime | None: ...
     def ping(self) -> bool: ...
@@ -146,6 +151,9 @@ class PgRepository:
 
     def registry(self) -> list[dict]:
         return self._rows(SELECT_REGISTRY)
+
+    def ingest_runs(self, since: datetime) -> list[dict]:
+        return self._rows(SELECT_INGEST_RUNS, (since,))
 
     def newest_reading(self) -> datetime | None:
         return self._scalar(SELECT_NEWEST_READING)

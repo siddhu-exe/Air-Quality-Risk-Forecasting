@@ -85,6 +85,9 @@ class FakeRepo:
             }
         ]
 
+    def ingest_runs(self, since):
+        return self.data.get("ingest_runs", [])
+
     def newest_reading(self):
         return self.data["newest_reading"]
 
@@ -302,3 +305,38 @@ def test_the_shipped_report_files_parse():
     products = {(e.product, e.window.split()[0]) for e in out.evidence}
     assert {("aqi_1h", "test"), ("aqi_6h", "test"), ("pm25_6h", "test"), ("aqi_6h", "replay")} <= products
     assert all(e.product != "pm25_24h" for e in out.evidence)
+
+
+def test_model_health_reports_how_far_behind_the_source_is_per_day():
+    runs = [
+        {
+            "started_at": datetime(2026, 10, 14, 9, 10, tzinfo=UTC),
+            "status": "failed",
+            "details": {"source_used": "openaq", "age_hours": {"A": 40.0, "B": 44.0, "C": 41.0}},
+        },
+        {
+            "started_at": datetime(2026, 10, 14, 10, 10, tzinfo=UTC),
+            "status": "failed",
+            "details": {"source_used": "openaq", "age_hours": {"A": 39.0, "B": 43.0, "C": 40.0}},
+        },
+        {
+            "started_at": datetime(2026, 10, 15, 9, 10, tzinfo=UTC),
+            "status": "success",
+            "details": {"source_used": "openaq", "age_hours": {"A": 1.0, "B": 2.0, "C": 1.5}},
+        },
+        {
+            "started_at": datetime(2026, 10, 15, 10, 10, tzinfo=UTC),
+            "status": "failed",
+            "details": {},
+        },  # nothing read: no lag sample
+    ]
+    lag = service(FakeRepo(ingest_runs=runs)).model_health().source_lag
+    assert lag.source == "openaq" and [d.day for d in lag.daily] == ["2026-10-14", "2026-10-15"]
+    assert lag.daily[0].median_hours == 40.5 and lag.daily[0].max_hours == 44.0 and lag.daily[0].runs == 2
+    assert lag.daily[1].median_hours == 1.5 and lag.daily[1].runs == 1
+    assert lag.newest_reading_at == ISSUE and lag.current_max_hours == pytest.approx(-0.5, abs=1.0)
+
+
+def test_source_lag_is_empty_not_an_error_before_any_ingest_ran():
+    lag = service(FakeRepo()).model_health().source_lag
+    assert lag.daily == [] and lag.source is None

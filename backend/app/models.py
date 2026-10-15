@@ -191,8 +191,26 @@ class RegisteredModel(Model):
     sha256: str
 
 
+class LagDay(Model):
+    day: str
+    median_hours: float
+    max_hours: float
+    runs: int
+
+
+class SourceLag(Model):
+    """How far behind the data source is: the age of each station's newest reading, as seen by every ingest run."""
+
+    source: str | None
+    newest_reading_at: datetime | None
+    current_median_hours: float | None
+    current_max_hours: float | None
+    daily: list[LagDay]
+
+
 class ModelHealth(Meta):
     skill: list[SkillSeries]
+    source_lag: SourceLag
     forecast_coverage: float | None  # share of station-hours with at least one forecast in the last 24 issue hours
     freshness: list[Freshness]
     jobs: list[Job]
