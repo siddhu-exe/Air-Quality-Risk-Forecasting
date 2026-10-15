@@ -37,9 +37,12 @@ export interface ChartInput {
   target: ChartTarget
   /** Oldest first; the last point is "now". */
   history: readonly { t: string; value: number }[]
-  /** From "now" (hour 0) to the horizon. */
-  forecast: readonly { t: string; median: number; lo: number; hi: number }[]
+  /** The published forecasts as points after "now", soonest first. May be empty: no forecast is a valid state. */
+  forecast: readonly { t: string; value: number }[]
 }
+
+/** The chart's x-axis always reaches at least this far past "now", so an empty forecast still shows a future. */
+const MIN_HORIZON_HOURS = 6
 
 interface Band {
   y: number
@@ -50,13 +53,10 @@ interface Band {
 export interface ChartSample {
   t: string
   x: number
-  /** Where the dot sits: the measured value, or the forecast median. */
+  /** Where the dot sits: the measured value, or the forecast value. */
   y: number
   kind: 'measured' | 'forecast'
   value: number
-  /** Likely range, forecast hours only. */
-  lo?: number
-  hi?: number
 }
 
 export interface ChartModel {
@@ -65,8 +65,8 @@ export interface ChartModel {
   midX: number
   /** `M x,y L x,y ...` strings ready for an SVG path. */
   pastPath: string
-  medianPath: string
-  bandPath: string
+  /** From "now" through each published forecast point; empty when there is no forecast. */
+  forecastPath: string
   persistencePath: string
   ticks: { y: number; labelY: number; label: string }[]
   /** Every hour on the chart, left to right, for the hover readout. */
@@ -76,7 +76,8 @@ export interface ChartModel {
   horizonHours: number
   endLabel: string
   nowValue: number
-  endValue: number
+  /** The last published forecast value, or null when there is none. */
+  endValue: number | null
 }
 
 const fmt = (n: number): string => n.toFixed(1)
@@ -86,18 +87,15 @@ export function buildChartModel({ target, history, forecast }: ChartInput): Char
   const first = history[0]
   const last = history[history.length - 1]
   const forecastEnd = forecast[forecast.length - 1]
-  if (!first || !last || !forecastEnd) throw new RangeError('A chart needs history and a forecast.')
+  if (!first || !last) throw new RangeError('A chart needs history.')
 
   const nowIso = last.t
   const pastHours = -hoursBetween(first.t, nowIso)
-  const horizonHours = hoursBetween(forecastEnd.t, nowIso)
+  const horizonHours = Math.max(forecastEnd ? hoursBetween(forecastEnd.t, nowIso) : 0, MIN_HORIZON_HOURS)
   const totalHours = pastHours + horizonHours
   const plotWidth = CHART.right - CHART.left
 
-  const domain = chartDomain(target, [
-    ...history.map((p) => p.value),
-    ...forecast.flatMap((p) => [p.lo, p.hi]),
-  ])
+  const domain = chartDomain(target, [...history.map((p) => p.value), ...forecast.map((p) => p.value)])
   const x = (iso: string): number => CHART.left + ((pastHours + hoursBetween(iso, nowIso)) / totalHours) * plotWidth
   const y = (value: number): number => {
     const clamped = Math.min(Math.max(value, domain.lo), domain.hi)
@@ -105,17 +103,10 @@ export function buildChartModel({ target, history, forecast }: ChartInput): Char
   }
   const point = (px: number, py: number): string => `${fmt(px)},${fmt(py)}`
 
-  const upper = forecast.map((p) => point(x(p.t), y(p.hi)))
-  const lower = forecast.map((p) => point(x(p.t), y(p.lo))).reverse()
   const nowY = y(last.value)
   const samples: ChartSample[] = [
     ...history.map((p): ChartSample => ({ t: p.t, x: x(p.t), y: y(p.value), kind: 'measured', value: p.value })),
-    // Hour 0 of the forecast is "now", already covered by the last measured hour.
-    ...forecast
-      .filter((p) => hoursBetween(p.t, nowIso) > 0)
-      .map(
-        (p): ChartSample => ({ t: p.t, x: x(p.t), y: y(p.median), kind: 'forecast', value: p.median, lo: p.lo, hi: p.hi }),
-      ),
+    ...forecast.map((p): ChartSample => ({ t: p.t, x: x(p.t), y: y(p.value), kind: 'forecast', value: p.value })),
   ]
   const zones = ZONE_START[target]
 
@@ -129,8 +120,7 @@ export function buildChartModel({ target, history, forecast }: ChartInput): Char
     nowX: x(nowIso),
     midX: CHART.left + ((pastHours - 36) / totalHours) * plotWidth,
     pastPath: `M${history.map((p) => point(x(p.t), y(p.value))).join(' L')}`,
-    medianPath: `M${forecast.map((p) => point(x(p.t), y(p.median))).join(' L')}`,
-    bandPath: `M${upper.join(' L')} L${lower.join(' L')} Z`,
+    forecastPath: forecast.length ? `M${point(x(nowIso), nowY)} L${forecast.map((p) => point(x(p.t), y(p.value))).join(' L')}` : '',
     persistencePath: `M${point(x(nowIso), nowY)} L${point(CHART.right, nowY)}`,
     ticks: tickValues.map((value) => ({ y: y(value), labelY: y(value) + 4, label: String(value) })),
     samples,
@@ -139,7 +129,7 @@ export function buildChartModel({ target, history, forecast }: ChartInput): Char
     horizonHours,
     endLabel: `+${Math.round(horizonHours)}h`,
     nowValue: last.value,
-    endValue: forecastEnd.median,
+    endValue: forecastEnd ? forecastEnd.value : null,
   }
 }
 
@@ -152,9 +142,9 @@ export function describeSeries(
 ): string {
   const delta = model.nowValue - firstValue
   const trend = Math.abs(delta) < 5 ? 'steady at' : delta > 0 ? 'rising to' : 'falling to'
-  return `${subject}: ${measure} over the past 72 hours ${trend} ${Math.round(model.nowValue)}, forecast ${Math.round(
-    model.endValue,
-  )} at ${model.endLabel}`
+  const ahead =
+    model.endValue === null ? 'no forecast available' : `forecast ${Math.round(model.endValue)} at ${model.endLabel}`
+  return `${subject}: ${measure} over the past 72 hours ${trend} ${Math.round(model.nowValue)}, ${ahead}`
 }
 
 /** The sample closest to a horizontal position in chart units. */
@@ -169,18 +159,17 @@ export function nearestSample(samples: readonly ChartSample[], x: number): Chart
 export interface SeriesRow {
   t: string
   measured?: number
-  forecast?: { median: number; lo: number; hi: number }
+  forecast?: number
 }
 
-/** The chart's numbers as table rows, oldest first; "now" carries both the reading and the forecast's hour 0. */
+/** The chart's numbers as table rows, oldest first. */
 export function buildSeriesRows({ history, forecast }: Pick<ChartInput, 'history' | 'forecast'>): SeriesRow[] {
   const rows = new Map<string, SeriesRow>()
   for (const p of history) rows.set(p.t, { t: p.t, measured: p.value })
   for (const p of forecast) {
-    const forecastCell = { median: p.median, lo: p.lo, hi: p.hi }
     const row = rows.get(p.t)
-    if (row) row.forecast = forecastCell
-    else rows.set(p.t, { t: p.t, forecast: forecastCell })
+    if (row) row.forecast = p.value
+    else rows.set(p.t, { t: p.t, forecast: p.value })
   }
   return [...rows.values()].sort((a, b) => Date.parse(a.t) - Date.parse(b.t))
 }

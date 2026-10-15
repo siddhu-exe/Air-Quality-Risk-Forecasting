@@ -8,7 +8,7 @@ const NOW = Date.parse('2026-10-11T14:00:00+05:30')
 const at = (h: number): string => new Date(NOW + h * 3_600_000).toISOString()
 
 const history = Array.from({ length: 73 }, (_, i) => ({ t: at(i - 72), value: 300 + i }))
-const forecast = Array.from({ length: 7 }, (_, j) => ({ t: at(j), median: 372 + j * 5, lo: 360 + j * 3, hi: 384 + j * 8 }))
+const forecast = [1, 6].map((h) => ({ t: at(h), value: 372 + h * 5 }))
 
 function renderChart(target: 'aqi' | 'pm25' = 'aqi') {
   render(<ForecastChart subject="Bawana" target={target} history={history} forecast={forecast} />)
@@ -41,7 +41,7 @@ describe('ForecastChart', () => {
     fireEvent.pointerMove(surface, { clientX: CHART.right, pointerType: 'mouse' })
     expect(screen.getByTestId('chart-readout')).toHaveTextContent('forecast')
     expect(screen.getByTestId('chart-readout')).toHaveTextContent('402')
-    expect(screen.getByTestId('chart-readout')).toHaveTextContent('likely 378–432')
+    expect(screen.getByTestId('chart-readout')).not.toHaveTextContent('likely')
 
     fireEvent.pointerLeave(surface, { pointerType: 'mouse' })
     expect(screen.queryByTestId('chart-readout')).not.toBeInTheDocument()
@@ -62,8 +62,8 @@ describe('ForecastChart', () => {
 
     expect(screen.queryByRole('img')).not.toBeInTheDocument()
     const table = screen.getByRole('table')
-    expect(within(table).getAllByRole('row')).toHaveLength(1 + 73 + 6)
-    expect(within(table).getByRole('columnheader', { name: 'Likely range' })).toBeInTheDocument()
+    expect(within(table).getAllByRole('row')).toHaveLength(1 + 73 + 2)
+    expect(within(table).queryByRole('columnheader', { name: 'Likely range' })).not.toBeInTheDocument()
     const nowRow = within(table).getByRole('row', { name: /Now/ })
     expect(nowRow).toHaveTextContent('372')
     expect(screen.getByRole('region', { name: /Bawana: hourly values \(PM2.5, µg\/m³\)/ })).toBeInTheDocument()
@@ -71,5 +71,10 @@ describe('ForecastChart', () => {
     await user.click(screen.getByRole('button', { name: 'View as chart' }))
     expect(screen.getByRole('img')).toBeInTheDocument()
     expect(screen.queryByRole('table')).not.toBeInTheDocument()
+  })
+
+  it('draws the history and says there is no forecast when none was published', () => {
+    render(<ForecastChart subject="ITO" target="aqi" history={history} forecast={[]} />)
+    expect(screen.getByRole('img')).toHaveAccessibleName(/no forecast available/)
   })
 })

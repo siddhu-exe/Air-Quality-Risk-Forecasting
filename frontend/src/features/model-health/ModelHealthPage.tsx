@@ -1,19 +1,18 @@
 import { describeError } from '@/api/describeError'
-import { useBacktest, useModelHealth } from '@/api/queries'
+import { useModelHealth } from '@/api/queries'
 import { ErrorState } from '@/components/ui/ErrorState'
 import { Eyebrow } from '@/components/ui/Eyebrow'
 import { Page } from '@/components/ui/Page'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { StaleBanner } from '@/components/ui/StaleBanner'
-import { CalibrationCards } from './CalibrationCards'
 import { FreshnessTable } from './FreshnessTable'
 import { JobsList, ModelsList } from './JobsAndModels'
 import { SkillCards } from './SkillCards'
+import { SourceLagCard } from './SourceLagCard'
 
 /** Is the forecast still beating "same as now"? Skill, calibration, data freshness and jobs. */
 export function ModelHealthPage() {
   const health = useModelHealth()
-  const backtest = useBacktest()
 
   if (health.isPending) {
     return (
@@ -50,13 +49,13 @@ export function ModelHealthPage() {
           <h1 className="mt-1 font-serif text-40 leading-none md:text-56">Model health</h1>
         </div>
         <p className="max-w-[520px] text-ink-2">
-          Every forecast is scored against what actually happened and against copy-last-value. Skill = 1 − model
-          error ÷ copy-last error. Below 0 means the model is losing.
+          Every forecast is scored against what actually happened, against copy-last-value and, for AQI, against the
+          24h-window update. Skill = 1 − model error ÷ reference error. Below 0 means the model is losing.
         </p>
       </section>
 
       <SkillCards skill={data.skill} />
-      <CalibrationCards calibration={data.calibration} backtest={backtest.data} />
+      <SourceLagCard lag={data.sourceLag} coverage={data.forecastCoverage} />
 
       <div className="flex flex-wrap gap-4 md:gap-6">
         <FreshnessTable rows={data.freshness} generatedAt={data.generatedAt} />

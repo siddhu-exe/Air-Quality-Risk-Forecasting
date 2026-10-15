@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
 import { describeError } from '@/api/describeError'
-import { useStationForecast, useStations } from '@/api/queries'
+import { useBacktest, useStationForecast, useStations } from '@/api/queries'
 import type { ForecastTarget } from '@/api/schemas'
 import { ForecastChart } from '@/components/charts/ForecastChart'
 import { Card } from '@/components/ui/Card'
@@ -9,8 +9,9 @@ import { ErrorState } from '@/components/ui/ErrorState'
 import { Page } from '@/components/ui/Page'
 import { SegmentedControl } from '@/components/ui/SegmentedControl'
 import { StaleBanner } from '@/components/ui/StaleBanner'
+import { chartForecast, rankSummariesByNow } from '@/lib/forecast'
 import { cn } from '@/lib/cn'
-import { HorizonCards } from './HorizonCards'
+import { ProductCards } from './ProductCards'
 import { PollutantsTable } from './PollutantsTable'
 import { StationHeader } from './StationHeader'
 import { StationPills } from './StationPills'
@@ -23,8 +24,8 @@ const MEASURES = [
 ] as const
 
 const CHART_TITLE: Record<ForecastTarget, string> = {
-  aqi: 'Past 72 hours and next 24 hours (AQI)',
-  pm25: 'Past 72 hours and next 6 hours (PM2.5, µg/m³)',
+  aqi: 'Past 72 hours and the published forecasts (AQI)',
+  pm25: 'Past 72 hours and the published forecasts (PM2.5, µg/m³)',
 }
 
 /** One station: now, the 72 h story, three horizons, pollutants and weather. */
@@ -33,12 +34,10 @@ export function StationsPage() {
   const [target, setTarget] = useState<ForecastTarget>('aqi')
   const stationsQuery = useStations()
   const forecastQuery = useStationForecast(stationId, target)
+  const backtest = useBacktest()
 
-  // Worst first, matching the Overview table.
-  const stations = useMemo(
-    () => [...(stationsQuery.data?.stations ?? [])].sort((a, b) => b.aqiNow - a.aqiNow),
-    [stationsQuery.data],
-  )
+  // Worst first, matching the Overview table; stations with no current reading last.
+  const stations = useMemo(() => rankSummariesByNow(stationsQuery.data?.stations ?? []), [stationsQuery.data])
 
   if (stationsQuery.isPending) {
     return (
@@ -98,15 +97,22 @@ export function StationsPage() {
               </h2>
               <SegmentedControl label="Choose measure" options={MEASURES} value={target} onChange={setTarget} />
             </div>
-            <ForecastChart
-              subject={forecast.station.name}
-              target={forecast.target}
-              history={forecast.history}
-              forecast={forecast.forecast}
-            />
+            {forecast.history.length < 2 ? (
+              <p className="rounded-lg bg-wash px-4 py-10 text-center text-ink-2">
+                There are no recent {forecast.target === 'aqi' ? 'AQI' : 'PM2.5'} readings for this station, so there is
+                nothing to draw. The cards below say why each forecast is missing.
+              </p>
+            ) : (
+              <ForecastChart
+                subject={forecast.station.name}
+                target={forecast.target}
+                history={forecast.history}
+                forecast={chartForecast(forecast.forecasts)}
+              />
+            )}
           </Card>
 
-          <HorizonCards horizons={forecast.horizons} target={forecast.target} asOf={forecast.dataAsOf} />
+          <ProductCards forecasts={forecast.forecasts} evidence={backtest.data?.evidence} asOf={forecast.dataAsOf ?? forecast.generatedAt} />
 
           <div className="flex flex-wrap gap-4 md:gap-6">
             <PollutantsTable pollutants={forecast.pollutants} />

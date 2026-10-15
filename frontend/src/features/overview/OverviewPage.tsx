@@ -10,7 +10,7 @@ import { StationMap } from './StationMap'
 import { StationList, StationTable } from './StationTable'
 import { TrustFootnote, TrustStrip } from './TrustStrip'
 
-/** Tomorrow's city forecast, what to do about it, and how each station compares. */
+/** The city now, what to do about it, the forecasts that exist, and why the others do not. */
 export function OverviewPage() {
   const { data, isPending, error, refetch } = useOverview()
 
@@ -29,7 +29,7 @@ export function OverviewPage() {
 
       <div className="flex flex-wrap gap-4 md:gap-6">
         <CityHero overview={data} />
-        <AdvicePanel forecast24h={data.network.forecast24h} grapStageInForce={data.grapStageInForce} />
+        <AdvicePanel aqiNow={data.network.meanAqiNow} />
       </div>
 
       <div className="flex flex-wrap gap-4 md:gap-6">

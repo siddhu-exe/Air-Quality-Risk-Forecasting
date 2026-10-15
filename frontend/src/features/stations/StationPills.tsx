@@ -30,7 +30,10 @@ export function StationPills({ stations, selectedId }: StationPillsProps) {
                 : 'border-line-strong bg-surface text-ink hover:bg-wash',
             )}
           >
-            <span aria-hidden="true" className={cn('h-2 w-2 rounded-full', TIER_FILL[categoryOf(station.aqiNow).key])} />
+            <span
+              aria-hidden="true"
+              className={cn('h-2 w-2 rounded-full', station.aqiNow === null ? 'bg-line-strong' : TIER_FILL[categoryOf(station.aqiNow).key])}
+            />
             {station.name}
           </Link>
         )

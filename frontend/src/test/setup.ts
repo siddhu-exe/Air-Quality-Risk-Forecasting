@@ -35,7 +35,7 @@ window.scrollTo = vi.fn()
 
 // The first visit to each lazy page transforms its module graph, which can
 // take over Testing Library's 1 s default under jsdom.
-configure({ asyncUtilTimeout: 5000 })
+configure({ asyncUtilTimeout: 10_000 })
 
 afterEach(() => {
   cleanup()

@@ -11,8 +11,7 @@ rolling average and persistence is very hard to beat.
 
 ## Live status
 
-The live pipeline (ingestion, AQI recompute, forecast job) is built and tested, but **nothing is scheduled and no forecast is being served yet**: no live
-data source has been shown to be fresh from a runner. The API (Stage 5) and the deployed dashboard are not built; the React frontend runs on sample data.
+The live pipeline (ingestion, AQI recompute, forecast job, scoring) and the read-only API (Azure Container Apps) are built and tested. The hourly OpenAQ ingest is scheduled but OpenAQ runs about two days behind real time, so **no live forecast is being issued yet**: the forecast job refuses stale data, and its cron is added once a source has been under 3 hours old for 24 hours straight. WAQI is ingested in shadow mode only. The React frontend runs on sample data until it is rewired to the API.
 Details and next steps: [`docs/TIER_3/README.md`](docs/TIER_3/README.md).
 
 ## Architecture

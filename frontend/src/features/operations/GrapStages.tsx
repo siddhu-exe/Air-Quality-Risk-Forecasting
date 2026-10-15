@@ -18,15 +18,15 @@ function Count({ label, value }: { label: string; value: number }) {
 
 interface GrapStagesProps {
   stages: GrapAlerts['stages']
-  stageInForce: GrapAlerts['stageInForce']
+  stageIndicated: GrapAlerts['stageIndicatedNow']
 }
 
-/** The four GRAP stages, how many stations sit in each now and tomorrow, and which is in force. */
-export function GrapStages({ stages, stageInForce }: GrapStagesProps) {
+/** The four GRAP stages, how many stations sit in each now and in six hours, and which stage today's mean indicates. */
+export function GrapStages({ stages, stageIndicated }: GrapStagesProps) {
   return (
     <section aria-label="GRAP stages" className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-3">
       {stages.map((stage) => {
-        const active = stage.stage === stageInForce
+        const active = stage.stage === stageIndicated
         return (
           <div
             key={stage.stage}
@@ -38,21 +38,16 @@ export function GrapStages({ stages, stageInForce }: GrapStagesProps) {
             <div className="flex items-center justify-between gap-2">
               <h2 className="font-semibold">Stage {stage.stage}</h2>
               {active && (
-                <span className="rounded-full bg-surface px-2.5 py-0.5 text-12 font-medium text-ink">In force</span>
+                <span className="rounded-full bg-surface px-2.5 py-0.5 text-12 font-medium text-ink">Indicated now</span>
               )}
             </div>
             <div>
               <p className="text-13 opacity-80">{rangeLabel(stage)}</p>
               <p className="text-14">{stage.label}</p>
             </div>
-            <div
-              className={cn(
-                'grid grid-cols-2 gap-2 border-t pt-3',
-                active ? 'border-grap-rule' : 'border-line-soft',
-              )}
-            >
+            <div className={cn('grid grid-cols-2 gap-2 border-t pt-3', active ? 'border-grap-rule' : 'border-line-soft')}>
               <Count label="Stations now" value={stage.nowCount} />
-              <Count label="Tomorrow" value={stage.tomorrowCount} />
+              <Count label="In 6 hours" value={stage.forecast6hCount} />
             </div>
           </div>
         )

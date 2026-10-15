@@ -20,18 +20,18 @@ export function FreshnessTable({ rows, generatedAt }: FreshnessTableProps) {
         <h2 id="freshness-title" className="text-17 font-semibold">
           Data freshness
         </h2>
-        <span className="text-13 text-ink-muted">Hourly ingest from CPCB</span>
+        <span className="text-13 text-ink-muted">Hourly ingest from OpenAQ (CPCB stations)</span>
       </div>
       <ul className="flex flex-col md:hidden">
         {rows.map((row) => {
-          const age = msBetween(generatedAt, row.lastReadingAt)
-          const late = age >= LATE_AFTER_MS
+          const age = row.lastReadingAt === null ? null : msBetween(generatedAt, row.lastReadingAt)
+          const late = age === null || age >= LATE_AFTER_MS
           return (
             <li key={row.stationId} className="flex flex-col gap-2 border-t border-line-soft py-3.5">
               <div className="flex items-baseline justify-between gap-3">
                 <span className="text-15 font-medium">{row.name}</span>
                 <span className={cn('font-mono text-14', late ? 'text-fresh-late' : 'text-ink-2')}>
-                  {formatAge(age)}
+                  {age === null ? 'no reading' : formatAge(age)}
                   {late && <span className="sr-only"> (late)</span>}
                 </span>
               </div>
@@ -53,13 +53,13 @@ export function FreshnessTable({ rows, generatedAt }: FreshnessTableProps) {
           </thead>
           <tbody>
             {rows.map((row) => {
-              const age = msBetween(generatedAt, row.lastReadingAt)
-              const late = age >= LATE_AFTER_MS
+              const age = row.lastReadingAt === null ? null : msBetween(generatedAt, row.lastReadingAt)
+              const late = age === null || age >= LATE_AFTER_MS
               return (
                 <tr key={row.stationId} className="border-t border-line-soft">
                   <th scope="row" className="py-3 pr-3 text-left font-medium">{row.name}</th>
                   <td className={cn('px-3 py-3 font-mono', late ? 'text-fresh-late' : 'text-ink-2')}>
-                    {formatAge(age)}
+                    {age === null ? 'no reading' : formatAge(age)}
                     {late && <span className="sr-only"> (late)</span>}
                   </td>
                   <td className="px-3 py-3">

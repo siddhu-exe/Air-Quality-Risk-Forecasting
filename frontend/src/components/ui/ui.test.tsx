@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { AqiScaleBar } from '../aqi/AqiScaleBar'
 import { CategoryPill } from '../aqi/CategoryPill'
 import { ErrorState } from './ErrorState'
-import { ProgressBar } from './ProgressBar'
 import { SegmentedControl } from './SegmentedControl'
 import { StaleBanner } from './StaleBanner'
 
@@ -51,20 +50,10 @@ describe('SegmentedControl', () => {
 
 describe('AqiScaleBar', () => {
   it('describes itself to screen readers and positions the forecast marker', () => {
-    const { container } = render(
-      <AqiScaleBar now={356} forecast={374} range={{ lo: 325, hi: 431 }} label="Tomorrow falls in Very Poor" />,
-    )
-    expect(screen.getByRole('img', { name: 'Tomorrow falls in Very Poor' })).toBeInTheDocument()
+    const { container } = render(<AqiScaleBar now={356} forecast={374} label="Six hours ahead falls in Very Poor" />)
+    expect(screen.getByRole('img', { name: 'Six hours ahead falls in Very Poor' })).toBeInTheDocument()
     const marker = container.querySelector('[style*="left: 74.8%"]')
     expect(marker).not.toBeNull()
-  })
-})
-
-describe('ProgressBar', () => {
-  it('clamps out-of-range values and hides itself from assistive tech', () => {
-    const { container } = render(<ProgressBar value={1.7} fillClassName="bg-aqi-severe" />)
-    expect(container.firstChild).toHaveAttribute('aria-hidden', 'true')
-    expect(container.querySelector('.bg-aqi-severe')).toHaveStyle({ width: '100%' })
   })
 })
 
@@ -78,8 +67,14 @@ describe('ErrorState and StaleBanner', () => {
     expect(onRetry).toHaveBeenCalledOnce()
   })
 
-  it('tells the reader how old the data is', () => {
+  it('tells the reader how old the data is, and that forecasts need fresh data', () => {
     render(<StaleBanner dataAsOf="2026-10-11T08:30:00Z" />)
     expect(screen.getByRole('status')).toHaveTextContent('14:00 IST on Sun 11 Oct')
+    expect(screen.getByRole('status')).toHaveTextContent('forecasts are only issued from fresh data')
+  })
+
+  it('says so plainly when there are no readings at all', () => {
+    render(<StaleBanner dataAsOf={null} />)
+    expect(screen.getByRole('status')).toHaveTextContent('no readings yet')
   })
 })

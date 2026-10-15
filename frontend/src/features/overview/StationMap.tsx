@@ -14,7 +14,7 @@ interface StationMapProps {
 function summarise(stations: readonly OverviewStation[]): string {
   const counts = new Map<string, number>()
   for (const station of stations) {
-    const label = categoryOf(station.now).label
+    const label = station.now === null ? 'no reading' : categoryOf(station.now.value).label
     counts.set(label, (counts.get(label) ?? 0) + 1)
   }
   return [...counts].map(([label, n]) => `${n} ${label}`).join(', ')
@@ -26,8 +26,13 @@ function summarise(stations: readonly OverviewStation[]): string {
  * a geographic map: the outline and river are illustrations.
  */
 export function StationMap({ stations }: StationMapProps) {
-  const positions = useMemo(() => projectToMap(stations), [stations])
-  const present = new Set(stations.map((s) => categoryOf(s.now).key))
+  // Stations without coordinates cannot be placed; they are still in the table.
+  const placed = useMemo(
+    () => stations.filter((s): s is OverviewStation & { lat: number; lon: number } => s.lat !== null && s.lon !== null),
+    [stations],
+  )
+  const positions = useMemo(() => projectToMap(placed), [placed])
+  const present = new Set(stations.flatMap((s) => (s.now === null ? [] : [categoryOf(s.now.value).key])))
   // Moderate and worse are always listed; cleaner bands appear only when a pin uses them.
   const legend = AQI_CATEGORIES.filter((c) => c.min >= 101 || present.has(c.key))
 
@@ -37,7 +42,7 @@ export function StationMap({ stations }: StationMapProps) {
         <h2 id="map-title" className="text-17 font-semibold">
           Stations now
         </h2>
-        <span className="text-13 text-ink-muted">{stations.length} CAAQMS monitors</span>
+        <span className="text-13 text-ink-muted">{stations.length} CAAQMS monitors · faded pin = old reading</span>
       </div>
 
       <div
@@ -66,22 +71,28 @@ export function StationMap({ stations }: StationMapProps) {
           />
         </svg>
 
-        {stations.map((station, index) => {
+        {placed.map((station, index) => {
           const position = positions[index]
           if (!position) return null
-          const category = categoryOf(station.now)
+          const category = station.now === null ? null : categoryOf(station.now.value)
           return (
             <Link
               key={station.id}
               to={`/stations/${station.id}`}
-              aria-label={`${station.name}: AQI ${formatAqi(station.now)} now, ${category.label}`}
+              aria-label={
+                category && station.now
+                  ? `${station.name}: AQI ${formatAqi(station.now.value)} now, ${category.label}${station.now.stale ? ', reading is old' : ''}`
+                  : `${station.name}: no current reading`
+              }
               className="absolute flex min-h-target min-w-target -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-1 text-ink no-underline"
               style={{ left: `${position.leftPct}%`, top: position.topPx }}
             >
               <span
-                className={`flex h-[46px] w-[46px] items-center justify-center rounded-full font-mono text-14 font-medium ring-4 ring-surface ${TIER_SOLID[category.key]}`}
+                className={`flex h-[46px] w-[46px] items-center justify-center rounded-full font-mono text-14 font-medium ring-4 ring-surface ${
+                  category ? TIER_SOLID[category.key] : 'bg-wash text-ink-muted'
+                } ${station.now?.stale ? 'opacity-60' : ''}`}
               >
-                {formatAqi(station.now)}
+                {station.now ? formatAqi(station.now.value) : '–'}
               </span>
               <span className="whitespace-nowrap rounded bg-surface px-1.5 py-px text-12 font-medium">
                 {station.name}

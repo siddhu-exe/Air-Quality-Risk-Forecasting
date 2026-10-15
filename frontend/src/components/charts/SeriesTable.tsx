@@ -31,7 +31,7 @@ export function SeriesTable({ id, subject, target, history, forecast }: ChartInp
     >
       <table className="w-full min-w-[420px] border-collapse text-14">
         <caption className="sr-only">
-          Hourly {unit} for {subject}: measured over the past 72 hours, then forecast with its likely range.
+          Hourly {unit} for {subject}: measured over the past 72 hours, then the published forecast points.
         </caption>
         <thead className="sticky top-0 bg-surface text-left text-13 text-ink-muted shadow-[0_1px_0_0_theme(colors.line.soft)]">
           <tr>
@@ -43,9 +43,6 @@ export function SeriesTable({ id, subject, target, history, forecast }: ChartInp
             </th>
             <th scope="col" className="px-3 py-2 text-right font-medium">
               Forecast
-            </th>
-            <th scope="col" className="px-3 py-2 text-right font-medium">
-              Likely range
             </th>
           </tr>
         </thead>
@@ -62,10 +59,7 @@ export function SeriesTable({ id, subject, target, history, forecast }: ChartInp
                   {isNow ? 'Now' : formatWhen(row.t, nowIso)}
                 </th>
                 <td className="px-3 py-2 text-right font-mono">{row.measured === undefined ? '—' : round(row.measured)}</td>
-                <td className="px-3 py-2 text-right font-mono">{row.forecast ? round(row.forecast.median) : '—'}</td>
-                <td className="px-3 py-2 text-right font-mono text-ink-2">
-                  {row.forecast && !isNow ? `${round(row.forecast.lo)}–${round(row.forecast.hi)}` : '—'}
-                </td>
+                <td className="px-3 py-2 text-right font-mono">{row.forecast === undefined ? '—' : round(row.forecast)}</td>
               </tr>
             )
           })}

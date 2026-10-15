@@ -9,8 +9,6 @@ interface AqiScaleBarProps {
   now?: number
   /** Forecast value (the solid marker). */
   forecast: number
-  /** 80% interval, drawn as a translucent span under the bar. */
-  range?: { lo: number; hi: number }
   /** Tick labels under the bar (desktop hero); omitted on the compact phone card. */
   showAxis?: boolean
   /** Bar thickness in px: 14 on desktop, 10 on the phone card. */
@@ -20,11 +18,10 @@ interface AqiScaleBarProps {
   className?: string
 }
 
-/** The coloured 0-500 CPCB scale with forecast, "now" and range markers. */
+/** The coloured 0-500 CPCB scale with forecast and "now" markers. */
 export function AqiScaleBar({
   now,
   forecast,
-  range,
   showAxis = true,
   thickness = 14,
   label,
@@ -41,17 +38,8 @@ export function AqiScaleBar({
         ))}
       </div>
 
-      {(range || now !== undefined) && (
+      {now !== undefined && (
         <div className="relative h-[22px]" aria-hidden="true">
-          {range && (
-            <div
-              className="absolute top-0 h-1.5 rounded-[3px] bg-ink opacity-25"
-              style={{
-                left: `${scalePercent(range.lo)}%`,
-                width: `${scalePercent(range.hi) - scalePercent(range.lo)}%`,
-              }}
-            />
-          )}
           <div
             className="absolute -top-1 h-3.5 w-0.5 bg-ink"
             style={{ left: `${scalePercent(forecast)}%` }}

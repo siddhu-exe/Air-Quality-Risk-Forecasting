@@ -38,12 +38,7 @@ export function ForecastChart({ subject, target, history, forecast, className }:
             <LegendItem swatch={<span aria-hidden="true" className="h-0.5 w-[18px] bg-ink" />}>Measured</LegendItem>
           </li>
           <li>
-            <LegendItem swatch={<span aria-hidden="true" className="h-[3px] w-[18px] bg-accent" />}>Forecast</LegendItem>
-          </li>
-          <li>
-            <LegendItem swatch={<span aria-hidden="true" className="h-2.5 w-[18px] bg-accent opacity-25" />}>
-              {target === 'aqi' ? '80% range' : 'Likely range'}
-            </LegendItem>
+            <LegendItem swatch={<span aria-hidden="true" className="h-[3px] w-[18px] bg-accent" />}>Forecast points</LegendItem>
           </li>
           <li>
             <LegendItem

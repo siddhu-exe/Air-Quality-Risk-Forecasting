@@ -19,7 +19,9 @@ export function StatusCluster({ className }: { className?: string }) {
         // Reserve the stamp's width so the header does not shift when it arrives.
         <Skeleton className="h-4 w-44" />
       ) : data ? (
-        <span className="font-mono text-13 text-ink-muted">{formatUpdated(data.dataAsOf)}</span>
+        <span className="font-mono text-13 text-ink-muted">
+          {data.dataAsOf ? formatUpdated(data.dataAsOf) : 'No readings yet'}
+        </span>
       ) : null}
     </div>
   )

@@ -24,19 +24,14 @@ function Readout({ sample, nowIso, unit }: { sample: ChartSample; nowIso: string
           {sample.kind === 'measured' ? 'measured' : 'forecast'}
         </span>
       </p>
-      {sample.lo !== undefined && sample.hi !== undefined && (
-        <p className="font-mono text-12 text-ink-2">
-          likely {round(sample.lo)}–{round(sample.hi)}
-        </p>
-      )}
     </>
   )
 }
 
 /**
  * The SVG chart plus a hover/tap readout. Past 72 hours as a solid line, the
- * forecast as a coloured line with its likely range, and the "copy-last-value"
- * baseline dashed. The readout is for pointer users; the same numbers are in
+ * forecast as a coloured line through the published forecast points, and the
+ * "copy-last-value" baseline dashed. The readout is for pointer users; the same numbers are in
  * the table view, which is what keyboard and screen-reader users get.
  */
 export function ForecastPlot({ subject, target, history, forecast }: ForecastPlotProps) {
@@ -119,10 +114,16 @@ export function ForecastPlot({ subject, target, history, forecast }: ForecastPlo
               </g>
             ))}
             <rect x={model.nowX} y={CHART.top} width={futureWidth} height={CHART.bottom - CHART.top} className="fill-accent" opacity={0.04} />
-            <path d={model.bandPath} className="fill-accent" opacity={0.16} />
             <path d={model.pastPath} fill="none" className="stroke-ink" strokeWidth={2} strokeLinejoin="round" />
             <path d={model.persistencePath} fill="none" className="stroke-ink-subtle" strokeWidth={1.5} strokeDasharray="4 4" />
-            <path d={model.medianPath} fill="none" className="stroke-accent" strokeWidth={2.5} strokeLinecap="round" />
+            {model.forecastPath && (
+              <path d={model.forecastPath} fill="none" className="stroke-accent" strokeWidth={2.5} strokeLinecap="round" />
+            )}
+            {model.samples
+              .filter((sample) => sample.kind === 'forecast')
+              .map((sample) => (
+                <circle key={sample.t} cx={sample.x} cy={sample.y} r={4.5} className="fill-accent" />
+              ))}
             <line x1={model.nowX} x2={model.nowX} y1={CHART.top} y2={CHART.bottom} className="stroke-ink" strokeWidth={1} />
             <text x={model.nowX} y={322} textAnchor="middle" className="fill-ink font-sans text-12">
               now

@@ -7,27 +7,29 @@ import { Eyebrow } from '@/components/ui/Eyebrow'
 import { Page } from '@/components/ui/Page'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { StaleBanner } from '@/components/ui/StaleBanner'
-import { SEVERE_THRESHOLD } from '@/lib/aqi'
+import { formatAqi } from '@/lib/aqi'
 import { countWord } from '@/lib/ranking'
-import { AlertRule } from './AlertRule'
+import { EvidenceTable } from './EvidenceTable'
 import { GrapStages } from './GrapStages'
-import { LeadTimes } from './LeadTimes'
-import { SevereAlerts } from './SevereAlerts'
+import { GrapStations } from './GrapStations'
 
 const capitalise = (s: string): string => s.charAt(0).toUpperCase() + s.slice(1)
 
-/** One plain sentence: which stage is in force and how many stations are forecast to be Severe. */
-function summarise({ stageInForce, stages }: GrapAlerts): string {
-  const stage = stageInForce ? `Stage ${stageInForce} is in force.` : 'No GRAP stage is in force.'
-  const severeTomorrow = stages.filter((s) => s.min >= SEVERE_THRESHOLD).reduce((sum, s) => sum + s.tomorrowCount, 0)
+/** One plain sentence: which stage today's readings indicate and how many stations are forecast Severe in six hours. */
+function summarise({ stageIndicatedNow, networkMeanAqiNow, stages }: GrapAlerts): string {
+  if (networkMeanAqiNow === null) return 'No station has a recent reading, so no stage can be indicated.'
+  const stage = stageIndicatedNow
+    ? `The city mean of ${formatAqi(networkMeanAqiNow)} indicates Stage ${stageIndicatedNow}.`
+    : `The city mean of ${formatAqi(networkMeanAqiNow)} is below Stage I.`
+  const severe = stages.filter((s) => s.min >= 401).reduce((sum, s) => sum + s.forecast6hCount, 0)
   const outlook =
-    severeTomorrow === 0
-      ? 'No station is forecast to reach Severe within 24 hours.'
-      : `${capitalise(countWord(severeTomorrow))} ${severeTomorrow === 1 ? 'station is' : 'stations are'} forecast to reach Severe within 24 hours.`
+    severe === 0
+      ? 'No station is forecast to reach Severe within six hours.'
+      : `${capitalise(countWord(severe))} ${severe === 1 ? 'station is' : 'stations are'} forecast to reach Severe within six hours.`
   return `${stage} ${outlook}`
 }
 
-/** The page for city and pollution-control staff: stages, alerts, and how good the alert rules are. */
+/** The page for city and pollution-control staff: indicative stages, each station against the bands, and the evidence. */
 export function OperationsPage() {
   const alerts = useGrapAlerts()
   const backtest = useBacktest()
@@ -65,23 +67,20 @@ export function OperationsPage() {
         <p className="max-w-[460px] text-ink-2">{summarise(data)}</p>
       </section>
 
-      <GrapStages stages={data.stages} stageInForce={data.stageInForce} />
-      <SevereAlerts data={data} />
+      <p className="rounded-xl bg-caution-bg px-4 py-3 text-14 text-caution-fg">{data.disclaimer}</p>
 
-      <div className="flex flex-wrap gap-4 md:gap-6">
-        {backtest.data ? (
-          <>
-            <AlertRule backtest={backtest.data} />
-            <LeadTimes leadTimes={backtest.data.leadTimes} />
-          </>
-        ) : backtest.isPending ? (
-          <Skeleton className="h-72 w-full rounded-2xl" />
-        ) : (
-          <Card className="w-full p-6">
-            <p className="text-ink-2">Backtest figures are unavailable right now. {describeError(backtest.error)}</p>
-          </Card>
-        )}
-      </div>
+      <GrapStages stages={data.stages} stageIndicated={data.stageIndicatedNow} />
+      <GrapStations stations={data.stations} />
+
+      {backtest.data ? (
+        <EvidenceTable backtest={backtest.data} />
+      ) : backtest.isPending ? (
+        <Skeleton className="h-72 w-full rounded-2xl" />
+      ) : (
+        <Card className="w-full p-6">
+          <p className="text-ink-2">Backtest figures are unavailable right now. {describeError(backtest.error)}</p>
+        </Card>
+      )}
     </Page>
   )
 }

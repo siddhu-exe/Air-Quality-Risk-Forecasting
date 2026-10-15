@@ -1,15 +1,11 @@
 import { Link } from 'react-router-dom'
 import { useBacktest } from '@/api/queries'
 import { describeError } from '@/api/describeError'
-import type { Backtest } from '@/api/schemas'
+import type { Backtest, Evidence } from '@/api/schemas'
 import { Card } from '@/components/ui/Card'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { formatPercent } from '@/lib/format'
-import { countWord } from '@/lib/ranking'
-
-function pastWinters(winters: number): string {
-  return winters === 1 ? 'one past winter' : `${countWord(winters)} past winters`
-}
+import { evidenceFor } from '@/lib/forecast'
 
 function Figure({ value, children }: { value: string; children: string }) {
   return (
@@ -20,23 +16,38 @@ function Figure({ value, children }: { value: string; children: string }) {
   )
 }
 
+/** "smaller error than assuming nothing changes" as a signed percentage; a negative value reads as larger error. */
+const skillText = (e: Evidence): string => `${e.skillVsPersistence >= 0 ? '' : '−'}${formatPercent(Math.abs(e.skillVsPersistence))}`
+
 function TrustContent({ backtest }: { backtest: Backtest }) {
+  const oneHour = evidenceFor(backtest.evidence, 'aqi_1h', 'test')
+  const sixHour = evidenceFor(backtest.evidence, 'aqi_6h', 'test')
+  const day = evidenceFor(backtest.evidence, 'aqi_24h', 'test')
+  const dayReplay = evidenceFor(backtest.evidence, 'aqi_24h', 'replay')
   return (
     <div className="grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] gap-6">
-      <Figure value={`~${formatPercent(backtest.skill24h)}`}>
-        {`smaller 24h error than simply assuming tomorrow equals today, in ${pastWinters(backtest.winters)}.`}
-      </Figure>
-      <Figure value={formatPercent(backtest.coverage80)}>
-        of winter days landed inside the 80% range. In bad spells, read the upper end.
-      </Figure>
-      <Figure value="24h">
-        AQI is a 24-hour average, so it moves slowly and sudden spikes show up late.
-      </Figure>
+      {oneHour && (
+        <Figure value={skillText(oneHour)}>
+          smaller AQI error one hour ahead than assuming nothing changes, from a rule that updates the 24-hour average (winter test).
+        </Figure>
+      )}
+      {sixHour && (
+        <Figure value={skillText(sixHour)}>
+          smaller AQI error six hours ahead for the model, and it also beats that rule (winter test).
+        </Figure>
+      )}
+      {day && (
+        <Figure value={skillText(day)}>
+          {`for the experimental 24-hour AQI${
+            dayReplay ? `; in the Sep–Oct 2026 replay it was ${skillText(dayReplay)}, about the same as assuming no change.` : '.'
+          }`}
+        </Figure>
+      )}
     </div>
   )
 }
 
-/** "How far to trust this": three backtest facts and the not-an-advisory disclaimer. */
+/** "How far to trust this": backtest facts for each product and the not-an-advisory disclaimer. */
 export function TrustStrip() {
   const { data, isPending, error } = useBacktest()
 
@@ -60,20 +71,17 @@ export function TrustStrip() {
       )}
 
       <p className="border-t border-line-soft pt-4 text-13 text-ink-muted">
-        A statistical forecast from public CPCB station data, not an official advisory. For official forecasts
-        see CPCB and SAFAR / IITM.
+        A statistical forecast from public CPCB station data, not an official advisory. For official forecasts see CPCB and SAFAR / IITM.
       </p>
     </Card>
   )
 }
 
-/** Phone footnote: the same disclaimer plus the headline accuracy figure. */
+/** Phone footnote: the same disclaimer. */
 export function TrustFootnote() {
-  const { data } = useBacktest()
   return (
     <p className="text-12 text-ink-muted md:hidden">
-      Statistical forecast from CPCB station data, not an official advisory.
-      {data && ` About ${formatPercent(data.skill24h)} smaller error than “tomorrow = today” in past winters.`}
+      Statistical forecast from CPCB station data, not an official advisory. The 24-hour AQI is experimental.
     </p>
   )
 }

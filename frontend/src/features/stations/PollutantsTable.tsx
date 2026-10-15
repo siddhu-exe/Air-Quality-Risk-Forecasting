@@ -1,20 +1,19 @@
 import type { Pollutant } from '@/api/schemas'
-import { TIER_FILL } from '@/components/aqi/tierClasses'
 import { Card } from '@/components/ui/Card'
-import { ProgressBar } from '@/components/ui/ProgressBar'
-import { AQI_SCALE_MAX, categoryOf } from '@/lib/aqi'
 import { POLLUTANTS } from '@/lib/pollutants'
 
 const concentration = new Intl.NumberFormat('en-IN', { maximumFractionDigits: 1 })
 
-/** Each pollutant's concentration and its CPCB sub-index; the AQI is the highest sub-index. */
+/** Each pollutant's latest hourly concentration; an empty list says the station has no recent reading. */
 export function PollutantsTable({ pollutants }: { pollutants: readonly Pollutant[] }) {
   return (
     <Card as="section" aria-labelledby="pollutants-title" className="min-w-0 flex-[999_1_560px] px-5 py-6 md:px-7">
       <h2 id="pollutants-title" className="mb-3 text-17 font-semibold">
         Pollutants now
       </h2>
-      <div>
+      {pollutants.length === 0 ? (
+        <p className="text-ink-2">No recent pollutant readings for this station.</p>
+      ) : (
         <table className="w-full border-collapse text-14">
           <thead>
             <tr className="text-left text-13 text-ink-muted">
@@ -23,9 +22,6 @@ export function PollutantsTable({ pollutants }: { pollutants: readonly Pollutant
               </th>
               <th scope="col" className="py-2 text-right font-medium">
                 Concentration
-              </th>
-              <th scope="col" className="py-2 pl-4 font-medium md:pl-6">
-                Sub-index
               </th>
             </tr>
           </thead>
@@ -41,23 +37,13 @@ export function PollutantsTable({ pollutants }: { pollutants: readonly Pollutant
                     {concentration.format(pollutant.concentration)}{' '}
                     <span className="text-ink-muted">{pollutant.unit}</span>
                   </td>
-                  <td className="py-3 pl-4 md:pl-6">
-                    <span className="flex items-center gap-2.5">
-                      <ProgressBar
-                        value={pollutant.subIndex / AQI_SCALE_MAX}
-                        fillClassName={`h-full ${TIER_FILL[categoryOf(pollutant.subIndex).key]}`}
-                        className="min-w-10 max-w-[220px] flex-1"
-                      />
-                      <span className="w-8 text-right font-mono">{Math.round(pollutant.subIndex)}</span>
-                    </span>
-                  </td>
                 </tr>
               )
             })}
           </tbody>
         </table>
-      </div>
-      <p className="mt-3 text-13 text-ink-muted">AQI is the highest sub-index, averaged over 24 hours (CPCB method).</p>
+      )}
+      <p className="mt-3 text-13 text-ink-muted">AQI is the highest pollutant sub-index, averaged over 24 hours (CPCB method).</p>
     </Card>
   )
 }
