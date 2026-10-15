@@ -46,11 +46,10 @@ Portal > **Container Apps** > Create:
 
 1. Portal > **Microsoft Entra ID** > **App registrations** > New registration: name `gh-delhi-air-deploy`, single tenant, no redirect URI. Copy **Application (client) ID** and **Directory (tenant) ID**.
 2. The app > **Certificates & secrets** > **Federated credentials** > Add credential:
-   - Scenario: **GitHub Actions deploying Azure resources**
-   - Organization `siddhu-exe`, Repository `Air-Quality-Risk-Forecasting`
-   - Entity type **Environment**, environment name `production`
-   - Name `github-production`. (Resulting subject: `repo:siddhu-exe/Air-Quality-Risk-Forecasting:environment:production`; issuer `https://token.actions.githubusercontent.com`; audience `api://AzureADTokenExchange`.)
-   - Do **not** create a client secret.
+   - Scenario: **Other issuer** (not "GitHub Actions deploying Azure resources": that scenario builds the older subject `repo:<org>/<repo>:environment:production`, which no longer matches, because GitHub now puts numeric IDs into the OIDC subject).
+   - Issuer `https://token.actions.githubusercontent.com`; type **Explicit subject identifier**; audience `api://AzureADTokenExchange`.
+   - Subject: copy it from the first failed login. The `azure/login` step prints `No matching federated identity record found for presented assertion subject '...'`; the value looks like `repo:siddhu-exe@<owner-id>/Air-Quality-Risk-Forecasting@<repo-id>:environment:production` and has to match exactly.
+   - Name `github-production-immutable`. Do **not** create a client secret.
 3. Portal > **Resource groups** > `rg-delhi-air` > **Access control (IAM)** > Add role assignment: role **Contributor**, assign to the `gh-delhi-air-deploy` application (Select members, search the app name). Scope stays the resource group, so the credential can touch nothing else.
 4. Copy your **Subscription ID** (Subscriptions > your subscription > Overview).
 
