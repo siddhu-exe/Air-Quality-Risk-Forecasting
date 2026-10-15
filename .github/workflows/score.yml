@@ -1,0 +1,47 @@
+# Nightly scoring of matured forecasts, MANUAL ONLY for now (nothing is being forecast live yet, so a nightly run would only score nothing).
+# TODO(cron): add in the same commit that enables the forecast cron; a time off the hour avoids the top-of-the-hour queue:
+#   schedule:
+#     - cron: "40 20 * * *"   # 02:10 Asia/Kolkata, after the day's last forecast has matured
+# Scores forecasts whose target hour is over against the stored actuals, refreshes aq.skill_rolling, and (live runs only)
+# opens or refreshes a GitHub issue when the alert rules in src/live/score.py fire.
+name: score
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_type:
+        description: "Which forecasts to score"
+        type: choice
+        options: [live, replay]
+        default: live
+      open_issues:
+        description: "Open or refresh GitHub issues for alerts (live only)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: score
+  cancel-in-progress: false
+
+jobs:
+  score:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements-forecast.txt
+      - run: pip install -r requirements-forecast.txt
+      - name: Score
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: python -m src.live.score --run-type ${{ inputs.run_type }} ${{ inputs.open_issues && '--issues' || '' }}

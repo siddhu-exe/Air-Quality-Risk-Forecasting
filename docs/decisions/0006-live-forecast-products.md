@@ -22,8 +22,10 @@ Not published, kept off in `config/live.toml` `[forecast]` (the config refuses t
 - P(severe) (Brier difference against persistence includes zero; severe rate 40.8% on test, 3.2% on validation).
 
 **Consequences.**
-- Model health scores AQI 1h and 6h against window-update persistence as well as plain persistence. The forecast job writes plain persistence on every row; the scorer
-  derives the window-update reference from stored readings (Stage 4).
+- Model health scores AQI 1h and 6h against window-update persistence as well as plain persistence. The forecast job freezes both references on every row at issue time
+  (`y_persistence`, and `y_window_update` for AQI rows, NULL for PM2.5; migration 008), because readings can be revised later. The scorer reads only the stored references.
+  When the current hourly AQI is missing at issue time `y_window_update` equals `y_persistence`, the fallback the baseline evaluation used.
+- Replayed historical hours are stored with `run_type = 'replay'` and never mix with live rows in model health or the API.
 - The 1h product has no model hash: its registry row hashes `src/live/rules.py`, and its behaviour is pinned by `tests/test_aqi_causality.py` and `tests/test_serving.py`.
 - The 1h claim is "rule-based, better than persistence", not "model skill".
 - The forecast job serves `src/live/serving.py`; the frozen research models stay behind `src/live/models.py` for parity and the retrain's reference rows (ADR 0001).

@@ -418,7 +418,7 @@ or provide a read-only pull credential; set the Container App secrets.
 | 1 | `db/migrations/*.sql`, read-only role, station + backfill script | you apply migrations (I create nothing in the cloud) | **done**; backfill loaded (35,276 readings) |
 | 2 | `src/live/ingest.py`, `ingest.yml`, mocked-HTTP tests, source facts replacing the TODOs | one real run from Actions | **code done** (mocked tests); the real run waits for the probe and a fresh source |
 | 3 | `src/live/forecast.py`, refactor of the feature builder, **parity test** | parity passes or I report why not | **done**; 24h exact, 1h/6h exact with training's rolling start, small last-digit differences otherwise (reported) |
-| 4 | `src/live/score.py`, `score.yml`, issue rules | tests with synthetic scores | not started |
+| 4 | `src/live/score.py`, `score.yml`, issue rules, `src/live/replay.py` | tests with synthetic scores | **code done**; migration 008 (`y_window_update`, `run_type`) must be applied; replay report in `reports/live/` |
 | 5 | `backend/main.py`, Dockerfile, `deploy-backend.yml`, Azure resource + secret list | you create resources | not started |
 | 6 | 4-tab frontend, Vercel config | lint + type-check pass | frontend rebuilt on branch `tier3/probe-sources` (4 commits, not merged); needs `/api/v1` from Stage 5 |
 | 7 | `models/registry.json`, `ci.yml`, README, `docs/TIER_3/TIER_3_LOG.md` | hash-mismatch test | not started (hash check already exists for the forecast job) |

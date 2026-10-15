@@ -12,6 +12,8 @@ Format: [Keep a Changelog](https://keepachangelog.com). Dates are when the work 
 - React frontend (`frontend/`), running on sample data until the API exists.
 - `LICENSE` (MIT), `pyproject.toml` (ruff, pytest), `Makefile`, pre-commit hooks, CI, `docs/ARCHITECTURE.md`, decision records.
 
+- Scoring: `src/live/score.py` (matured forecasts, rolling skill, alert rules, GitHub issues), `score.yml` (manual), and `src/live/replay.py` (re-forecast and score stored hours, `run_type = 'replay'`); migration 008 adds `y_window_update` and `run_type`.
+
 ### Changed
 - The forecast job serves `src/live/serving.py`: AQI 1h is the rule-based window-update forecast, AQI 6h/24h and PM2.5 1h/6h are the live-consistent models, switched in `config/live.toml` `[forecast]` (ADR 0006); `src/live/parity_live.py` checks them against the training path.
 - numpy 2.1.3 and pandas 2.2.3 (the versions the live models were pickled with).
