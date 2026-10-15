@@ -1,5 +1,6 @@
-# Runtime dependencies of the forecast job (GitHub Actions). Versions match the local venv; lightgbm is the version the
-# parity test ran with (the frozen 1h/6h models are lightgbm.Booster pickles).
+# Runtime dependencies of the forecast job (GitHub Actions). Versions match the training environment of the live models; lightgbm is the version the
+# parity test ran with (the 6h model is a lightgbm.Booster pickle). numpy and pandas (via requirements-live.txt) are the versions
+# the live-consistent models were trained and pickled with: the PM2.5 models do not unpickle under numpy 1.
 -r requirements-live.txt
 scikit-learn==1.9.0
 joblib==1.6.0

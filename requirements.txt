@@ -3,8 +3,8 @@
 # Not pinned here: lightgbm and optuna (Colab training; the forecast job pins lightgbm in requirements-forecast.txt).
 
 # data
-pandas==2.1.4
-numpy==1.26.4
+pandas==2.2.3
+numpy==2.1.3
 openpyxl==3.1.2
 pyarrow==25.0.1
 joblib==1.6.0
