@@ -103,12 +103,17 @@ def _headers() -> dict:
 
 def get(path: str, **params: Any) -> dict:
     """GET with polite rate limiting (60 requests/minute); the key is only ever sent as a header."""
-    for _ in range(4):
+    for attempt in range(5):
         response = requests.get(f"{API}{path}", headers=_headers(), params=params, timeout=60)
         remaining = response.headers.get("x-ratelimit-remaining")
         reset = float(response.headers.get("x-ratelimit-reset", 30))
         if response.status_code == 429:
             time.sleep(reset + 1)
+            continue
+        if (
+            response.status_code >= 500 and attempt < 4
+        ):  # a transient upstream error: wait and retry, never fail the run for one blip
+            time.sleep(2**attempt)
             continue
         response.raise_for_status()
         if remaining is not None and int(remaining) <= 1:

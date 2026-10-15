@@ -204,3 +204,29 @@ def test_location_ids_are_the_cpcb_provider_ones():
         "Punjabi Bagh": 50,
         "R K Puram": 17,
     }
+
+
+class _Reply:
+    def __init__(self, status, body=None):
+        self.status_code, self._body, self.headers = status, body or {"results": []}, {}
+
+    def raise_for_status(self):
+        if self.status_code >= 400:
+            raise openaq.requests.HTTPError(f"{self.status_code}")
+
+    def json(self):
+        return self._body
+
+
+def test_a_transient_server_error_is_retried_and_a_persistent_one_still_fails(monkeypatch):
+    monkeypatch.setattr(openaq, "_headers", lambda: {})
+    monkeypatch.setattr(openaq.time, "sleep", lambda s: None)
+    replies = iter([_Reply(500), _Reply(502), _Reply(200, {"results": [1]})])
+    monkeypatch.setattr(openaq.requests, "get", lambda *a, **k: next(replies))
+    assert openaq.get("/x") == {"results": [1]}
+    monkeypatch.setattr(openaq.requests, "get", lambda *a, **k: _Reply(500))
+    with pytest.raises(openaq.requests.HTTPError):
+        openaq.get("/x")
+    monkeypatch.setattr(openaq.requests, "get", lambda *a, **k: _Reply(404))
+    with pytest.raises(openaq.requests.HTTPError):  # a client error is not retried
+        openaq.get("/x")

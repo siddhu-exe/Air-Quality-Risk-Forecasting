@@ -69,7 +69,7 @@ def test_station_rows_cover_the_seven_stations():
 
 
 def test_migrations_are_numbered_and_contain_no_secrets():
-    assert [p.name[:3] for p in MIGRATIONS] == ["001", "002", "003", "004", "005", "006", "007", "008"]
+    assert [p.name[:3] for p in MIGRATIONS] == ["001", "002", "003", "004", "005", "006", "007", "008", "009"]
     for path in MIGRATIONS:
         sql = path.read_text()
         # no password literal may appear in a statement (comments describing the manual step are fine)
@@ -78,10 +78,18 @@ def test_migrations_are_numbered_and_contain_no_secrets():
         assert "drop " not in code.lower() and "truncate" not in code.lower(), path.name
 
 
-def test_every_table_gets_rls_in_migration_006():
-    created = set()
-    for path in MIGRATIONS:
-        created |= set(re.findall(r"create table aq\.(\w+)", path.read_text()))
+def test_every_table_gets_rls_and_grants():
+    """Tables made in 001-005 are covered by migration 006; a later migration must enable RLS and grant for its own table."""
     rls = next(p for p in MIGRATIONS if p.name.startswith("006")).read_text()
-    missing = [t for t in sorted(created) if f"'{t}'" not in rls]
-    assert not missing, f"tables without RLS/grants in 006: {missing}"
+    missing = []
+    for path in MIGRATIONS:
+        text = path.read_text()
+        for table in re.findall(r"create table aq\.(\w+)", text):
+            covered = f"'{table}'" in rls or (
+                path.name > "006"
+                and f"alter table aq.{table} enable row level security" in text
+                and f"on aq.{table}" in text
+            )
+            if not covered:
+                missing.append(table)
+    assert not missing, f"tables without RLS/grants: {missing}"

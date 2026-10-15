@@ -320,6 +320,17 @@ def test_main_exit_code_follows_the_run_status(monkeypatch):
         assert ingest.main(["--dry-run"]) == code
 
 
+def test_a_stale_source_that_still_delivered_rows_is_not_a_failed_workflow_run(monkeypatch):
+    monkeypatch.setattr(ingest, "run", lambda cfg, st: {"status": "failed", "rows": 42, "error": None, "details": {}})
+    assert (
+        ingest.main(["--dry-run"]) == 0
+    )  # status stays "failed" in job_runs (nothing fresh); the workflow stays green
+    monkeypatch.setattr(
+        ingest, "run", lambda cfg, st: {"status": "failed", "rows": 0, "error": "SourceUnavailable", "details": {}}
+    )
+    assert ingest.main(["--dry-run"]) == 1
+
+
 def test_a_scale_error_at_one_station_is_nullified_and_flagged_but_does_not_fail_the_run():
     frame = synthetic(hours())
     frame.loc[frame.station_name == "Bawana", "nox"] = (

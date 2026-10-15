@@ -13,52 +13,20 @@ The token is read from ``WAQI_API_TOKEN`` (env or ``.env``) and never printed.
 
 from __future__ import annotations
 
-import json
-import os
-import urllib.request
 from pathlib import Path
 
 import pandas as pd
 
 from src.features.build_features import load_caaqms_offline
 from src.live.epa_aqi import from_aqi
+from src.live.sources.waqi import MAPPING, POLLUTANTS, get, token
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 OUT_DIR = REPO_ROOT / "docs" / "TIER_3"
 BOUNDS = "28.40,76.80,28.95,77.45"
+
+
 # our station -> WAQI uid, chosen by name and distance to the station coordinates in src/live/load_stations.py
-MAPPING = {
-    "Anand Vihar": (2553, "exact name"),
-    "Bawana": (11267, "Pooth Khurd, Bawana; ~0.5 km"),
-    "Dwarka-Sector 8": (10119, "NIMR, Sector 8, Dwarka; ~0.7 km"),
-    "ITO": (
-        10111,
-        "NO ITO station on WAQI; nearest is Major Dhyan Chand National Stadium, ~1.9 km, a different monitor",
-    ),
-    "Jahangirpuri": (10113, "ITI Jahangirpuri; ~0.1 km"),
-    "Punjabi Bagh": (2555, "exact name"),
-    "R K Puram": (2556, "R.K. Puram"),
-}
-POLLUTANTS = ["pm25", "pm10", "no2", "so2", "co", "o3"]
-
-
-def token() -> str:
-    value = os.environ.get("WAQI_API_TOKEN")
-    if not value and (REPO_ROOT / ".env").exists():
-        for line in (REPO_ROOT / ".env").read_text().splitlines():
-            if line.startswith("WAQI_API_TOKEN="):
-                value = line.split("=", 1)[1].strip().strip("\"'")
-    if not value:
-        raise SystemExit("WAQI_API_TOKEN is not set (env var or .env)")
-    return value
-
-
-def get(path: str, key: str) -> dict:
-    sep = "&" if "?" in path else "?"
-    with urllib.request.urlopen(f"https://api.waqi.info{path}{sep}token={key}", timeout=30) as response:
-        return json.load(response)
-
-
 def main() -> None:
     key = token()
     now = pd.Timestamp.now(tz="Asia/Kolkata")

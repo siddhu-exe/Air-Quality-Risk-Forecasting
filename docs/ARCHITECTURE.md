@@ -87,8 +87,9 @@ AQI from pollutants, which sits above the official series, so the frozen skill d
    AQI 6h and 24h and PM2.5 1h and 6h are the live-consistent models; PM2.5 24h, intervals and P(severe) are off.
 4. `python -m src.live.parity_live` compares the served products with the training path (`python -m src.live.parity` does the same for the frozen models).
 
-The workflows are manual (`workflow_dispatch`) until a source is shown to be fresh from a runner; the cron is added in the same
-commit that switches the source. Status: `docs/TIER_3/README.md`.
+The hourly OpenAQ ingest (minute 10) and the WAQI shadow ingest (minute 20, ADR 0009) are scheduled. The forecast, scoring and
+deploy workflows are manual (`workflow_dispatch`); the forecast cron is added once a source has been under 3 hours old for 24 hours
+straight. Status: `docs/TIER_3/README.md`.
 
 ## Conventions
 

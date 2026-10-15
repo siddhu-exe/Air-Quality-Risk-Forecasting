@@ -1,12 +1,13 @@
-# Live ingest, MANUAL ONLY for now. Source comes from config/live.toml; override without a commit via the repository
-# variable LIVE_SOURCE (Settings > Secrets and variables > Actions > Variables) or the "source" input when dispatching.
-# TODO(cron): the hourly schedule is added in the same commit that switches to a source the probe has shown to be fresh
-# from a runner. While OpenAQ is stale an hourly run would only be a red run, so no `schedule:` trigger yet. Planned:
-#   schedule:
-#     - cron: "10 * * * *"   # minute 10, not :00, to avoid the top-of-the-hour queue
+# Live ingest, hourly at minute 10 (not :00, to avoid the top-of-the-hour queue). Source comes from config/live.toml; override without a
+# commit via the repository variable LIVE_SOURCE (Settings > Secrets and variables > Actions > Variables) or the "source" input.
+# OpenAQ is primary. While it lags behind, every run still writes whatever new hours it has (idempotent upserts) and records the lag in
+# job_runs.details; the forecast job refuses stale data on its own, so nothing is forecast until the data is fresh.
+# The forecast cron stays OFF until a source has been under 3 h old for 24 hours straight (see docs/TIER_3/README.md).
 name: ingest
 
 on:
+  schedule:
+    - cron: "10 * * * *"
   workflow_dispatch:
     inputs:
       source:

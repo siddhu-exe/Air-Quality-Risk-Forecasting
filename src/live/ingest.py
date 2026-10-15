@@ -188,7 +188,8 @@ def main(argv: list[str] | None = None) -> int:
         len(result["details"].get("fresh_stations", [])),
         result["error"],
     )
-    return 0 if result["status"] in ("success", "partial") else 1
+    # a stale source is a data condition (job status and model health show it), not a broken run: rows written means the job worked
+    return 0 if result["status"] in ("success", "partial") or result["rows"] > 0 else 1
 
 
 if __name__ == "__main__":

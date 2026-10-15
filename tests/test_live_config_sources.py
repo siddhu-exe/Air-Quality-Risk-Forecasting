@@ -239,7 +239,7 @@ def test_workflow_and_requirements_files_exist_for_the_ingest():
     root = Path(__file__).resolve().parents[1]
     text = (root / ".github/workflows/ingest.yml").read_text()
     code = "\n".join(line for line in text.splitlines() if not line.lstrip().startswith("#"))
-    assert "workflow_dispatch" in code and "schedule:" not in code  # manual only until a source is fresh from a runner
+    assert "workflow_dispatch" in code and 'cron: "10 * * * *"' in code  # hourly at :10; the forecast cron is still off
     assert "group: ingest" in text and "cancel-in-progress: false" in text
     assert "pull_request" not in text and "contents: read" in text
     for secret in ("DATABASE_URL", "DATA_GOV_IN_API_KEY", "OPENAQ_API_KEY"):

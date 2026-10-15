@@ -1,0 +1,33 @@
+# WAQI shadow ingest: hourly at minute 20 (after the :10 OpenAQ ingest). Writes only aq.shadow_readings, which the forecast job and the
+# API never read (migration 009, ADR 0009). In a week `python -m src.live.shadow_compare` shows whether WAQI can be a fallback.
+name: shadow-waqi
+
+on:
+  schedule:
+    - cron: "20 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: shadow-waqi
+  cancel-in-progress: false
+
+jobs:
+  shadow:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements-live.txt
+      - run: pip install -r requirements-live.txt
+      - name: WAQI shadow ingest
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          WAQI_API_TOKEN: ${{ secrets.WAQI_API_TOKEN }}
+        run: python -m src.live.waqi_shadow

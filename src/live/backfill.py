@@ -95,6 +95,8 @@ def openaq_history(
                 log.info(
                     "fetched %-16s %-17s sensor %s: %d slots", station, param, sensor_id, len(raw_all[station][param])
                 )
+        if cache:  # keep what was downloaded so far: a later failure must not cost the earlier stations
+            cache.write_bytes(pickle.dumps(raw_all))
         frame = openaq.hourly_frame(raw_all[station], hours)
         extra = openaq.UNVERIFIED_FLAG if station in openaq.ALIGNMENT_UNVERIFIED_2026 else None
         parts.append(_finish(frame, station, OPENAQ_SOURCE, extra))
