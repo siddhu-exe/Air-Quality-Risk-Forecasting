@@ -2,6 +2,10 @@
 
 State on 2026-10-15 (first written 2026-10-11). The full plan, decisions and evidence are in [`PLAN.md`](PLAN.md); this page is what you need to pick the work up again.
 
+## Working rules (read first)
+
+Full text in the root `CLAUDE.md`. In short: trunk-based on `main` (a branch only when truly needed, with the reason stated first, merged and deleted promptly); full test suite and a staged-file list shown to the owner before every commit; small conventional commits; push to `main` only after the owner's OK and never force-push it; one checkout, no worktrees; production standard (clean structure, accurate docs, no internal working notes in public docs, every number from a script).
+
 ## What exists (all on `main`)
 
 | Piece | Where | Notes |

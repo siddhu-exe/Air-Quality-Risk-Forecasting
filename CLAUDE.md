@@ -2,6 +2,19 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Working rules (standing, set by the owner 2026-10-15)
+
+**Workflow**
+- Trunk-based: commit directly to `main`. Create a branch only when truly needed (a risky or long-running change that would break `main`) and say why before creating it. Merge it back and delete it (locally and on `origin`) as soon as it is done.
+- Before every commit: run the full test suite (`./venv/bin/python -m pytest`, plus `cd frontend && npm test` when the frontend changed) and show the owner the staged file list and a short message. Small, focused commits with conventional-commit messages (`feat`/`fix`/`docs`/`refactor`/`chore`/`test`). Explicit paths, never `git add -A`.
+- Push to `main` after each commit once the owner has OK'd it. Never force-push `main`.
+- One checkout, no worktrees unless the owner asks.
+- Ask before: pushing, merging, creating cloud resources, deleting files or branches that are not already merged. Bulk discards (`git clean`, `git stash drop`) may be refused by the permission layer; the owner can run them with `!`.
+
+**Production standard**
+- Treat this as a production project, not a coursework repo: clean structure, clean code, accurate docs, no stale or duplicate files, no internal working notes in public docs. Every number in a doc comes from a script output.
+- Local machine is old and crashes under load: run heavy work (training, big matrix builds) on Colab, keep local runs single-threaded and low priority (`OMP_NUM_THREADS=1 nice -n 19`), one job at a time.
+
 ## What this is
 
 Delhi air quality risk forecasting: 1h/6h/24h AQI forecasts across 7 CAAQMS stations, CPCB/GRAP risk classification with cost-sensitive alert thresholds, and a Diwali-ban causal (ITS/placebo) analysis. The project is a sequence of phases (ETL → EDA → features → modeling → classification), each leaving artifacts on disk that later phases and the UIs consume. `README.md` has results and background; `docs/` and `reports/**/*.md` hold per-phase findings and specs.
