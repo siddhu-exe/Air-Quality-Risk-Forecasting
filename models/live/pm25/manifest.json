@@ -1,0 +1,53 @@
+{
+  "pm25-1h-hgb-live-v1": {
+    "file": "pm25-1h-hgb-live-v1.joblib",
+    "sha256": "82336569c671ccff66da7604b2aa7d232a98635c76d10772830bf49b557c7f91",
+    "horizon_hours": 1,
+    "target_form": "residual",
+    "calendar": false,
+    "iterations": 400,
+    "params": {
+      "learning_rate": 0.05,
+      "max_leaf_nodes": 31,
+      "min_samples_leaf": 20,
+      "l2_regularization": 0.0,
+      "max_features": 1.0
+    },
+    "n_features": 96,
+    "matrix": "features_live_masked.parquet"
+  },
+  "pm25-6h-hgb-live-v1": {
+    "file": "pm25-6h-hgb-live-v1.joblib",
+    "sha256": "a1a3fa9aaf8488310f2b215cda9b32039ec14cba2df7ed1b5c3a9d6608ba19e3",
+    "horizon_hours": 6,
+    "target_form": "level",
+    "calendar": true,
+    "iterations": 400,
+    "params": {
+      "learning_rate": 0.05,
+      "max_leaf_nodes": 31,
+      "min_samples_leaf": 20,
+      "l2_regularization": 0.0,
+      "max_features": 1.0
+    },
+    "n_features": 113,
+    "matrix": "features_live_masked.parquet"
+  },
+  "pm25-24h-hgb-live-v1": {
+    "file": "pm25-24h-hgb-live-v1.joblib",
+    "sha256": "a489b44a089ab3ec56b67e0db204390c84a2807bc626c3a440dcb9e1353ed573",
+    "horizon_hours": 24,
+    "target_form": "residual",
+    "calendar": true,
+    "iterations": 400,
+    "params": {
+      "learning_rate": 0.05,
+      "max_leaf_nodes": 31,
+      "min_samples_leaf": 20,
+      "l2_regularization": 0.0,
+      "max_features": 1.0
+    },
+    "n_features": 113,
+    "matrix": "features_live_masked.parquet"
+  }
+}

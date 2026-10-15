@@ -1,0 +1,14 @@
+{
+  "models/live/aqi-1h-lgb-live-v1.joblib": "2bcd755b472afa91f8918a074f518e8c38d8359a2a219cb2f916b4ebdf794042",
+  "models/live/aqi-1h-lgb-live-v1.txt": "5181fe8be446b9d82f34de75575f0b582865aacf7199a318b4b662a8f2294a10",
+  "models/live/aqi-24h-hybrid-live-v1/features.joblib": "bf11b205a39bcb994b87bb88b47c46df7b794ae4aaafc795b2f826251b84d00b",
+  "models/live/aqi-24h-hybrid-live-v1/imputer.joblib": "a44978376303422f6c2ba1bb4cf8cba2bd22fd1e6c39609dd6994e923bd63a63",
+  "models/live/aqi-24h-hybrid-live-v1/model.joblib": "ef155df4c531c7eac521065796b66053c1a3874dd202f13b82ce79d9358c235e",
+  "models/live/aqi-24h-hybrid-live-v1/scaler.joblib": "8b1cfa0b53c1c76f90e82ac87c6a98336d879706b07ced9f1fef1a6130f2746a",
+  "models/live/aqi-6h-lgb-live-v1.joblib": "0a827b9261038b7e9d8c4f00a468ddede2eb56816e26bfd1663d6b5a85a5fb3b",
+  "models/live/aqi-6h-lgb-live-v1.txt": "f3bcf8e8c20c8be95773959df6c425236c68b794e85accf8c4e8205013da296f",
+  "models/live/pm25/pm25-1h-hgb-live-v1.joblib": "82336569c671ccff66da7604b2aa7d232a98635c76d10772830bf49b557c7f91",
+  "models/live/pm25/pm25-24h-hgb-live-v1.joblib": "a489b44a089ab3ec56b67e0db204390c84a2807bc626c3a440dcb9e1353ed573",
+  "models/live/pm25/pm25-6h-hgb-live-v1.joblib": "a1a3fa9aaf8488310f2b215cda9b32039ec14cba2df7ed1b5c3a9d6608ba19e3",
+  "models/live/quantile/aqi-24h-quantile-live-v1.joblib": "d4630dfbcdbea03fd55aa5c3e5ffa67bdbeb4a16c7c651d3304fa5dde5a594d6"
+}

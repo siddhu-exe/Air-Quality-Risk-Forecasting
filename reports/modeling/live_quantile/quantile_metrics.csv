@@ -1,0 +1,3 @@
+split,n,raw_80pct_coverage,conformal_80pct_coverage,conformal_pad,raw_mean_width,conformal_mean_width,persistence_band_coverage,persistence_band_mean_width
+val,9790,0.7531,0.8001,4.301,87.86,96.46,0.8525,118.18
+test,10044,0.73,0.7698,4.301,128.22,136.82,0.8026,118.18

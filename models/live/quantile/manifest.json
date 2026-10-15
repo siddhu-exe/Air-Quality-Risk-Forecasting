@@ -1,0 +1,23 @@
+{
+  "aqi-24h-quantile-live-v1": {
+    "file": "aqi-24h-quantile-live-v1.joblib",
+    "sha256": "d4630dfbcdbea03fd55aa5c3e5ffa67bdbeb4a16c7c651d3304fa5dde5a594d6",
+    "horizon_hours": 24,
+    "alphas": [
+      0.1,
+      0.5,
+      0.9
+    ],
+    "calendar": true,
+    "conformal_pad": 4.301019910781008,
+    "severe_threshold": 401.0,
+    "best_iterations": {
+      "0.1": 75,
+      "0.5": 152,
+      "0.9": 149,
+      "classifier": 63
+    },
+    "n_features": 113,
+    "matrix": "features_live_masked.parquet"
+  }
+}

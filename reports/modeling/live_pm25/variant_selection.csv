@@ -1,0 +1,13 @@
+horizon,stage,target_form,calendar,iterations,params,val_mae,val_persistence_mae,val_mae_skill
+1h,variant,level,True,400,"{""learning_rate"": 0.05, ""max_leaf_nodes"": 31, ""min_samples_leaf"": 20, ""l2_regularization"": 0.0, ""max_features"": 1.0}",13.503,15.402,0.1233
+1h,variant,level,False,400,"{""learning_rate"": 0.05, ""max_leaf_nodes"": 31, ""min_samples_leaf"": 20, ""l2_regularization"": 0.0, ""max_features"": 1.0}",13.422,15.402,0.1285
+1h,variant,residual,True,400,"{""learning_rate"": 0.05, ""max_leaf_nodes"": 31, ""min_samples_leaf"": 20, ""l2_regularization"": 0.0, ""max_features"": 1.0}",13.247,15.402,0.1399
+1h,variant,residual,False,400,"{""learning_rate"": 0.05, ""max_leaf_nodes"": 31, ""min_samples_leaf"": 20, ""l2_regularization"": 0.0, ""max_features"": 1.0}",13.202,15.402,0.1428
+6h,variant,level,True,400,"{""learning_rate"": 0.05, ""max_leaf_nodes"": 31, ""min_samples_leaf"": 20, ""l2_regularization"": 0.0, ""max_features"": 1.0}",25.697,38.234,0.3279
+6h,variant,level,False,400,"{""learning_rate"": 0.05, ""max_leaf_nodes"": 31, ""min_samples_leaf"": 20, ""l2_regularization"": 0.0, ""max_features"": 1.0}",26.468,38.234,0.3077
+6h,variant,residual,True,400,"{""learning_rate"": 0.05, ""max_leaf_nodes"": 31, ""min_samples_leaf"": 20, ""l2_regularization"": 0.0, ""max_features"": 1.0}",25.698,38.234,0.3279
+6h,variant,residual,False,400,"{""learning_rate"": 0.05, ""max_leaf_nodes"": 31, ""min_samples_leaf"": 20, ""l2_regularization"": 0.0, ""max_features"": 1.0}",26.731,38.234,0.3009
+24h,variant,level,True,400,"{""learning_rate"": 0.05, ""max_leaf_nodes"": 31, ""min_samples_leaf"": 20, ""l2_regularization"": 0.0, ""max_features"": 1.0}",32.188,35.814,0.1013
+24h,variant,level,False,400,"{""learning_rate"": 0.05, ""max_leaf_nodes"": 31, ""min_samples_leaf"": 20, ""l2_regularization"": 0.0, ""max_features"": 1.0}",33.196,35.814,0.0731
+24h,variant,residual,True,400,"{""learning_rate"": 0.05, ""max_leaf_nodes"": 31, ""min_samples_leaf"": 20, ""l2_regularization"": 0.0, ""max_features"": 1.0}",32.096,35.814,0.1038
+24h,variant,residual,False,400,"{""learning_rate"": 0.05, ""max_leaf_nodes"": 31, ""min_samples_leaf"": 20, ""l2_regularization"": 0.0, ""max_features"": 1.0}",33.301,35.814,0.0702

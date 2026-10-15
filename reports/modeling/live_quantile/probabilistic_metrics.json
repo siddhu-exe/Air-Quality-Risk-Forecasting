@@ -1,0 +1,86 @@
+{
+  "target": "target_aqi_24h",
+  "profile": "standard",
+  "n_boot": 1000,
+  "severe_threshold": 401.0,
+  "selected_calendar_features": true,
+  "best_iterations": {
+    "0.1": 75,
+    "0.5": 152,
+    "0.9": 149,
+    "classifier": 63
+  },
+  "best_params": {
+    "0.1": {
+      "learning_rate": 0.05,
+      "max_leaf_nodes": 31,
+      "min_samples_leaf": 20,
+      "l2_regularization": 0.0,
+      "max_features": 1.0
+    },
+    "0.5": {
+      "learning_rate": 0.05,
+      "max_leaf_nodes": 31,
+      "min_samples_leaf": 20,
+      "l2_regularization": 0.0,
+      "max_features": 1.0
+    },
+    "0.9": {
+      "learning_rate": 0.05,
+      "max_leaf_nodes": 31,
+      "min_samples_leaf": 20,
+      "l2_regularization": 0.0,
+      "max_features": 1.0
+    },
+    "classifier": {
+      "learning_rate": 0.05,
+      "max_leaf_nodes": 31,
+      "min_samples_leaf": 20,
+      "l2_regularization": 0.0,
+      "max_features": 1.0
+    }
+  },
+  "embargo_hours": 24,
+  "test_severe_rate": 0.408,
+  "train_severe_rate": 0.0656,
+  "val_severe_rate": 0.0317,
+  "brier_model": 0.1891,
+  "brier_persistence": 0.1943,
+  "brier_constant_train_rate": 0.3588,
+  "brier_diff_model_minus_persistence_ci95": [
+    -0.0243,
+    0.0165
+  ],
+  "median_forecast_mae_test": 35.162,
+  "persistence_mae_test": 36.52,
+  "median_forecast_mae_skill": 0.0372,
+  "pinball_test": {
+    "0.1": 11.08,
+    "0.5": 17.581,
+    "0.9": 7.631
+  },
+  "coverage": [
+    {
+      "split": "val",
+      "n": 9790,
+      "raw_80pct_coverage": 0.7531,
+      "conformal_80pct_coverage": 0.8001,
+      "conformal_pad": 4.301,
+      "raw_mean_width": 87.86,
+      "conformal_mean_width": 96.46,
+      "persistence_band_coverage": 0.8525,
+      "persistence_band_mean_width": 118.18
+    },
+    {
+      "split": "test",
+      "n": 10044,
+      "raw_80pct_coverage": 0.73,
+      "conformal_80pct_coverage": 0.7698,
+      "conformal_pad": 4.301,
+      "raw_mean_width": 128.22,
+      "conformal_mean_width": 136.82,
+      "persistence_band_coverage": 0.8026,
+      "persistence_band_mean_width": 118.18
+    }
+  ]
+}
