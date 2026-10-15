@@ -24,19 +24,44 @@ EXPECTED_COUNTS = {
 EXPECTED_COLUMNS = {
     "stations.csv": ["station_id", "station_name", "city", "operator", "latitude", "longitude"],
     "source_files.csv": [
-        "source_file_id", "station_id", "filename", "source_type",
-        "file_format", "reporting_period_start", "reporting_period_end",
-        "row_count", "processing_status"
+        "source_file_id",
+        "station_id",
+        "filename",
+        "source_type",
+        "file_format",
+        "reporting_period_start",
+        "reporting_period_end",
+        "row_count",
+        "processing_status",
     ],
     "caaqms_hourly.csv": [
-        "station_id", "source_file_id", "timestamp",
-        "pm25", "pm10", "no", "no2", "nox", "nh3", "so2", "co", "o3",
-        "benzene", "toluene", "xylene", "temperature", "humidity",
-        "wind_speed", "wind_direction", "rainfall", "solar_radiation",
-        "barometric_pressure", "vertical_wind_speed", "qc_flags"
+        "station_id",
+        "source_file_id",
+        "timestamp",
+        "pm25",
+        "pm10",
+        "no",
+        "no2",
+        "nox",
+        "nh3",
+        "so2",
+        "co",
+        "o3",
+        "benzene",
+        "toluene",
+        "xylene",
+        "temperature",
+        "humidity",
+        "wind_speed",
+        "wind_direction",
+        "rainfall",
+        "solar_radiation",
+        "barometric_pressure",
+        "vertical_wind_speed",
+        "qc_flags",
     ],
     "aqi_hourly.csv": ["station_id", "source_file_id", "timestamp", "aqi_value", "qc_flags"],
-    "column_metadata.csv": ["file", "column", "description", "unit", "data_type"]
+    "column_metadata.csv": ["file", "column", "description", "unit", "data_type"],
 }
 
 
@@ -62,9 +87,7 @@ def validate_csv_structure_and_counts():
         dfs[filename] = df
 
         # Row count
-        assert len(df) == expected_count, (
-            f"Row count mismatch for {filename}: expected {expected_count}, got {len(df)}"
-        )
+        assert len(df) == expected_count, f"Row count mismatch for {filename}: expected {expected_count}, got {len(df)}"
 
         # Columns
         expected_cols = EXPECTED_COLUMNS[filename]
@@ -116,7 +139,9 @@ def validate_integrity_and_ranges(dfs):
 
     # Range checks
     pm25_valid = df_caaqms["pm25"].dropna()
-    assert pm25_valid.min() >= 0.0 and pm25_valid.max() <= 1000.0, f"PM2.5 out of bounds: {pm25_valid.min()} - {pm25_valid.max()}"
+    assert pm25_valid.min() >= 0.0 and pm25_valid.max() <= 1000.0, (
+        f"PM2.5 out of bounds: {pm25_valid.min()} - {pm25_valid.max()}"
+    )
     print(f"   ✓ CAAQMS: PM2.5 range [{pm25_valid.min():.2f}, {pm25_valid.max():.2f}] µg/m³ valid")
 
     # Duplicate check on (station_id, timestamp)
@@ -135,7 +160,9 @@ def validate_integrity_and_ranges(dfs):
     print(f"   ✓ AQI: Timestamps span {timestamps_aqi.min()} to {timestamps_aqi.max()}")
 
     aqi_valid = df_aqi["aqi_value"].dropna()
-    assert aqi_valid.min() >= 0.0 and aqi_valid.max() <= 500.0, f"AQI out of bounds: {aqi_valid.min()} - {aqi_valid.max()}"
+    assert aqi_valid.min() >= 0.0 and aqi_valid.max() <= 500.0, (
+        f"AQI out of bounds: {aqi_valid.min()} - {aqi_valid.max()}"
+    )
     print(f"   ✓ AQI: AQI value range [{aqi_valid.min():.1f}, {aqi_valid.max():.1f}] within CPCB bounds [0, 500]")
 
     dup_aqi = df_aqi.duplicated(subset=["station_id", "timestamp"]).sum()

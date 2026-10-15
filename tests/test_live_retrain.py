@@ -1,4 +1,5 @@
 """Light checks for the live-consistent retrain pieces (no LightGBM, no data files)."""
+
 import json
 
 import numpy as np
@@ -21,7 +22,7 @@ def test_live_mask_blanks_only_the_inputs_the_live_sources_lack():
     out = apply_mask(_caaqms(), "live")
     assert out[MASKED_EVERYWHERE].isna().all().all()
     assert out.loc[out.station_name == "ITO", MASKED_AT["ITO"]].isna().all().all()
-    assert out.loc[out.station_name == "Bawana", MASKED_AT["ITO"]].notna().all().all()   # other stations keep weather
+    assert out.loc[out.station_name == "Bawana", MASKED_AT["ITO"]].notna().all().all()  # other stations keep weather
     assert out[["pm25", "no2"]].notna().all().all()
     assert apply_mask(_caaqms(), "none").notna().all().all()
     with pytest.raises(ValueError):

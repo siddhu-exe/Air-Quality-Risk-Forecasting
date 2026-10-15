@@ -34,6 +34,7 @@ Outputs
   reports/modeling/probabilistic/[<profile>/]reliability_severe.csv / .png
   reports/modeling/probabilistic/[<profile>/]probabilistic_metrics.json
 """
+
 from __future__ import annotations
 
 import json
@@ -98,12 +99,14 @@ def reliability_table(y_bin, proba, n_bins=10) -> pd.DataFrame:
         mask = bins == b
         if mask.sum() == 0:
             continue
-        rows.append({
-            "bin": f"{b / n_bins:.1f}-{(b + 1) / n_bins:.1f}",
-            "n": int(mask.sum()),
-            "mean_predicted": round(float(proba[mask].mean()), 4),
-            "observed_rate": round(float(y_bin[mask].mean()), 4),
-        })
+        rows.append(
+            {
+                "bin": f"{b / n_bins:.1f}-{(b + 1) / n_bins:.1f}",
+                "n": int(mask.sum()),
+                "mean_predicted": round(float(proba[mask].mean()), 4),
+                "observed_rate": round(float(y_bin[mask].mean()), 4),
+            }
+        )
     return pd.DataFrame(rows)
 
 
@@ -111,8 +114,12 @@ def fit_quantile(train, val, cols, alpha, cfg=None):
     """Fit a quantile GBM; pick the iteration count on validation pinball loss."""
     cfg = DEFAULT_CONFIG if cfg is None else cfg
     model = HistGradientBoostingRegressor(
-        loss="quantile", quantile=alpha, max_iter=MAX_ITER, early_stopping=False,
-        random_state=42, **cfg,
+        loss="quantile",
+        quantile=alpha,
+        max_iter=MAX_ITER,
+        early_stopping=False,
+        random_state=42,
+        **cfg,
     ).fit(train[cols], train[TARGET])
     y_val = val[TARGET].values
     losses = [pinball(y_val, p, alpha) for p in model.staged_predict(val[cols])]
@@ -131,7 +138,10 @@ def fit_classifier(train_x, y_train, val_x, y_val, cfg=None):
     """Fit the severe-exceedance classifier; pick the iteration count on validation Brier."""
     cfg = DEFAULT_CONFIG if cfg is None else cfg
     clf = HistGradientBoostingClassifier(
-        max_iter=MAX_ITER, early_stopping=False, random_state=42, **cfg,
+        max_iter=MAX_ITER,
+        early_stopping=False,
+        random_state=42,
+        **cfg,
     ).fit(train_x, y_train)
     briers = [brier(y_val, p[:, 1]) for p in clf.staged_predict_proba(val_x)]
     best = int(np.argmin(briers))
@@ -153,8 +163,7 @@ def block_bootstrap_brier_diff(y_bin, p_model, p_base, days, n_boot, seed):
 def plot_reliability(rel_model, rel_persist, path: Path) -> None:
     fig, (ax, ax2) = plt.subplots(1, 2, figsize=(10, 4.2), gridspec_kw={"width_ratios": [3, 2]})
     ax.plot([0, 1], [0, 1], "--", color="grey", label="perfect calibration")
-    for rel, label, color in ((rel_model, "GBM classifier", "#d62728"),
-                              (rel_persist, "persistence-based", "#1f77b4")):
+    for rel, label, color in ((rel_model, "GBM classifier", "#d62728"), (rel_persist, "persistence-based", "#1f77b4")):
         ax.plot(rel["mean_predicted"], rel["observed_rate"], "o-", color=color, label=label)
     ax.set_xlabel("mean predicted P(AQI >= 401)")
     ax.set_ylabel("observed frequency (test)")
@@ -196,8 +205,7 @@ def main() -> None:
         print(f"calendar={use_cal}: {len(cols)} features, summed val pinball {total:.3f}", flush=True)
     use_cal = min(fits, key=lambda k: fits[k][2])
     cols, per_alpha, _ = fits[use_cal]
-    print(f"selected calendar={use_cal}; best iterations "
-          f"{ {a: v[1] + 1 for a, v in per_alpha.items()} }", flush=True)
+    print(f"selected calendar={use_cal}; best iterations { {a: v[1] + 1 for a, v in per_alpha.items()} }", flush=True)
 
     # non-standard profiles: random hyper-parameter search per quantile (validation pinball loss)
     best_params = {str(a): dict(DEFAULT_CONFIG) for a in ALPHAS}
@@ -205,14 +213,19 @@ def main() -> None:
         for n, cfg in enumerate(search_configs(PROFILE["n_search"])[1:], start=1):
             cand = fit_quantile(train, val, cols, a, cfg)
             improved = cand[2] < per_alpha[a][2]
-            print(f"[q{a}] search {n}/{PROFILE['n_search']} {cfg} -> val pinball {cand[2]:.3f}"
-                  f"{'  *' if improved else ''}", flush=True)
+            print(
+                f"[q{a}] search {n}/{PROFILE['n_search']} {cfg} -> val pinball {cand[2]:.3f}"
+                f"{'  *' if improved else ''}",
+                flush=True,
+            )
             if improved:
                 per_alpha[a] = cand
                 best_params[str(a)] = cfg
 
-    preds = {a: {"val": staged_at(m, val, cols, best), "test": staged_at(m, test, cols, best)}
-             for a, (m, best, _) in per_alpha.items()}
+    preds = {
+        a: {"val": staged_at(m, val, cols, best), "test": staged_at(m, test, cols, best)}
+        for a, (m, best, _) in per_alpha.items()
+    }
     # enforce monotone quantiles (independent fits can cross)
     for split in ("val", "test"):
         stack = np.sort(np.vstack([preds[a][split] for a in ALPHAS]), axis=0)
@@ -223,28 +236,32 @@ def main() -> None:
     pad = conformal_pad(y_val, preds[0.1]["val"], preds[0.9]["val"], TARGET_COVERAGE)
     resid_train = train[TARGET].values - train["aqi_curr"].values
     r_lo, r_hi = np.quantile(resid_train, [0.1, 0.9])
-    band = {s: (p["aqi_curr"].values + r_lo, p["aqi_curr"].values + r_hi)
-            for s, p in (("val", val), ("test", test))}
+    band = {s: (p["aqi_curr"].values + r_lo, p["aqi_curr"].values + r_hi) for s, p in (("val", val), ("test", test))}
     band_pad = conformal_pad(y_val, *band["val"], TARGET_COVERAGE)
 
     rows = []
     for split, y in (("val", y_val), ("test", y_test)):
         lo, hi = preds[0.1][split], preds[0.9][split]
         b_lo, b_hi = band[split]
-        rows.append({
-            "split": split, "n": int(len(y)),
-            "raw_80pct_coverage": round(coverage(y, lo, hi), 4),
-            "conformal_80pct_coverage": round(coverage(y, lo - pad, hi + pad), 4),
-            "conformal_pad": round(pad, 3),
-            "raw_mean_width": round(float(np.mean(hi - lo)), 2),
-            "conformal_mean_width": round(float(np.mean(hi - lo + 2 * pad)), 2),
-            "persistence_band_coverage": round(coverage(y, b_lo - band_pad, b_hi + band_pad), 4),
-            "persistence_band_mean_width": round(float(np.mean(b_hi - b_lo + 2 * band_pad)), 2),
-        })
-        print(f"[{split}] raw cov {rows[-1]['raw_80pct_coverage']:.3f} -> conformal "
-              f"{rows[-1]['conformal_80pct_coverage']:.3f} (pad {pad:.2f}, width "
-              f"{rows[-1]['conformal_mean_width']:.1f}); persistence band cov "
-              f"{rows[-1]['persistence_band_coverage']:.3f} width {rows[-1]['persistence_band_mean_width']:.1f}")
+        rows.append(
+            {
+                "split": split,
+                "n": int(len(y)),
+                "raw_80pct_coverage": round(coverage(y, lo, hi), 4),
+                "conformal_80pct_coverage": round(coverage(y, lo - pad, hi + pad), 4),
+                "conformal_pad": round(pad, 3),
+                "raw_mean_width": round(float(np.mean(hi - lo)), 2),
+                "conformal_mean_width": round(float(np.mean(hi - lo + 2 * pad)), 2),
+                "persistence_band_coverage": round(coverage(y, b_lo - band_pad, b_hi + band_pad), 4),
+                "persistence_band_mean_width": round(float(np.mean(b_hi - b_lo + 2 * band_pad)), 2),
+            }
+        )
+        print(
+            f"[{split}] raw cov {rows[-1]['raw_80pct_coverage']:.3f} -> conformal "
+            f"{rows[-1]['conformal_80pct_coverage']:.3f} (pad {pad:.2f}, width "
+            f"{rows[-1]['conformal_mean_width']:.1f}); persistence band cov "
+            f"{rows[-1]['persistence_band_coverage']:.3f} width {rows[-1]['persistence_band_mean_width']:.1f}"
+        )
     coverage_table = pd.DataFrame(rows)
 
     median_mae = float(np.mean(np.abs(preds[0.5]["test"] - y_test)))
@@ -260,8 +277,10 @@ def main() -> None:
     for n, cfg in enumerate(search_configs(PROFILE["n_search"])[1:] if PROFILE["n_search"] else [], start=1):
         cand = fit_classifier(train[cols], y_bin_train, val[cols], y_bin_val, cfg)
         improved = cand[2] < best_brier
-        print(f"[clf] search {n}/{PROFILE['n_search']} {cfg} -> val Brier {cand[2]:.4f}"
-              f"{'  *' if improved else ''}", flush=True)
+        print(
+            f"[clf] search {n}/{PROFILE['n_search']} {cfg} -> val Brier {cand[2]:.4f}{'  *' if improved else ''}",
+            flush=True,
+        )
         if improved:
             clf, best_clf, best_brier = cand
             clf_params = cfg
@@ -274,16 +293,39 @@ def main() -> None:
     if export_dir() is not None:
         # replay the selected iteration count: with no subsampling and a fixed seed, max_iter = best + 1 gives the same model
         quantile_models = {
-            str(a): HistGradientBoostingRegressor(loss="quantile", quantile=a, max_iter=best + 1, early_stopping=False, random_state=42,
-                                                  **best_params[str(a)]).fit(train[cols], train[TARGET])
-            for a, (_, best, _) in per_alpha.items()}
-        classifier = HistGradientBoostingClassifier(max_iter=best_clf + 1, early_stopping=False, random_state=42,
-                                                    **clf_params).fit(train[cols], y_bin_train)
-        export("aqi-24h-quantile-live-v1", {"quantile_models": quantile_models, "classifier": classifier, "columns": cols,
-                                            "conformal_pad": pad, "severe_threshold": SEVERE},
-               {"horizon_hours": 24, "alphas": ALPHAS, "calendar": bool(use_cal), "conformal_pad": pad, "severe_threshold": SEVERE,
+            str(a): HistGradientBoostingRegressor(
+                loss="quantile",
+                quantile=a,
+                max_iter=best + 1,
+                early_stopping=False,
+                random_state=42,
+                **best_params[str(a)],
+            ).fit(train[cols], train[TARGET])
+            for a, (_, best, _) in per_alpha.items()
+        }
+        classifier = HistGradientBoostingClassifier(
+            max_iter=best_clf + 1, early_stopping=False, random_state=42, **clf_params
+        ).fit(train[cols], y_bin_train)
+        export(
+            "aqi-24h-quantile-live-v1",
+            {
+                "quantile_models": quantile_models,
+                "classifier": classifier,
+                "columns": cols,
+                "conformal_pad": pad,
+                "severe_threshold": SEVERE,
+            },
+            {
+                "horizon_hours": 24,
+                "alphas": ALPHAS,
+                "calendar": bool(use_cal),
+                "conformal_pad": pad,
+                "severe_threshold": SEVERE,
                 "best_iterations": {str(a): v[1] + 1 for a, v in per_alpha.items()} | {"classifier": best_clf + 1},
-                "n_features": len(cols), "matrix": str(FEATURES_PATH.name)})
+                "n_features": len(cols),
+                "matrix": str(FEATURES_PATH.name),
+            },
+        )
 
     curr = train["aqi_curr"].values
     base_rate = float(y_bin_train.mean())
@@ -374,9 +416,21 @@ def main() -> None:
         "`reliability_severe.png`.",
     ]
     (OUT_DIR / "quantile_metrics.md").write_text("\n".join(lines) + "\n")
-    print(json.dumps({k: metrics[k] for k in (
-        "test_severe_rate", "brier_model", "brier_persistence",
-        "brier_constant_train_rate", "median_forecast_mae_skill")}, indent=2))
+    print(
+        json.dumps(
+            {
+                k: metrics[k]
+                for k in (
+                    "test_severe_rate",
+                    "brier_model",
+                    "brier_persistence",
+                    "brier_constant_train_rate",
+                    "median_forecast_mae_skill",
+                )
+            },
+            indent=2,
+        )
+    )
     print(f"Wrote {OUT_DIR / 'quantile_metrics.md'}")
 
 

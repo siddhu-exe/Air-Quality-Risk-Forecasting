@@ -5,6 +5,7 @@ Write rules (tests assert the SQL text):
     hand-loaded CSV row is never overwritten and two live sources do not fight over an hour (first writer wins);
   * no DELETE anywhere; the job role could not run one anyway.
 """
+
 from __future__ import annotations
 
 import json
@@ -42,8 +43,14 @@ def reading_tuples(readings: pd.DataFrame):
 
     ts = pd.DatetimeIndex(readings.index).tz_localize("Asia/Kolkata")
     for position, (_, row) in enumerate(readings.iterrows()):
-        yield (int(row.station_id), ts[position].to_pydatetime(), *[_clean(float(row[c])) for c in VALUE_COLUMNS],
-               row.weather_source, Json(row.qc_flags), row.source)
+        yield (
+            int(row.station_id),
+            ts[position].to_pydatetime(),
+            *[_clean(float(row[c])) for c in VALUE_COLUMNS],
+            row.weather_source,
+            Json(row.qc_flags),
+            row.source,
+        )
 
 
 def aqi_tuples(aqi: pd.DataFrame):
@@ -70,9 +77,12 @@ class Store:
         return self._cm.__exit__(exc_type, exc, tb)
 
     def start_run(self, job: str) -> int:
-        self._cur.execute("insert into aq.job_runs (job, github_run) values (%s, %s) returning id", (job, os.environ.get("GITHUB_RUN_ID")))
+        self._cur.execute(
+            "insert into aq.job_runs (job, github_run) values (%s, %s) returning id",
+            (job, os.environ.get("GITHUB_RUN_ID")),
+        )
         run_id = self._cur.fetchone()[0]
-        self._conn.commit()      # visible even if the run later fails
+        self._conn.commit()  # visible even if the run later fails
         return run_id
 
     def finish_run(self, run_id: int, status: str, rows: int, error: str | None, details: dict) -> None:
@@ -91,7 +101,10 @@ class Store:
         return len(rows)
 
     def recent_pollutants(self, station_ids: list[int], since: pd.Timestamp) -> pd.DataFrame:
-        self._cur.execute(SELECT_RECENT_POLLUTANTS, (list(station_ids), since.tz_localize("Asia/Kolkata") if since.tzinfo is None else since))
+        self._cur.execute(
+            SELECT_RECENT_POLLUTANTS,
+            (list(station_ids), since.tz_localize("Asia/Kolkata") if since.tzinfo is None else since),
+        )
         columns = ["station_id", "ts", "pm25", "pm10", "no2", "so2", "nh3", "co", "o3"]
         frame = pd.DataFrame(self._cur.fetchall(), columns=columns)
         frame["hour"] = pd.to_datetime(frame["ts"], utc=True).dt.tz_convert("Asia/Kolkata").dt.tz_localize(None)

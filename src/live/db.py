@@ -4,6 +4,7 @@ Connection strings come only from the environment (``DATABASE_URL`` for the jobs
 ``DATABASE_URL_READONLY`` for the API); a local ``.env`` is loaded if present. They are
 never printed or logged. Errors that could echo the URL are re-raised without it.
 """
+
 from __future__ import annotations
 
 import os
@@ -35,10 +36,17 @@ _RESERVED = set("@:/?#[] +%")
 def _classify(driver_message: str) -> str:
     """Map a libpq error to a fixed message that cannot contain URL fragments."""
     m = driver_message.lower()
-    if "invalid integer value" in m or "could not translate host name" in m or "invalid uri" in m \
-            or "missing \"=\"" in m or "invalid connection option" in m:
-        return ("the URL is malformed; percent-encode reserved characters in the password "
-                "(@ : / ? # [ ] + space %) or use a password of letters and digits only")
+    if (
+        "invalid integer value" in m
+        or "could not translate host name" in m
+        or "invalid uri" in m
+        or 'missing "="' in m
+        or "invalid connection option" in m
+    ):
+        return (
+            "the URL is malformed; percent-encode reserved characters in the password "
+            "(@ : / ? # [ ] + space %) or use a password of letters and digits only"
+        )
     if "tenant or user not found" in m:
         return "pooler user not found; the user must be '<role>.<project-ref>'"
     if "password authentication failed" in m or "authentication failed" in m:

@@ -1,4 +1,5 @@
 """Live config and the two sources behind one interface. Mocked HTTP only: no network, no database."""
+
 from pathlib import Path
 
 import numpy as np
@@ -30,7 +31,12 @@ def _toml(tmp_path, body='[ingest]\nsource = "openaq"\n'):
 
 def test_the_repository_config_loads_and_defaults_to_openaq():
     cfg = cfgmod.load_config(env={})
-    assert cfg.source == "openaq" and cfg.allow_unverified is False and cfg.weather_display == "open-meteo" and cfg.weather_fill == "none"
+    assert (
+        cfg.source == "openaq"
+        and cfg.allow_unverified is False
+        and cfg.weather_display == "open-meteo"
+        and cfg.weather_fill == "none"
+    )
 
 
 def test_environment_overrides_the_file_and_blank_variables_are_ignored(tmp_path):
@@ -41,8 +47,17 @@ def test_environment_overrides_the_file_and_blank_variables_are_ignored(tmp_path
     assert cfgmod.load_config(path, {"LIVE_LOOKBACK_HOURS": "12"}).lookback_hours == 12
 
 
-@pytest.mark.parametrize("env", [{"LIVE_SOURCE": "mystery"}, {"LIVE_FALLBACK": "openaq"}, {"LIVE_WEATHER_FILL": "gfs"}, {"LIVE_WEATHER_DISPLAY": "gfs"},
-                                 {"LIVE_LOOKBACK_HOURS": "0"}, {"LIVE_LOOKBACK_HOURS": "500"}])
+@pytest.mark.parametrize(
+    "env",
+    [
+        {"LIVE_SOURCE": "mystery"},
+        {"LIVE_FALLBACK": "openaq"},
+        {"LIVE_WEATHER_FILL": "gfs"},
+        {"LIVE_WEATHER_DISPLAY": "gfs"},
+        {"LIVE_LOOKBACK_HOURS": "0"},
+        {"LIVE_LOOKBACK_HOURS": "500"},
+    ],
+)
 def test_invalid_settings_are_rejected(tmp_path, env):
     with pytest.raises(cfgmod.ConfigError):
         cfgmod.load_config(_toml(tmp_path), env)
@@ -65,7 +80,7 @@ def test_registry_has_both_sources_behind_the_same_interface():
 
 def test_verification_status_is_explicit_and_enforced():
     assert OpenAQSource.verified is True
-    assert DataGovInSource.verified is False                 # until a real response has been read
+    assert DataGovInSource.verified is False  # until a real response has been read
     with pytest.raises(SourceNotVerified):
         DataGovInSource(api_key="k").require_verified(allow_unverified=False)
     DataGovInSource(api_key="k").require_verified(allow_unverified=True)
@@ -74,7 +89,9 @@ def test_verification_status_is_explicit_and_enforced():
 
 def test_documented_gaps_per_source():
     assert "solar_radiation" in OpenAQSource.missing["all stations"]
-    assert {"nox", "temperature", "humidity", "wind_speed", "solar_radiation"} <= set(DataGovInSource.missing["all stations"])
+    assert {"nox", "temperature", "humidity", "wind_speed", "solar_radiation"} <= set(
+        DataGovInSource.missing["all stations"]
+    )
 
 
 # ------------------------------------------------------------------ OpenAQ source
@@ -93,7 +110,7 @@ def test_openaq_source_returns_the_canonical_frame_in_training_units(monkeypatch
     assert list(frame.columns)[:2] == ["station_name", "hour"] and set(SOURCE_COLUMNS) <= set(frame.columns)
     assert set(frame.station_name) == set(openaq.LOCATIONS)
     row = frame[(frame.station_name == "R K Puram") & (frame.hour == pd.Timestamp("2026-10-11 09:00"))].iloc[0]
-    assert row.pm25 == 100.0 and row.no2 == 40.0 and row.nox == pytest.approx(80.0)     # 0.08 ppm -> 80 ppb
+    assert row.pm25 == 100.0 and row.no2 == 40.0 and row.nox == pytest.approx(80.0)  # 0.08 ppm -> 80 ppb
     assert row.temperature == pytest.approx(31.0)
 
 
@@ -105,6 +122,7 @@ def test_openaq_station_flags_only_mark_dwarka():
 def test_a_changed_openaq_unit_label_stops_the_ingest_source(monkeypatch):
     def boom(loc, station=""):
         raise openaq.UnitLabelChanged("labels moved")
+
     monkeypatch.setattr(openaq, "live_sensors", boom)
     with pytest.raises(openaq.UnitLabelChanged):
         OpenAQSource().fetch(pd.Timestamp("2026-10-11 08:00"), pd.Timestamp("2026-10-11 09:00"))
@@ -113,6 +131,7 @@ def test_a_changed_openaq_unit_label_stops_the_ingest_source(monkeypatch):
 def test_openaq_network_failure_becomes_source_unavailable_without_details(monkeypatch):
     def down(loc, station=""):
         raise requests.ConnectionError("https://api.openaq.org/...?key=SECRET")
+
     monkeypatch.setattr(openaq, "live_sensors", down)
     with pytest.raises(SourceUnavailable) as err:
         OpenAQSource().fetch(pd.Timestamp("2026-10-11 08:00"), pd.Timestamp("2026-10-11 09:00"))
@@ -121,15 +140,28 @@ def test_openaq_network_failure_becomes_source_unavailable_without_details(monke
 
 # ------------------------------------------------------------------ data.gov.in source (documented fields only)
 def _record(station, pollutant, avg, stamp="11-10-2026 14:00:00"):
-    return {"country": "India", "state": "Delhi", "city": "Delhi", "station": station, "last_update": stamp,
-            "pollutant_id": pollutant, "pollutant_min": "10", "pollutant_max": "300", "pollutant_avg": avg}
+    return {
+        "country": "India",
+        "state": "Delhi",
+        "city": "Delhi",
+        "station": station,
+        "last_update": stamp,
+        "pollutant_id": pollutant,
+        "pollutant_min": "10",
+        "pollutant_max": "300",
+        "pollutant_avg": avg,
+    }
 
 
 def test_parse_records_pivots_pollutants_maps_stations_and_handles_NA():
-    records = [_record("R K Puram, Delhi - DPCC", "PM2.5", "123"), _record("R K Puram, Delhi - DPCC", "OZONE", "NA"),
-               _record("R K Puram, Delhi - DPCC", "CO", "1.4"), _record("ITO, Delhi - CPCB", "PM10", "210"),
-               _record("Civil Lines, Delhi - IMD", "PM2.5", "88"),                 # not one of our stations
-               _record("R K Puram, Delhi - DPCC", "BENZENE", "1")]                 # not a model input
+    records = [
+        _record("R K Puram, Delhi - DPCC", "PM2.5", "123"),
+        _record("R K Puram, Delhi - DPCC", "OZONE", "NA"),
+        _record("R K Puram, Delhi - DPCC", "CO", "1.4"),
+        _record("ITO, Delhi - CPCB", "PM10", "210"),
+        _record("Civil Lines, Delhi - IMD", "PM2.5", "88"),  # not one of our stations
+        _record("R K Puram, Delhi - DPCC", "BENZENE", "1"),
+    ]  # not a model input
     frame = dgi.parse_records(records)
     assert set(frame.station_name) == {"R K Puram", "ITO"}
     rk = frame[frame.station_name == "R K Puram"].iloc[0]
@@ -144,9 +176,17 @@ def test_the_hour_label_rule_is_an_explicit_unverified_guess():
     assert DataGovInSource.verified is False and "NOT VERIFIED" in dgi.__doc__
 
 
-@pytest.mark.parametrize("name,expected", [("Anand Vihar, Delhi - DPCC", "Anand Vihar"), ("Jahangirpuri, Delhi - DPCC\t", "Jahangirpuri"),
-                                           ("Dwarka-Sector 8, Delhi - DPCC", "Dwarka-Sector 8"), ("Dwarka-Sector 8", "Dwarka-Sector 8"),
-                                           ("NSIT Dwarka, Delhi - CPCB", None), ("", None)])
+@pytest.mark.parametrize(
+    "name,expected",
+    [
+        ("Anand Vihar, Delhi - DPCC", "Anand Vihar"),
+        ("Jahangirpuri, Delhi - DPCC\t", "Jahangirpuri"),
+        ("Dwarka-Sector 8, Delhi - DPCC", "Dwarka-Sector 8"),
+        ("Dwarka-Sector 8", "Dwarka-Sector 8"),
+        ("NSIT Dwarka, Delhi - CPCB", None),
+        ("", None),
+    ],
+)
 def test_station_name_mapping(name, expected):
     assert dgi.station_for_feed_name(name) == expected
 
@@ -161,8 +201,12 @@ class _Session:
             raise self.error
 
         class R:
-            def raise_for_status(s): pass
-            def json(s): return self_payload
+            def raise_for_status(s):
+                pass
+
+            def json(s):
+                return self_payload
+
         self_payload = self.payload
         return R()
 
@@ -178,7 +222,9 @@ def test_data_gov_in_fetch_filters_to_the_requested_hours():
 def test_data_gov_in_failures_never_leak_the_key():
     error = requests.ConnectionError("HTTPSConnectionPool: /resource/x?api-key=SUPERSECRET&format=json")
     with pytest.raises(SourceUnavailable) as err:
-        DataGovInSource(api_key="SUPERSECRET", session=_Session(error=error)).fetch(pd.Timestamp("2026-10-11 06:00"), pd.Timestamp("2026-10-11 07:00"))
+        DataGovInSource(api_key="SUPERSECRET", session=_Session(error=error)).fetch(
+            pd.Timestamp("2026-10-11 06:00"), pd.Timestamp("2026-10-11 07:00")
+        )
     assert "SUPERSECRET" not in str(err.value)
     with pytest.raises(SourceUnavailable, match="not set"):
         DataGovInSource(api_key="").fetch(pd.Timestamp("2026-10-11 06:00"), pd.Timestamp("2026-10-11 07:00"))
@@ -193,7 +239,7 @@ def test_workflow_and_requirements_files_exist_for_the_ingest():
     root = Path(__file__).resolve().parents[1]
     text = (root / ".github/workflows/ingest.yml").read_text()
     code = "\n".join(line for line in text.splitlines() if not line.lstrip().startswith("#"))
-    assert "workflow_dispatch" in code and "schedule:" not in code       # manual only until a source is fresh from a runner
+    assert "workflow_dispatch" in code and "schedule:" not in code  # manual only until a source is fresh from a runner
     assert "group: ingest" in text and "cancel-in-progress: false" in text
     assert "pull_request" not in text and "contents: read" in text
     for secret in ("DATABASE_URL", "DATA_GOV_IN_API_KEY", "OPENAQ_API_KEY"):

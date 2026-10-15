@@ -6,6 +6,7 @@ stops the job (an edited or replaced file must never silently produce live forec
   1h / 6h  LightGBM Booster fed the raw feature row (NaN handled natively), 131 features incl. station one-hots
   24h      0.5 x persistence + 0.5 x Ridge(imputer -> scaler -> ridge) on the 49 refined features
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -24,13 +25,19 @@ FOLDER_24H = Path("models/24h/final")
 ARTIFACTS = {
     1: {"model": "models/lgb_model_1h_v1.joblib"},
     6: {"model": "models/lgb_model_6h_v1.joblib"},
-    24: {"model": str(FOLDER_24H / "24h_final_model.joblib"), "imputer": str(FOLDER_24H / "imputer_final_24h.joblib"),
-         "scaler": str(FOLDER_24H / "scaler_final_24h.joblib"), "features": str(FOLDER_24H / "feature_names_final.joblib")},
+    24: {
+        "model": str(FOLDER_24H / "24h_final_model.joblib"),
+        "imputer": str(FOLDER_24H / "imputer_final_24h.joblib"),
+        "scaler": str(FOLDER_24H / "scaler_final_24h.joblib"),
+        "features": str(FOLDER_24H / "feature_names_final.joblib"),
+    },
 }
 #: model_version written to aq.model_registry / aq.forecasts
 VERSIONS = {1: "aqi-1h-lgb-v1", 6: "aqi-6h-lgb-v1", 24: "aqi-24h-hybrid-v1"}
 NAMES = {1: "LightGBM 1h AQI", 6: "LightGBM 6h AQI", 24: "50/50 persistence + Ridge 24h AQI"}
-TRAINING_WINDOW = "train Jan-Aug 2025; validation Sep-Oct 2025; test Nov-Dec 2025 (reports/modeling/PHASE_6_FINAL_AUDIT.md)"
+TRAINING_WINDOW = (
+    "train Jan-Aug 2025; validation Sep-Oct 2025; test Nov-Dec 2025 (reports/modeling/PHASE_6_FINAL_AUDIT.md)"
+)
 METRICS_SOURCE = "reports/metrics/headline_metrics.csv"
 BLEND_WEIGHT_PERSISTENCE = 0.5
 
@@ -71,12 +78,12 @@ def verify(root: Path = REPO_ROOT, hashes_path: Path = HASHES_PATH) -> dict[str,
 
 @dataclass
 class Models:
-    boosters: dict          # {1: Booster, 6: Booster}
+    boosters: dict  # {1: Booster, 6: Booster}
     ridge: object
     imputer: object
     scaler: object
     features_24h: list
-    features: dict          # {horizon: [feature names the model expects]}
+    features: dict  # {horizon: [feature names the model expects]}
 
 
 def load(root: Path = REPO_ROOT, check: bool = True, horizons: tuple = (1, 6, 24)) -> Models:
@@ -87,13 +94,18 @@ def load(root: Path = REPO_ROOT, check: bool = True, horizons: tuple = (1, 6, 24
     try:
         for horizon in [h for h in (1, 6) if h in horizons]:
             boosters[horizon] = joblib.load(root / ARTIFACTS[horizon]["model"])
-    except ModuleNotFoundError as exc:      # joblib unpickles lightgbm.basic.Booster
-        raise RuntimeError("lightgbm is required for the 1h/6h models (pip install -r requirements-forecast.txt)") from exc
+    except ModuleNotFoundError as exc:  # joblib unpickles lightgbm.basic.Booster
+        raise RuntimeError(
+            "lightgbm is required for the 1h/6h models (pip install -r requirements-forecast.txt)"
+        ) from exc
     files = ARTIFACTS[24]
     features_24h = list(joblib.load(root / files["features"]))
     return Models(
-        boosters=boosters, ridge=joblib.load(root / files["model"]), imputer=joblib.load(root / files["imputer"]),
-        scaler=joblib.load(root / files["scaler"]), features_24h=features_24h,
+        boosters=boosters,
+        ridge=joblib.load(root / files["model"]),
+        imputer=joblib.load(root / files["imputer"]),
+        scaler=joblib.load(root / files["scaler"]),
+        features_24h=features_24h,
         features={**{h: list(b.feature_name()) for h, b in boosters.items()}, 24: features_24h},
     )
 

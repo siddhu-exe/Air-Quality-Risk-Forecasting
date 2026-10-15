@@ -12,6 +12,7 @@ hyper-parameters, number of boosting iterations) is made on validation only, tes
 scored once, and the default configuration is always one of the candidates, so on
 validation the search can only match or improve the default.
 """
+
 from __future__ import annotations
 
 import os
@@ -38,12 +39,21 @@ SEARCH_SPACE = {
     "max_features": [0.5, 0.7, 1.0],
 }
 PROFILES = {
-    "standard": {"n_boot": 1000, "n_search": 0, "pm25_max_iter": 400,
-                 "quantile_max_iter": 400, "ablation_max_iter": 300},
-    "max": {"n_boot": 10000, "n_search": 10, "pm25_max_iter": 1000,
-            "quantile_max_iter": 1000, "ablation_max_iter": 600},
-    "smoke": {"n_boot": 20, "n_search": 2, "pm25_max_iter": 30,
-              "quantile_max_iter": 30, "ablation_max_iter": 30},
+    "standard": {
+        "n_boot": 1000,
+        "n_search": 0,
+        "pm25_max_iter": 400,
+        "quantile_max_iter": 400,
+        "ablation_max_iter": 300,
+    },
+    "max": {
+        "n_boot": 10000,
+        "n_search": 10,
+        "pm25_max_iter": 1000,
+        "quantile_max_iter": 1000,
+        "ablation_max_iter": 600,
+    },
+    "smoke": {"n_boot": 20, "n_search": 2, "pm25_max_iter": 30, "quantile_max_iter": 30, "ablation_max_iter": 30},
 }
 
 

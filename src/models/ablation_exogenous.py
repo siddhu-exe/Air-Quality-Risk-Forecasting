@@ -40,6 +40,7 @@ comparable. Written to ``exogenous/max/``.
 
 Output: reports/modeling/exogenous/[<profile>/]ablation.{csv,md}
 """
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -87,20 +88,25 @@ def tune_gbm(train: pd.DataFrame, val: pd.DataFrame, cols: list[str]) -> tuple[d
     best = None
     for n, cfg in enumerate(search_configs(PROFILE["n_search"]), start=0):
         model = HistGradientBoostingRegressor(
-            max_iter=PROFILE["ablation_max_iter"], early_stopping=False, random_state=42, **cfg,
+            max_iter=PROFILE["ablation_max_iter"],
+            early_stopping=False,
+            random_state=42,
+            **cfg,
         ).fit(train[cols], train[TARGET] - train["aqi_curr"])
         base, y = val["aqi_curr"].values, val[TARGET].values
         maes = [float(np.mean(np.abs(base + p - y))) for p in model.staged_predict(val[cols])]
         i = int(np.argmin(maes))
-        print(f"  gbm search {n}/{PROFILE['n_search']} {cfg} -> val MAE {maes[i]:.3f} @ {i + 1} iters"
-              f"{'  *' if best is None or maes[i] < best[0] else ''}", flush=True)
+        print(
+            f"  gbm search {n}/{PROFILE['n_search']} {cfg} -> val MAE {maes[i]:.3f} @ {i + 1} iters"
+            f"{'  *' if best is None or maes[i] < best[0] else ''}",
+            flush=True,
+        )
         if best is None or maes[i] < best[0]:
             best = (maes[i], {**cfg, "max_iter": i + 1})
     return best[1], best[0]
 
 
-def fit_predict(family: str, train: pd.DataFrame, parts: dict, cols: list[str],
-                gbm_params: dict | None = None) -> dict:
+def fit_predict(family: str, train: pd.DataFrame, parts: dict, cols: list[str], gbm_params: dict | None = None) -> dict:
     """Fit one family on `train`; return {split_name: prediction}."""
     if family == "ridge_hybrid":
         imputer, scaler = SimpleImputer(strategy="median"), StandardScaler()
@@ -112,7 +118,9 @@ def fit_predict(family: str, train: pd.DataFrame, parts: dict, cols: list[str],
             for name, part in parts.items()
         }
     model = HistGradientBoostingRegressor(
-        **(gbm_params or GBM_STANDARD), early_stopping=False, random_state=42,
+        **(gbm_params or GBM_STANDARD),
+        early_stopping=False,
+        random_state=42,
     ).fit(train[cols], train[TARGET] - train["aqi_curr"])
     return {name: part["aqi_curr"].values + model.predict(part[cols]) for name, part in parts.items()}
 
@@ -123,8 +131,11 @@ def main() -> None:
     frame["split"] = assign_split(frame["timestamp"])
     frame = frame.dropna(subset=[TARGET])
 
-    refined = [c for c in define_feature_candidate_sets(joblib.load(FEATURE_NAMES_AB))[
-        "Set Refined (Curated 54 Feats)"] if c in frame.columns]
+    refined = [
+        c
+        for c in define_feature_candidate_sets(joblib.load(FEATURE_NAMES_AB))["Set Refined (Curated 54 Feats)"]
+        if c in frame.columns
+    ]
     wx_all = [c for c in frame.columns if c.startswith("wx_")]
     fire_cols = [c for c in frame.columns if c.startswith("fire_")]
     have_fires = len(fire_cols) > 0
@@ -162,14 +173,12 @@ def main() -> None:
         if not is_standard():
             gbm_params, tuned_mae = tune_gbm(train, val, refined)
             tuned[panel] = gbm_params
-            print(f"[{panel}] tuned gbm_residual settings {gbm_params} (baseline val MAE {tuned_mae:.3f})",
-                  flush=True)
+            print(f"[{panel}] tuned gbm_residual settings {gbm_params} (baseline val MAE {tuned_mae:.3f})", flush=True)
         for family in ("ridge_hybrid", "gbm_residual"):
             base_val_mae = None
             for group in GROUPS:
                 cols = group_cols[group]
-                row = {"panel": panel, "family": family, "group": group,
-                       "n_train": int(len(train))}
+                row = {"panel": panel, "family": family, "group": group, "n_train": int(len(train))}
                 if "fires" in group and not have_fires:
                     records.append({**row, "n_features": None, "split": "val", "status": "not_run"})
                     continue
@@ -178,15 +187,24 @@ def main() -> None:
                 m = metrics(y["val"], preds["val"])
                 if group == "baseline":
                     base_val_mae = m["mae"]
-                records.append({
-                    **row, "n_features": len(cols), "split": "val", "status": "ok",
-                    "mae": round(m["mae"], 3), "rmse": round(m["rmse"], 3), "r2": round(m["r2"], 3),
-                    "mae_delta_vs_baseline": round(m["mae"] - base_val_mae, 3),
-                    "deployable": group not in ORACLE,
-                })
-                print(f"[{panel}/{family}] {group:24s} n_feat={len(cols):3d} "
-                      f"val MAE {m['mae']:.3f} RMSE {m['rmse']:.3f} (d_vs_base {m['mae'] - base_val_mae:+.3f})",
-                      flush=True)
+                records.append(
+                    {
+                        **row,
+                        "n_features": len(cols),
+                        "split": "val",
+                        "status": "ok",
+                        "mae": round(m["mae"], 3),
+                        "rmse": round(m["rmse"], 3),
+                        "r2": round(m["r2"], 3),
+                        "mae_delta_vs_baseline": round(m["mae"] - base_val_mae, 3),
+                        "deployable": group not in ORACLE,
+                    }
+                )
+                print(
+                    f"[{panel}/{family}] {group:24s} n_feat={len(cols):3d} "
+                    f"val MAE {m['mae']:.3f} RMSE {m['rmse']:.3f} (d_vs_base {m['mae'] - base_val_mae:+.3f})",
+                    flush=True,
+                )
 
     table = pd.DataFrame(records)
     ok = table[(table["status"] == "ok") & (table["deployable"] == True)]  # noqa: E712
@@ -198,12 +216,20 @@ def main() -> None:
     for group in dict.fromkeys([best.group, "baseline"]):
         key = (best.panel, best.family, group)
         m = metrics(y["test"], preds_cache[key]["test"])
-        test_rows.append({
-            "panel": best.panel, "family": best.family, "group": group,
-            "n_train": int(best.n_train), "split": "test", "status": "ok",
-            "mae": round(m["mae"], 3), "rmse": round(m["rmse"], 3), "r2": round(m["r2"], 3),
-            "deployable": True,
-        })
+        test_rows.append(
+            {
+                "panel": best.panel,
+                "family": best.family,
+                "group": group,
+                "n_train": int(best.n_train),
+                "split": "test",
+                "status": "ok",
+                "mae": round(m["mae"], 3),
+                "rmse": round(m["rmse"], 3),
+                "r2": round(m["r2"], 3),
+                "deployable": True,
+            }
+        )
     persistence_test = metrics(y["test"], test["aqi_curr"].values)
     table = pd.concat([table, pd.DataFrame(test_rows)], ignore_index=True)
 
@@ -218,8 +244,12 @@ def main() -> None:
         "is unavailable before 2024-07-01, so it is only used in the `blh_window` panel.",
         "Fire groups need a NASA FIRMS key; they are `not_run` when no `fire_*` columns exist.",
         f"Profile: `{PROFILE['name']}`"
-        + ("" if is_standard() else "; `gbm_residual` hyper-parameters tuned on the baseline group of each panel: "
-           + "; ".join(f"{k}: `{v}`" for k, v in tuned.items()))
+        + (
+            ""
+            if is_standard()
+            else "; `gbm_residual` hyper-parameters tuned on the baseline group of each panel: "
+            + "; ".join(f"{k}: `{v}`" for k, v in tuned.items())
+        )
         + ".",
         "",
         "## Validation (2025-09-01..10-31) - lower MAE is better",
@@ -229,7 +259,9 @@ def main() -> None:
     ]
     for _, r in table[table["split"] == "val"].iterrows():
         if r.status != "ok":
-            lines.append(f"| {r.panel} | {r.family} | {r.group} | - | {r.n_train:,} | not run | not run | not run | - |")
+            lines.append(
+                f"| {r.panel} | {r.family} | {r.group} | - | {r.n_train:,} | not run | not run | not run | - |"
+            )
         else:
             lines.append(
                 f"| {r.panel} | {r.family} | {r.group} | {int(r.n_features)} | {r.n_train:,} | {r.mae} | "
@@ -237,8 +269,7 @@ def main() -> None:
             )
     lines += [
         "",
-        f"**Best deployable on validation:** `{best.panel}` / `{best.family}` / `{best.group}` "
-        f"(val MAE {best.mae}).",
+        f"**Best deployable on validation:** `{best.panel}` / `{best.family}` / `{best.group}` (val MAE {best.mae}).",
         "",
         "## Test (2025-11-01..12-31), scored once",
         "",

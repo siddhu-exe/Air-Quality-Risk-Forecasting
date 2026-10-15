@@ -69,6 +69,7 @@ PHYSICAL_BOUNDS = {
     "bp_mmhg": (400, 998.9),
 }
 
+
 def clean_station_name(raw_name: str) -> tuple[str, str, str]:
     """
     Parses a raw folder name into canonical components.

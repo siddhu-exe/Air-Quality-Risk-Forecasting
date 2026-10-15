@@ -21,6 +21,7 @@ the two agree); the validation window is a calmer season than the winter test wi
 
     python -m src.evaluation.feature_availability_audit [--horizons 24 1 6]
 """
+
 from __future__ import annotations
 
 import argparse
@@ -40,8 +41,8 @@ FEATURES_PATH = REPO_ROOT / "data" / "processed" / "features_extended.parquet"
 WEATHER_PATH = REPO_ROOT / "data" / "processed" / "exogenous_weather.parquet"
 OUT_DIR = REPO_ROOT / "reports" / "modeling" / "live_audit"
 
-HISTORY_START = pd.Timestamp("2025-05-01", tz=KST)    # raw data loaded from here
-FEATURES_FROM = pd.Timestamp("2025-07-01", tz=KST)    # rows built from here so multi-day lags have history
+HISTORY_START = pd.Timestamp("2025-05-01", tz=KST)  # raw data loaded from here
+FEATURES_FROM = pd.Timestamp("2025-07-01", tz=KST)  # rows built from here so multi-day lags have history
 # live_readings column -> (Open-Meteo column, multiplier to our unit). Open-Meteo returns wind in km/h by default
 # (the ERA5 fetch never sets wind_speed_unit), our station sensors report m/s.
 WEATHER_FILL = {
@@ -54,7 +55,11 @@ OPENAQ_GAPS = {"*": ["solar_radiation"], "ITO": ["temperature", "humidity", "win
 DATAGOVIN_GAPS = {"*": ["nox", "temperature", "humidity", "wind_speed", "solar_radiation"]}
 SCENARIOS = {
     "baseline": ("all station inputs, as trained", {}, False),
-    "openaq_filled": ("OpenAQ primary; no solar anywhere, no ITO weather; gaps filled from Open-Meteo", OPENAQ_GAPS, True),
+    "openaq_filled": (
+        "OpenAQ primary; no solar anywhere, no ITO weather; gaps filled from Open-Meteo",
+        OPENAQ_GAPS,
+        True,
+    ),
     "openaq_unfilled": ("OpenAQ primary; the same gaps left empty", OPENAQ_GAPS, False),
     "datagovin_filled": ("data.gov.in primary; NOx missing, weather from Open-Meteo", DATAGOVIN_GAPS, True),
     "datagovin_unfilled": ("data.gov.in primary; NOx and weather all missing", DATAGOVIN_GAPS, False),
@@ -78,8 +83,14 @@ def apply_scenario(caaqms: pd.DataFrame, gaps: dict, fill: bool, weather: pd.Dat
         for column, (source, factor) in WEATHER_FILL.items():
             if column not in masked:
                 continue
-            rows = np.ones(len(out), dtype=bool) if "*" in masked[column] else out["station_name"].isin(masked[column]).to_numpy()
-            out.loc[rows, column] = (merged.loc[rows.nonzero()[0], source].to_numpy() * factor) if rows.any() else np.nan
+            rows = (
+                np.ones(len(out), dtype=bool)
+                if "*" in masked[column]
+                else out["station_name"].isin(masked[column]).to_numpy()
+            )
+            out.loc[rows, column] = (
+                (merged.loc[rows.nonzero()[0], source].to_numpy() * factor) if rows.any() else np.nan
+            )
     return out
 
 
@@ -113,8 +124,10 @@ def evaluate(frame: pd.DataFrame, prediction: np.ndarray, base_prediction: np.nd
     point["delta_mae_vs_baseline"] = point["mae"] - point["mae_baseline"]
     return {
         **point,
-        "skill_ci_lo": float(np.percentile(skill, 2.5)), "skill_ci_hi": float(np.percentile(skill, 97.5)),
-        "delta_mae_ci_lo": float(np.percentile(d_mae, 2.5)), "delta_mae_ci_hi": float(np.percentile(d_mae, 97.5)),
+        "skill_ci_lo": float(np.percentile(skill, 2.5)),
+        "skill_ci_hi": float(np.percentile(skill, 97.5)),
+        "delta_mae_ci_lo": float(np.percentile(d_mae, 2.5)),
+        "delta_mae_ci_hi": float(np.percentile(d_mae, 97.5)),
     }
 
 
@@ -130,7 +143,10 @@ def predict_24h(frame: pd.DataFrame, keys: list) -> np.ndarray:
     ``keys`` picks the (station_id, timestamp) rows to score.
     """
     folder = REPO_ROOT / "models" / "24h" / "final"
-    ridge, scaler, imputer = (joblib.load(folder / f) for f in ("24h_final_model.joblib", "scaler_final_24h.joblib", "imputer_final_24h.joblib"))
+    ridge, scaler, imputer = (
+        joblib.load(folder / f)
+        for f in ("24h_final_model.joblib", "scaler_final_24h.joblib", "imputer_final_24h.joblib")
+    )
     columns = joblib.load(folder / "feature_names_final.joblib")
     chosen = _select(construct_causal_long_horizon_features(frame), keys)
     ridge_part = ridge.predict(scaler.transform(imputer.transform(chosen[columns])))
@@ -142,7 +158,9 @@ def predict_lgb(frame: pd.DataFrame, keys: list, horizon: int) -> np.ndarray:
     chosen = _select(frame, keys).reset_index()
     for name in frame["station_name"].unique():
         chosen[f"station_{name.replace(' ', '_')}"] = (chosen["station_name"] == name).astype(float)
-    names = model.feature_name() if hasattr(model, "feature_name") else model.feature_name_     # the stored models are lightgbm.Booster
+    names = (
+        model.feature_name() if hasattr(model, "feature_name") else model.feature_name_
+    )  # the stored models are lightgbm.Booster
     return model.predict(chosen[list(names)])
 
 
@@ -150,7 +168,11 @@ def predict_lgb(frame: pd.DataFrame, keys: list, horizon: int) -> np.ndarray:
 def build_frames(scenarios: list[str]) -> tuple[dict[str, pd.DataFrame], pd.DataFrame]:
     stored = pd.read_parquet(FEATURES_PATH)
     stored["timestamp"] = pd.to_datetime(stored["timestamp"]).dt.tz_convert(KST)
-    aqi = stored[["station_id", "station_name", "timestamp", "aqi_curr", "aqi_source"]].rename(columns={"aqi_curr": "aqi_value"}).dropna(subset=["aqi_value"])
+    aqi = (
+        stored[["station_id", "station_name", "timestamp", "aqi_curr", "aqi_source"]]
+        .rename(columns={"aqi_curr": "aqi_value"})
+        .dropna(subset=["aqi_value"])
+    )
     caaqms = load_caaqms_offline(HISTORY_START, VAL_END.floor("h"))
     weather = load_weather()
     frames = {}
@@ -159,8 +181,13 @@ def build_frames(scenarios: list[str]) -> tuple[dict[str, pd.DataFrame], pd.Data
         # The index runs 24 h past the window so the last day's issue times keep their 24h-ahead label, as in Tier 2
         # (9,590 validation rows). Features still stop at VAL_END; only labels reach into Nov 1 (see the reconciliation).
         frames[name] = compute_feature_frame(
-            _stations_frame(), apply_scenario(caaqms, gaps, fill, weather), aqi,
-            HISTORY_START, VAL_END.floor("h") + pd.Timedelta(hours=LABEL_LOOKAHEAD_H), FEATURES_FROM, VAL_END,
+            _stations_frame(),
+            apply_scenario(caaqms, gaps, fill, weather),
+            aqi,
+            HISTORY_START,
+            VAL_END.floor("h") + pd.Timedelta(hours=LABEL_LOOKAHEAD_H),
+            FEATURES_FROM,
+            VAL_END,
         )
     return frames, stored
 
@@ -179,20 +206,48 @@ def reconcile_24h(rows: pd.DataFrame, rebuilt: np.ndarray) -> tuple[pd.DataFrame
     out, max_diff = [], float("nan")
     frozen = pd.read_parquet(folder / "val_predictions.parquet")
     frozen["timestamp"] = pd.to_datetime(frozen["timestamp"]).dt.tz_convert(KST)
-    out.append(_row_metrics("Tier 2 stored frozen predictions, all validation rows", frozen.target_aqi_24h.to_numpy(float),
-                            frozen.prediction_hybrid_6c_winning.to_numpy(float), frozen.prediction_naive_persistence.to_numpy(float)))
-    mine = rows[["station_id", "timestamp"]].assign(rebuilt=rebuilt).merge(frozen, on=["station_id", "timestamp"], how="inner")
-    out.append(_row_metrics("Audit baseline (rebuilt features, frozen model), same rows", mine.target_aqi_24h.to_numpy(float),
-                            mine.rebuilt.to_numpy(float), mine.prediction_naive_persistence.to_numpy(float)))
+    out.append(
+        _row_metrics(
+            "Tier 2 stored frozen predictions, all validation rows",
+            frozen.target_aqi_24h.to_numpy(float),
+            frozen.prediction_hybrid_6c_winning.to_numpy(float),
+            frozen.prediction_naive_persistence.to_numpy(float),
+        )
+    )
+    mine = (
+        rows[["station_id", "timestamp"]]
+        .assign(rebuilt=rebuilt)
+        .merge(frozen, on=["station_id", "timestamp"], how="inner")
+    )
+    out.append(
+        _row_metrics(
+            "Audit baseline (rebuilt features, frozen model), same rows",
+            mine.target_aqi_24h.to_numpy(float),
+            mine.rebuilt.to_numpy(float),
+            mine.prediction_naive_persistence.to_numpy(float),
+        )
+    )
     max_diff = float((mine.rebuilt - mine.prediction_hybrid_6c_winning).abs().max())
     strict = mine[mine.timestamp + pd.Timedelta(hours=24) <= VAL_END]
-    out.append(_row_metrics("Audit baseline, strict: label also inside the validation window", strict.target_aqi_24h.to_numpy(float),
-                            strict.rebuilt.to_numpy(float), strict.prediction_naive_persistence.to_numpy(float)))
+    out.append(
+        _row_metrics(
+            "Audit baseline, strict: label also inside the validation window",
+            strict.target_aqi_24h.to_numpy(float),
+            strict.rebuilt.to_numpy(float),
+            strict.prediction_naive_persistence.to_numpy(float),
+        )
+    )
     ext_path = folder / "val_predictions_extended.parquet"
     if ext_path.exists():
         ext = pd.read_parquet(ext_path)
-        out.append(_row_metrics("Tier 2 EXTENDED model (trained with 2024 data; a different model), all rows", ext.target_aqi_24h.to_numpy(float),
-                                ext.prediction_hybrid_6c_winning.to_numpy(float), ext.prediction_naive_persistence.to_numpy(float)))
+        out.append(
+            _row_metrics(
+                "Tier 2 EXTENDED model (trained with 2024 data; a different model), all rows",
+                ext.target_aqi_24h.to_numpy(float),
+                ext.prediction_hybrid_6c_winning.to_numpy(float),
+                ext.prediction_naive_persistence.to_numpy(float),
+            )
+        )
     return pd.DataFrame(out), max_diff
 
 
@@ -201,8 +256,12 @@ def fidelity(frame: pd.DataFrame, stored: pd.DataFrame) -> dict:
     keys = ["station_id", "timestamp"]
     val = frame[(frame.timestamp >= VAL_START)]
     joined = val.merge(stored, on=keys, suffixes=("", "_stored"))
-    shared = [c for c in val.columns if c not in keys and f"{c}_stored" in joined and pd.api.types.is_float_dtype(val[c])]
-    close = np.mean([np.isclose(joined[c], joined[f"{c}_stored"], rtol=1e-6, atol=1e-6, equal_nan=True).mean() for c in shared])
+    shared = [
+        c for c in val.columns if c not in keys and f"{c}_stored" in joined and pd.api.types.is_float_dtype(val[c])
+    ]
+    close = np.mean(
+        [np.isclose(joined[c], joined[f"{c}_stored"], rtol=1e-6, atol=1e-6, equal_nan=True).mean() for c in shared]
+    )
     return {"rows": len(joined), "columns": len(shared), "share_of_cells_equal": float(close)}
 
 
@@ -224,13 +283,17 @@ def main(horizons: list[int]) -> int:
         predict = predict_24h if horizon == 24 else (lambda f, k, h=horizon: predict_lgb(f, k, h))
         target = f"target_aqi_{horizon}h"
         base_rows = frames["baseline"]
-        base_rows = base_rows[(base_rows.timestamp >= VAL_START) & base_rows[target].notna() & base_rows.aqi_curr.notna()]
+        base_rows = base_rows[
+            (base_rows.timestamp >= VAL_START) & base_rows[target].notna() & base_rows.aqi_curr.notna()
+        ]
         keys = list(zip(base_rows.station_id, base_rows.timestamp))
         base_pred = predict(frames["baseline"], keys)
         if horizon == 24:
             reconciliation, max_diff = reconcile_24h(base_rows, base_pred)
             if not max_diff <= 1e-6:
-                raise SystemExit(f"audit baseline differs from the stored Tier 2 validation predictions (max {max_diff:.6f}); fix before use")
+                raise SystemExit(
+                    f"audit baseline differs from the stored Tier 2 validation predictions (max {max_diff:.6f}); fix before use"
+                )
         # "all" keeps every row Tier 2 scored (the stored-prediction guard above runs on these); "strict" keeps only rows whose
         # label also lies inside the validation window, i.e. drops the last `horizon` hours before the test start.
         strict = (base_rows.timestamp + pd.Timedelta(hours=horizon) <= VAL_END).to_numpy()
@@ -238,18 +301,32 @@ def main(horizons: list[int]) -> int:
             pred = predict(frame, keys)
             for row_set, mask in (("all", np.ones(len(base_rows), bool)), ("strict", strict)):
                 res = evaluate(base_rows[mask], pred[mask], base_pred[mask], target)
-                results.append({"horizon": f"{horizon}h", "row_set": row_set, "scenario": name, "description": SCENARIOS[name][0], **res})
+                results.append(
+                    {
+                        "horizon": f"{horizon}h",
+                        "row_set": row_set,
+                        "scenario": name,
+                        "description": SCENARIOS[name][0],
+                        **res,
+                    }
+                )
         print(f"done {horizon}h", flush=True)
 
     table = pd.DataFrame(results)
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     table.to_csv(OUT_DIR / "feature_availability_audit.csv", index=False)
     write_report(table, fid, reconciliation, max_diff)
-    print(table[["horizon", "row_set", "scenario", "n", "mae", "mae_persistence", "skill_mae", "delta_mae_vs_baseline"]].round(3).to_string(index=False))
+    print(
+        table[["horizon", "row_set", "scenario", "n", "mae", "mae_persistence", "skill_mae", "delta_mae_vs_baseline"]]
+        .round(3)
+        .to_string(index=False)
+    )
     return 0
 
 
-def write_report(table: pd.DataFrame, fid: dict, reconciliation: pd.DataFrame | None = None, max_diff: float | None = None) -> None:
+def write_report(
+    table: pd.DataFrame, fid: dict, reconciliation: pd.DataFrame | None = None, max_diff: float | None = None
+) -> None:
     lines = [
         "# Feature-availability audit (decision D1), validation window only",
         "",
@@ -267,17 +344,31 @@ def write_report(table: pd.DataFrame, fid: dict, reconciliation: pd.DataFrame | 
         "| :--- | :--- | :--- | ---: | ---: | ---: | ---: | :---: | ---: | :---: |",
     ]
     for r in table.itertuples():
-        lines.append(f"| {r.horizon} | {r.row_set} | {r.scenario} | {r.n:,} | {r.mae:.3f} | {r.mae_persistence:.3f} | {r.skill_mae:+.3f} | "
-                     f"[{r.skill_ci_lo:+.3f}, {r.skill_ci_hi:+.3f}] | {r.delta_mae_vs_baseline:+.3f} | [{r.delta_mae_ci_lo:+.3f}, {r.delta_mae_ci_hi:+.3f}] |")
+        lines.append(
+            f"| {r.horizon} | {r.row_set} | {r.scenario} | {r.n:,} | {r.mae:.3f} | {r.mae_persistence:.3f} | {r.skill_mae:+.3f} | "
+            f"[{r.skill_ci_lo:+.3f}, {r.skill_ci_hi:+.3f}] | {r.delta_mae_vs_baseline:+.3f} | [{r.delta_mae_ci_lo:+.3f}, {r.delta_mae_ci_hi:+.3f}] |"
+        )
     if reconciliation is not None:
-        lines += ["", "## Baseline reconciliation with Tier 2 (24h, validation)", "",
-                  "The audit baseline reproduces Tier 2's stored frozen-model validation predictions "
-                  f"(max absolute difference per row {max_diff:.6f}); the audit refuses to run otherwise. "
-                  "Same frozen imputer, scaler and Ridge; no embargo or refit is involved because nothing is trained.", "",
-                  "| Row set | Rows | Model MAE | Persistence MAE | Skill |", "| :--- | ---: | ---: | ---: | ---: |"]
-        lines += [f"| {r.row_set} | {r.n:,} | {r.model_mae:.3f} | {r.persistence_mae:.3f} | {r.skill_mae:+.4f} |" for r in reconciliation.itertuples()]
-        lines += ["", "The strict row set drops the last day of October (issue times 2025-10-31, labels on 2025-11-01), which is the "
-                  "hardest day in the window; the default row set keeps it, as Tier 2 did. Its labels are the first test-window day."]
+        lines += [
+            "",
+            "## Baseline reconciliation with Tier 2 (24h, validation)",
+            "",
+            "The audit baseline reproduces Tier 2's stored frozen-model validation predictions "
+            f"(max absolute difference per row {max_diff:.6f}); the audit refuses to run otherwise. "
+            "Same frozen imputer, scaler and Ridge; no embargo or refit is involved because nothing is trained.",
+            "",
+            "| Row set | Rows | Model MAE | Persistence MAE | Skill |",
+            "| :--- | ---: | ---: | ---: | ---: |",
+        ]
+        lines += [
+            f"| {r.row_set} | {r.n:,} | {r.model_mae:.3f} | {r.persistence_mae:.3f} | {r.skill_mae:+.4f} |"
+            for r in reconciliation.itertuples()
+        ]
+        lines += [
+            "",
+            "The strict row set drops the last day of October (issue times 2025-10-31, labels on 2025-11-01), which is the "
+            "hardest day in the window; the default row set keeps it, as Tier 2 did. Its labels are the first test-window day.",
+        ]
         reconciliation.to_csv(OUT_DIR / "baseline_reconciliation_24h.csv", index=False)
     lines += ["", "Scenario definitions:", ""] + [f"- `{k}`: {v[0]}" for k, v in SCENARIOS.items()]
     (OUT_DIR / "feature_availability_audit.md").write_text("\n".join(lines) + "\n")

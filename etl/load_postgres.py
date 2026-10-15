@@ -16,47 +16,48 @@ import psycopg2
 import psycopg2.extras  # execute_values
 
 # ── paths ──────────────────────────────────────────────────────────────────
-ETL_DIR     = Path(__file__).resolve().parent
+ETL_DIR = Path(__file__).resolve().parent
 PROJECT_DIR = ETL_DIR.parent
-ENV_FILE    = PROJECT_DIR / ".env"
+ENV_FILE = PROJECT_DIR / ".env"
 
 # ── ETL column name  →  DB column name ──────────────────────────────────────
 # Source: schemas.py CSV_COLUMN_MAPPING + ERD column names in sql/001_create_tables.sql
 CAAQMS_COL_MAP: dict[str, str] = {
-    "ts":             "timestamp",
-    "pm25":           "pm25",
-    "pm10":           "pm10",
-    "no_ugm3":        "no",
-    "no2_ugm3":       "no2",
-    "nox_ppb":        "nox",
-    "nh3_ugm3":       "nh3",
-    "so2_ugm3":       "so2",
-    "co_mgm3":        "co",
-    "ozone_ugm3":     "o3",
-    "benzene_ugm3":   "benzene",
-    "toluene_ugm3":   "toluene",
-    "xylene_ugm3":    "xylene",
-    "temp_c":         "temperature",
-    "rh_pct":         "humidity",
-    "ws_ms":          "wind_speed",
-    "wd_deg":         "wind_direction",
-    "rf_mm":          "rainfall",
-    "sr_wm2":         "solar_radiation",
-    "bp_mmhg":        "barometric_pressure",
-    "vws_ms":         "vertical_wind_speed",
-    "qc_flags":       "qc_flags",
+    "ts": "timestamp",
+    "pm25": "pm25",
+    "pm10": "pm10",
+    "no_ugm3": "no",
+    "no2_ugm3": "no2",
+    "nox_ppb": "nox",
+    "nh3_ugm3": "nh3",
+    "so2_ugm3": "so2",
+    "co_mgm3": "co",
+    "ozone_ugm3": "o3",
+    "benzene_ugm3": "benzene",
+    "toluene_ugm3": "toluene",
+    "xylene_ugm3": "xylene",
+    "temp_c": "temperature",
+    "rh_pct": "humidity",
+    "ws_ms": "wind_speed",
+    "wd_deg": "wind_direction",
+    "rf_mm": "rainfall",
+    "sr_wm2": "solar_radiation",
+    "bp_mmhg": "barometric_pressure",
+    "vws_ms": "vertical_wind_speed",
+    "qc_flags": "qc_flags",
     # columns present in ETL output but NOT in DB schema — silently dropped:
     # o_xylene_ugm3, eth_benzene_ugm3, mp_xylene_ugm3, tot_rf_mm
 }
 
 AQI_COL_MAP: dict[str, str] = {
-    "ts":        "timestamp",
-    "aqi":       "aqi_value",
-    "qc_flags":  "qc_flags",
+    "ts": "timestamp",
+    "aqi": "aqi_value",
+    "qc_flags": "qc_flags",
 }
 
 
 # ── env / connection ─────────────────────────────────────────────────────────
+
 
 def load_env() -> dict[str, str]:
     """Parse PROJECT_DIR/.env into a plain dict.  Never hard-codes credentials."""
@@ -70,8 +71,7 @@ def load_env() -> dict[str, str]:
                 continue
             key, _, val = line.partition("=")
             env[key.strip()] = val.strip()
-    required = {"POSTGRES_USER", "POSTGRES_PASSWORD", "POSTGRES_DB",
-                "POSTGRES_HOST", "POSTGRES_PORT"}
+    required = {"POSTGRES_USER", "POSTGRES_PASSWORD", "POSTGRES_DB", "POSTGRES_HOST", "POSTGRES_PORT"}
     missing = required - env.keys()
     if missing:
         raise ValueError(f"Missing keys in .env: {missing}")
@@ -90,6 +90,7 @@ def get_connection(env: dict[str, str]):
 
 
 # ── dimension helpers ────────────────────────────────────────────────────────
+
 
 def get_or_create_station(
     conn,
@@ -168,8 +169,7 @@ def get_or_create_source_file(
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'loaded')
             RETURNING source_file_id
             """,
-            (station_id, filename, path, source_type, file_format,
-             reporting_start, reporting_end, row_count),
+            (station_id, filename, path, source_type, file_format, reporting_start, reporting_end, row_count),
         )
         return cur.fetchone()[0]
 
@@ -178,32 +178,51 @@ def get_or_create_source_file(
 
 # DB columns for caaqms_hourly (in insert order, excluding PK and created_at)
 _CAAQMS_DB_COLS = [
-    "station_id", "source_file_id", "timestamp",
-    "pm25", "pm10", "no", "no2", "nox", "nh3", "so2", "co", "o3",
-    "benzene", "toluene", "xylene",
-    "temperature", "humidity", "wind_speed", "wind_direction",
-    "rainfall", "solar_radiation", "barometric_pressure", "vertical_wind_speed",
+    "station_id",
+    "source_file_id",
+    "timestamp",
+    "pm25",
+    "pm10",
+    "no",
+    "no2",
+    "nox",
+    "nh3",
+    "so2",
+    "co",
+    "o3",
+    "benzene",
+    "toluene",
+    "xylene",
+    "temperature",
+    "humidity",
+    "wind_speed",
+    "wind_direction",
+    "rainfall",
+    "solar_radiation",
+    "barometric_pressure",
+    "vertical_wind_speed",
     "qc_flags",
 ]
 
 _AQI_DB_COLS = [
-    "station_id", "source_file_id", "timestamp",
-    "aqi_value", "qc_flags",
+    "station_id",
+    "source_file_id",
+    "timestamp",
+    "aqi_value",
+    "qc_flags",
 ]
 
 
-def _df_to_caaqms_rows(
-    df: pd.DataFrame, station_id: int, source_file_id: int
-) -> list[tuple]:
+def _df_to_caaqms_rows(df: pd.DataFrame, station_id: int, source_file_id: int) -> list[tuple]:
     """Map ETL dataframe → list of tuples matching _CAAQMS_DB_COLS."""
     # Rename ETL columns to DB columns, keeping only what we need
     renamed = df.rename(columns=CAAQMS_COL_MAP)
     rows = []
-    for r in renamed.to_dict('records'):
+    for r in renamed.to_dict("records"):
         row = (
             station_id,
             source_file_id,
-            r["timestamp"],              # TIMESTAMPTZ — already tz-aware from ETL
+            r["timestamp"],  # TIMESTAMPTZ — already tz-aware from ETL
             _f(r, "pm25"),
             _f(r, "pm10"),
             _f(r, "no"),
@@ -224,26 +243,26 @@ def _df_to_caaqms_rows(
             _f(r, "solar_radiation"),
             _f(r, "barometric_pressure"),
             _f(r, "vertical_wind_speed"),
-            r.get("qc_flags"),           # already a JSON string or None
+            r.get("qc_flags"),  # already a JSON string or None
         )
         rows.append(row)
     return rows
 
 
-def _df_to_aqi_rows(
-    df: pd.DataFrame, station_id: int, source_file_id: int
-) -> list[tuple]:
+def _df_to_aqi_rows(df: pd.DataFrame, station_id: int, source_file_id: int) -> list[tuple]:
     """Map ETL dataframe → list of tuples matching _AQI_DB_COLS."""
     renamed = df.rename(columns=AQI_COL_MAP)
     rows = []
-    for r in renamed.to_dict('records'):
-        rows.append((
-            station_id,
-            source_file_id,
-            r["timestamp"],
-            _f(r, "aqi_value"),
-            r.get("qc_flags"),
-        ))
+    for r in renamed.to_dict("records"):
+        rows.append(
+            (
+                station_id,
+                source_file_id,
+                r["timestamp"],
+                _f(r, "aqi_value"),
+                r.get("qc_flags"),
+            )
+        )
     return rows
 
 
@@ -254,6 +273,7 @@ def _f(row, col):
         return None
     try:
         import math
+
         if math.isnan(float(val)):
             return None
     except (TypeError, ValueError):
@@ -264,10 +284,7 @@ def _f(row, col):
 def _build_upsert_caaqms() -> str:
     cols = ", ".join(_CAAQMS_DB_COLS)
     placeholders = ", ".join(["%s"] * len(_CAAQMS_DB_COLS))
-    update_cols = [
-        c for c in _CAAQMS_DB_COLS
-        if c not in ("station_id", "source_file_id", "timestamp")
-    ]
+    update_cols = [c for c in _CAAQMS_DB_COLS if c not in ("station_id", "source_file_id", "timestamp")]
     update_clause = ", ".join(f"{c} = EXCLUDED.{c}" for c in update_cols)
     return f"""
         INSERT INTO caaqms_hourly ({cols})
@@ -279,8 +296,7 @@ def _build_upsert_caaqms() -> str:
 
 def _build_upsert_aqi() -> str:
     cols = ", ".join(_AQI_DB_COLS)
-    update_cols = [c for c in _AQI_DB_COLS
-                   if c not in ("station_id", "source_file_id", "timestamp")]
+    update_cols = [c for c in _AQI_DB_COLS if c not in ("station_id", "source_file_id", "timestamp")]
     update_clause = ", ".join(f"{c} = EXCLUDED.{c}" for c in update_cols)
     return f"""
         INSERT INTO aqi_hourly ({cols})
@@ -290,9 +306,7 @@ def _build_upsert_aqi() -> str:
     """
 
 
-def insert_caaqms_batch(
-    conn, df: pd.DataFrame, station_id: int, source_file_id: int
-) -> dict[str, int]:
+def insert_caaqms_batch(conn, df: pd.DataFrame, station_id: int, source_file_id: int) -> dict[str, int]:
     """Upsert CAAQMS rows inside an already-open transaction."""
     rows = _df_to_caaqms_rows(df, station_id, source_file_id)
     if not rows:
@@ -303,9 +317,7 @@ def insert_caaqms_batch(
     return {"attempted": len(rows)}
 
 
-def insert_aqi_batch(
-    conn, df: pd.DataFrame, station_id: int, source_file_id: int
-) -> dict[str, int]:
+def insert_aqi_batch(conn, df: pd.DataFrame, station_id: int, source_file_id: int) -> dict[str, int]:
     """Upsert AQI rows inside an already-open transaction."""
     rows = _df_to_aqi_rows(df, station_id, source_file_id)
     if not rows:
@@ -318,10 +330,11 @@ def insert_aqi_batch(
 
 # ── main orchestration ────────────────────────────────────────────────────────
 
+
 def run_small_load(
     station_folder: str = "Anand Vihar, Delhi - DPCC",
     caaqms_year: int = 2025,
-    filter_month: int = 1,          # January only
+    filter_month: int = 1,  # January only
     aqi_month_pattern: str = "January",
     dry_run: bool = False,
 ) -> dict:
@@ -346,26 +359,21 @@ def run_small_load(
     station_dir = DATA_ROOT / station_folder
 
     # ── locate files ────────────────────────────────────────────────────────
-    caaqms_path = (station_dir / "Raw Data" /
-                   f"{caaqms_year}_raw_data_hourly_"
-                   f"{station_folder.lower().replace(' ', '_').replace('-', '-')}_1H.csv")
+    caaqms_path = (
+        station_dir / "Raw Data" / f"{caaqms_year}_raw_data_hourly_"
+        f"{station_folder.lower().replace(' ', '_').replace('-', '-')}_1H.csv"
+    )
 
     # Fuzzy-find the CSV if the exact name differs slightly
     if not caaqms_path.exists():
         candidates = list((station_dir / "Raw Data").glob(f"{caaqms_year}_*.csv"))
         if not candidates:
-            raise FileNotFoundError(
-                f"No {caaqms_year} CAAQMS CSV found in {station_dir / 'Raw Data'}"
-            )
+            raise FileNotFoundError(f"No {caaqms_year} CAAQMS CSV found in {station_dir / 'Raw Data'}")
         caaqms_path = candidates[0]
 
-    aqi_candidates = list((station_dir / "AQI Hourly").glob(
-        f"*_{caaqms_year}_{aqi_month_pattern}_*.xlsx"
-    ))
+    aqi_candidates = list((station_dir / "AQI Hourly").glob(f"*_{caaqms_year}_{aqi_month_pattern}_*.xlsx"))
     if not aqi_candidates:
-        raise FileNotFoundError(
-            f"No AQI XLSX for {aqi_month_pattern} {caaqms_year} in {station_dir / 'AQI Hourly'}"
-        )
+        raise FileNotFoundError(f"No AQI XLSX for {aqi_month_pattern} {caaqms_year} in {station_dir / 'AQI Hourly'}")
     aqi_path = aqi_candidates[0]
 
     # ── transform ────────────────────────────────────────────────────────────
@@ -409,13 +417,12 @@ def run_small_load(
             cur.execute("SELECT COUNT(*) FROM aqi_hourly")
             pre_aqi_count = cur.fetchone()[0]
 
-        print(f"\n[PRE-CHECK] stations={pre_station_count}  "
-              f"caaqms_hourly={pre_caaqms_count}  aqi_hourly={pre_aqi_count}")
+        print(
+            f"\n[PRE-CHECK] stations={pre_station_count}  caaqms_hourly={pre_caaqms_count}  aqi_hourly={pre_aqi_count}"
+        )
 
         # ── insert station ────────────────────────────────────────────────────
-        station_id = get_or_create_station(
-            conn, station_name, station_folder, city, operator
-        )
+        station_id = get_or_create_station(conn, station_name, station_folder, city, operator)
         print(f"[STATION]  '{station_name}' → station_id={station_id}")
 
         # ── insert source_file records ───────────────────────────────────────
@@ -472,15 +479,15 @@ def run_small_load(
             "caaqms_source_file_id": caaqms_source_id,
             "aqi_source_file_id": aqi_source_id,
             "caaqms_rows_attempted": caaqms_result["attempted"],
-            "aqi_rows_attempted":    aqi_result["attempted"],
+            "aqi_rows_attempted": aqi_result["attempted"],
             "post_counts": {
-                "stations":      post_station,
-                "source_files":  post_sf,
+                "stations": post_station,
+                "source_files": post_sf,
                 "caaqms_hourly": post_caaqms,
-                "aqi_hourly":    post_aqi,
+                "aqi_hourly": post_aqi,
             },
             "caaqms_stats": caaqms_stats,
-            "aqi_stats":    aqi_stats,
+            "aqi_stats": aqi_stats,
         }
 
     except Exception:

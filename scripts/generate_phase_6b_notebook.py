@@ -11,21 +11,24 @@ from pathlib import Path
 
 cells = []
 
+
 def add_md(source):
-    cells.append({
-        'cell_type': 'markdown',
-        'metadata': {},
-        'source': [line + '\n' for line in source.strip().split('\n')]
-    })
+    cells.append(
+        {"cell_type": "markdown", "metadata": {}, "source": [line + "\n" for line in source.strip().split("\n")]}
+    )
+
 
 def add_code(source):
-    cells.append({
-        'cell_type': 'code',
-        'execution_count': None,
-        'metadata': {},
-        'outputs': [],
-        'source': [line + '\n' for line in source.strip().split('\n')]
-    })
+    cells.append(
+        {
+            "cell_type": "code",
+            "execution_count": None,
+            "metadata": {},
+            "outputs": [],
+            "source": [line + "\n" for line in source.strip().split("\n")],
+        }
+    )
+
 
 # ==============================================================================
 # Cell 1: Header, Objective & Frozen Scope
@@ -452,25 +455,19 @@ print("  - reports/modeling/24h/predictions_24h_optimized.parquet")""")
 # Build & Write Notebook
 # ==============================================================================
 notebook = {
-    'cells': cells,
-    'metadata': {
-        'language_info': {
-            'name': 'python',
-            'version': '3.10.0'
-        },
-        'accelerator': 'GPU',
-        'colab': {
-            'provenance': [],
-            'authors': ['Air Quality Forecasting Team']
-        }
+    "cells": cells,
+    "metadata": {
+        "language_info": {"name": "python", "version": "3.10.0"},
+        "accelerator": "GPU",
+        "colab": {"provenance": [], "authors": ["Air Quality Forecasting Team"]},
     },
-    'nbformat': 4,
-    'nbformat_minor': 4
+    "nbformat": 4,
+    "nbformat_minor": 4,
 }
 
-out_path = Path('notebooks/phase_6b_24h_optimization.ipynb')
+out_path = Path("notebooks/phase_6b_24h_optimization.ipynb")
 out_path.parent.mkdir(parents=True, exist_ok=True)
-with open(out_path, 'w', encoding='utf-8') as f:
+with open(out_path, "w", encoding="utf-8") as f:
     json.dump(notebook, f, indent=2)
 
 print(f"Generated {out_path} with {len(cells)} structured cells.")

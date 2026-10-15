@@ -24,51 +24,69 @@ REPORTS_DIR = os.path.join(BASE_DIR, "reports")
 # We load the data once when the server starts to keep API responses fast.
 data_cache = {}
 
+
 @app.on_event("startup")
 async def load_data():
     """Load all necessary Parquet and CSV files into memory on startup."""
     print("Loading data into memory...")
     try:
         # Forecasts
-        data_cache['1h'] = pd.read_parquet(os.path.join(REPORTS_DIR, "classification", "1h", "classified_predictions.parquet"))
-        data_cache['6h'] = pd.read_parquet(os.path.join(REPORTS_DIR, "classification", "6h", "classified_predictions.parquet"))
-        data_cache['24h'] = pd.read_parquet(os.path.join(REPORTS_DIR, "classification", "24h", "classified_predictions.parquet"))
+        data_cache["1h"] = pd.read_parquet(
+            os.path.join(REPORTS_DIR, "classification", "1h", "classified_predictions.parquet")
+        )
+        data_cache["6h"] = pd.read_parquet(
+            os.path.join(REPORTS_DIR, "classification", "6h", "classified_predictions.parquet")
+        )
+        data_cache["24h"] = pd.read_parquet(
+            os.path.join(REPORTS_DIR, "classification", "24h", "classified_predictions.parquet")
+        )
 
         # Causal Impact (Diwali)
-        data_cache['diwali_hourly'] = pd.read_csv(os.path.join(REPORTS_DIR, "causal", "diwali_hourly_timeseries.csv"))
+        data_cache["diwali_hourly"] = pd.read_csv(os.path.join(REPORTS_DIR, "causal", "diwali_hourly_timeseries.csv"))
 
         # Thresholds
-        data_cache['threshold_sweep'] = pd.read_csv(os.path.join(REPORTS_DIR, "classification", "metrics", "cost_threshold_sweep_24h.csv"))
-        data_cache['operating_points'] = pd.read_csv(os.path.join(REPORTS_DIR, "classification", "metrics", "threshold_operating_points_comparison.csv"))
+        data_cache["threshold_sweep"] = pd.read_csv(
+            os.path.join(REPORTS_DIR, "classification", "metrics", "cost_threshold_sweep_24h.csv")
+        )
+        data_cache["operating_points"] = pd.read_csv(
+            os.path.join(REPORTS_DIR, "classification", "metrics", "threshold_operating_points_comparison.csv")
+        )
 
         # Episodes
-        data_cache['episodes'] = pd.read_csv(os.path.join(REPORTS_DIR, "classification", "episodes", "grap_episode_lead_times.csv"))
+        data_cache["episodes"] = pd.read_csv(
+            os.path.join(REPORTS_DIR, "classification", "episodes", "grap_episode_lead_times.csv")
+        )
         print("Data loaded successfully!")
     except Exception as e:
         print(f"Error loading data: {e}")
 
+
 # --- API Endpoints ---
+
 
 @app.get("/api/stations")
 async def get_stations():
     """Return a list of all unique monitoring stations."""
-    if '1h' not in data_cache:
+    if "1h" not in data_cache:
         raise HTTPException(status_code=503, detail="Data not available")
 
     # Get latest AQI per station from 1h data
-    df = data_cache['1h']
-    last_rows = df.sort_values(by='timestamp').groupby('station_name').last().reset_index()
+    df = data_cache["1h"]
+    last_rows = df.sort_values(by="timestamp").groupby("station_name").last().reset_index()
 
     # Format to match frontend mock shape
     stations = []
     for _, row in last_rows.iterrows():
-        stations.append({
-            "id": row['station_name'],
-            "name": row['station_name'],
-            "status": "LIVE",
-            "aqi": int(row['y_true']) if pd.notnull(row['y_true']) else 0
-        })
+        stations.append(
+            {
+                "id": row["station_name"],
+                "name": row["station_name"],
+                "status": "LIVE",
+                "aqi": int(row["y_true"]) if pd.notnull(row["y_true"]) else 0,
+            }
+        )
     return stations
+
 
 @app.get("/api/forecasts")
 async def get_forecasts(horizon: str = Query("1h", regex="^(1h|6h|24h)$"), station: str | None = "ALL"):
@@ -82,7 +100,7 @@ async def get_forecasts(horizon: str = Query("1h", regex="^(1h|6h|24h)$"), stati
 
     # Filter by station if provided and not "ALL"
     if station and station != "ALL":
-        df = df[df['station_name'] == station]
+        df = df[df["station_name"] == station]
 
     # We’ll return a subset of the most recent ~100 records for the frontend chart to keep payload size small
     # Ensure it's sorted by timestamp, then take the last N rows per station or overall
@@ -92,37 +110,42 @@ async def get_forecasts(horizon: str = Query("1h", regex="^(1h|6h|24h)$"), stati
     records = df_sorted.tail(500).to_dict(orient="records")
     return records
 
+
 @app.get("/api/causal/diwali")
 async def get_diwali_causal():
     """Return the Diwali timeseries data."""
-    if 'diwali_hourly' not in data_cache:
+    if "diwali_hourly" not in data_cache:
         raise HTTPException(status_code=503, detail="Data not available")
 
-    return data_cache['diwali_hourly'].to_dict(orient="records")
+    return data_cache["diwali_hourly"].to_dict(orient="records")
+
 
 @app.get("/api/thresholds/sweep")
 async def get_threshold_sweep():
     """Return the cost-sensitive threshold parameter sweep dataset."""
-    if 'threshold_sweep' not in data_cache:
+    if "threshold_sweep" not in data_cache:
         raise HTTPException(status_code=503, detail="Data not available")
 
-    return data_cache['threshold_sweep'].to_dict(orient="records")
+    return data_cache["threshold_sweep"].to_dict(orient="records")
+
 
 @app.get("/api/thresholds/operating-points")
 async def get_operating_points():
     """Return the confusion matrix metrics and cost comparisons at different thresholds."""
-    if 'operating_points' not in data_cache:
+    if "operating_points" not in data_cache:
         raise HTTPException(status_code=503, detail="Data not available")
 
-    return data_cache['operating_points'].to_dict(orient="records")
+    return data_cache["operating_points"].to_dict(orient="records")
+
 
 @app.get("/api/episodes")
 async def get_episodes():
     """Return GRAP episode lead times."""
-    if 'episodes' not in data_cache:
+    if "episodes" not in data_cache:
         raise HTTPException(status_code=503, detail="Data not available")
 
-    return data_cache['episodes'].to_dict(orient="records")
+    return data_cache["episodes"].to_dict(orient="records")
+
 
 @app.get("/health")
 async def health_check():

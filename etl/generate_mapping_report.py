@@ -62,5 +62,6 @@ def generate_report():
 
     print(f"Mapping report generated at {output_path}")
 
+
 if __name__ == "__main__":
     generate_report()

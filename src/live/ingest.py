@@ -10,6 +10,7 @@ Run status (written to ``aq.job_runs`` and mirrored in the process exit code):
   failed   no fresh station, the source failed, or QC detected a probable unit change
 A failed run exits non-zero so the workflow goes red and the monitoring rule (3 failures in a row) can open an issue.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -27,10 +28,12 @@ from src.live.sources.base import LiveSource, SourceNotVerified
 from src.live.store import NullStore, Store
 
 KST = "Asia/Kolkata"
-AQI_HISTORY_HOURS = 48    # pollutant history read back so the 24 h rolling AQI has its window
+AQI_HISTORY_HOURS = 48  # pollutant history read back so the 24 h rolling AQI has its window
 
 
-def fetch_with_fallback(cfg: IngestConfig, start: pd.Timestamp, end: pd.Timestamp, factory=get_source) -> tuple[pd.DataFrame, LiveSource, list[str]]:
+def fetch_with_fallback(
+    cfg: IngestConfig, start: pd.Timestamp, end: pd.Timestamp, factory=get_source
+) -> tuple[pd.DataFrame, LiveSource, list[str]]:
     """Primary source first; the optional fallback only if the primary fails or returns no rows. Returns notes of what happened."""
     notes: list[str] = []
     names = [cfg.source] + ([cfg.fallback] if cfg.fallback else [])
@@ -52,7 +55,9 @@ def fetch_with_fallback(cfg: IngestConfig, start: pd.Timestamp, end: pd.Timestam
     raise SourceUnavailable("; ".join(notes)) from last_error
 
 
-def build_rows(frame: pd.DataFrame, source: LiveSource, cfg: IngestConfig, weather_fetch=weather_mod.fetch_recent) -> tuple[pd.DataFrame, dict]:
+def build_rows(
+    frame: pd.DataFrame, source: LiveSource, cfg: IngestConfig, weather_fetch=weather_mod.fetch_recent
+) -> tuple[pd.DataFrame, dict]:
     """QC + weather fill per station. Returns (rows ready for the database, details)."""
     details: dict = {}
     row_flags = [dict() for _ in range(len(frame))]
@@ -61,7 +66,7 @@ def build_rows(frame: pd.DataFrame, source: LiveSource, cfg: IngestConfig, weath
         try:
             frame, row_flags = weather_mod.fill_missing(frame, weather_fetch())
             details["weather"] = "open-meteo"
-        except Exception as exc:       # weather is a best-effort fill; the ingest must not fail because of it
+        except Exception as exc:  # weather is a best-effort fill; the ingest must not fail because of it
             details["weather"] = f"unavailable: {type(exc).__name__}"
     else:
         details["weather"] = "none"
@@ -82,7 +87,9 @@ def recompute_aqi(store, rows: pd.DataFrame, since: pd.Timestamp) -> pd.DataFram
     ids = sorted(rows.station_id.unique())
     history = store.recent_pollutants(ids, since - pd.Timedelta(hours=AQI_HISTORY_HOURS))
     new = rows.reset_index()[["station_id", "hour", *POLLUTANTS]]
-    both = pd.concat([history[["station_id", "hour", *POLLUTANTS]], new]).drop_duplicates(["station_id", "hour"], keep="last")
+    both = pd.concat([history[["station_id", "hour", *POLLUTANTS]], new]).drop_duplicates(
+        ["station_id", "hour"], keep="last"
+    )
     names = {v: k for k, v in STATION_IDS.items()}
     both["station_name"] = both.station_id.map(names)
     both = both.rename(columns={"hour": "Timestamp"}).sort_values(["station_id", "Timestamp"])
@@ -93,22 +100,36 @@ def recompute_aqi(store, rows: pd.DataFrame, since: pd.Timestamp) -> pd.DataFram
 
 def classify(rows: pd.DataFrame, now: pd.Timestamp, stale_after_hours: float) -> tuple[str, dict]:
     """status + freshness per station. A reading labelled T covers [T, T+1h), so its age is measured to T + 1 h."""
-    newest = rows.reset_index().groupby("station_name")["hour"].max() if len(rows) else pd.Series(dtype="datetime64[ns]")
-    ages = {s: round((now.tz_localize(None) - (t + pd.Timedelta(hours=1))).total_seconds() / 3600, 2) for s, t in newest.items()}
+    newest = (
+        rows.reset_index().groupby("station_name")["hour"].max() if len(rows) else pd.Series(dtype="datetime64[ns]")
+    )
+    ages = {
+        s: round((now.tz_localize(None) - (t + pd.Timedelta(hours=1))).total_seconds() / 3600, 2)
+        for s, t in newest.items()
+    }
     fresh = sorted(s for s, a in ages.items() if a <= stale_after_hours)
     stale = {s: a for s, a in ages.items() if a > stale_after_hours}
-    stale.update({s: None for s in STATION_IDS if s not in ages})                      # no reading at all
+    stale.update({s: None for s in STATION_IDS if s not in ages})  # no reading at all
     status = "failed" if not fresh else ("success" if not stale else "partial")
     return status, {"fresh_stations": fresh, "stale_stations": stale, "age_hours": ages}
 
 
-def run(cfg: IngestConfig, store, *, now: pd.Timestamp | None = None, factory=get_source, weather_fetch=weather_mod.fetch_recent) -> dict:
+def run(
+    cfg: IngestConfig,
+    store,
+    *,
+    now: pd.Timestamp | None = None,
+    factory=get_source,
+    weather_fetch=weather_mod.fetch_recent,
+) -> dict:
     now = now if now is not None else pd.Timestamp.now(tz=KST)
-    end = now.tz_localize(None).floor("h") - pd.Timedelta(hours=1)          # newest complete hour label
+    end = now.tz_localize(None).floor("h") - pd.Timedelta(hours=1)  # newest complete hour label
     start = end - pd.Timedelta(hours=cfg.lookback_hours - 1)
     run_id = store.start_run("ingest")
-    details: dict = {"config": {"source": cfg.source, "fallback": cfg.fallback, "lookback_hours": cfg.lookback_hours},
-                     "window": [str(start), str(end)]}
+    details: dict = {
+        "config": {"source": cfg.source, "fallback": cfg.fallback, "lookback_hours": cfg.lookback_hours},
+        "window": [str(start), str(end)],
+    }
     status, error, written = "failed", None, 0
     try:
         frame, source, notes = fetch_with_fallback(cfg, start, end, factory)
@@ -127,7 +148,7 @@ def run(cfg: IngestConfig, store, *, now: pd.Timestamp | None = None, factory=ge
         error, status = f"ImplausibleBatch: {exc}", "failed"
     except (SourceUnavailable, SourceNotVerified) as exc:
         error, status = f"{type(exc).__name__}: {exc}", "failed"
-    except Exception as exc:                       # record a short, key-free message and re-raise for the traceback
+    except Exception as exc:  # record a short, key-free message and re-raise for the traceback
         store.finish_run(run_id, "failed", written, f"{type(exc).__name__}", details)
         raise
     store.finish_run(run_id, status, written, error, details)
@@ -141,14 +162,18 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--allow-unverified", action="store_true")
     args = parser.parse_args(argv)
     cfg = load_config()
-    overrides = {k: v for k, v in (("source", args.source), ("allow_unverified", True if args.allow_unverified else None)) if v}
+    overrides = {
+        k: v for k, v in (("source", args.source), ("allow_unverified", True if args.allow_unverified else None)) if v
+    }
     if overrides:
         cfg = IngestConfig(**{**cfg.__dict__, **overrides})
     store = NullStore() if args.dry_run else Store()
     with store:
         result = run(cfg, store)
-    print(f"status={result['status']} rows={result['rows']} source={result['details'].get('source_used')} "
-          f"fresh={len(result['details'].get('fresh_stations', []))}/7 error={result['error']}")
+    print(
+        f"status={result['status']} rows={result['rows']} source={result['details'].get('source_used')} "
+        f"fresh={len(result['details'].get('fresh_stations', []))}/7 error={result['error']}"
+    )
     return 0 if result["status"] in ("success", "partial") else 1
 
 

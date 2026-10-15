@@ -7,6 +7,7 @@ than 99% of the rows the models were validated on is skipped, with the reason re
 
     python -m src.live.calibrate_gate           # needs data/processed/features_extended.parquet and lightgbm
 """
+
 from __future__ import annotations
 
 import json
@@ -32,17 +33,29 @@ def calibrate() -> dict:
     frame["timestamp"] = pd.to_datetime(frame["timestamp"]).dt.tz_convert(KST)
     frame = construct_causal_long_horizon_features(frame)
     val = frame[(frame["timestamp"] >= VAL_START) & (frame["timestamp"] <= VAL_END)]
-    shares = pd.concat({h: val.apply(lambda row, n=names: forecast.core_missing_share(row, n), axis=1) for h, names in models.features.items()}, axis=1)
+    shares = pd.concat(
+        {
+            h: val.apply(lambda row, n=names: forecast.core_missing_share(row, n), axis=1)
+            for h, names in models.features.items()
+        },
+        axis=1,
+    )
     worst = shares.max(axis=1)
     value = math.ceil(float(np.percentile(worst, PERCENTILE)) * 100) / 100
     return {
         "max_core_missing_share": value,
         "derivation": f"{PERCENTILE}th percentile of the per-row worst core-missing share over {len(val):,} validation rows "
-                      f"({VAL_START:%Y-%m-%d}..{VAL_END:%Y-%m-%d}), rounded up to 0.01",
-        "percentiles_of_worst_share": {str(q): round(float(np.percentile(worst, q)), 4) for q in (50, 90, 95, 99, 99.9, 100)},
+        f"({VAL_START:%Y-%m-%d}..{VAL_END:%Y-%m-%d}), rounded up to 0.01",
+        "percentiles_of_worst_share": {
+            str(q): round(float(np.percentile(worst, q)), 4) for q in (50, 90, 95, 99, 99.9, 100)
+        },
         "share_of_validation_rows_with_any_core_missing": round(float((worst > 0).mean()), 4),
-        "core_features": {str(h): sum(1 for c in names if not c.startswith("station_") and not c.startswith(forecast.AUDITED_ABSENT_PREFIXES))
-                          for h, names in models.features.items()},
+        "core_features": {
+            str(h): sum(
+                1 for c in names if not c.startswith("station_") and not c.startswith(forecast.AUDITED_ABSENT_PREFIXES)
+            )
+            for h, names in models.features.items()
+        },
         "audited_absent_prefixes": list(forecast.AUDITED_ABSENT_PREFIXES),
     }
 

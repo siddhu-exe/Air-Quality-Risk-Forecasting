@@ -7,6 +7,7 @@ One extra rule guards against silent unit changes upstream: values above a plaus
 ``implausible``, and a batch where many values of one column are implausible raises, because that
 pattern means a unit or scale changed, not that the air got dirtier.
 """
+
 from __future__ import annotations
 
 import numpy as np
@@ -16,22 +17,49 @@ from etl.schemas import PHYSICAL_BOUNDS, SENTINEL_VALUES
 from src.features.compute_cpcb_aqi import STATION_IDS
 
 VALUE_COLUMNS = [
-    "pm25", "pm10", "no2", "nox", "nh3", "so2", "co", "o3",
-    "temperature", "humidity", "wind_speed", "solar_radiation",
+    "pm25",
+    "pm10",
+    "no2",
+    "nox",
+    "nh3",
+    "so2",
+    "co",
+    "o3",
+    "temperature",
+    "humidity",
+    "wind_speed",
+    "solar_radiation",
 ]
 
 # live_readings column -> key in etl.schemas.PHYSICAL_BOUNDS
 _ETL_KEY = {
-    "pm25": "pm25", "pm10": "pm10", "no2": "no2_ugm3", "nox": "nox_ppb", "nh3": "nh3_ugm3",
-    "so2": "so2_ugm3", "co": "co_mgm3", "o3": "ozone_ugm3", "humidity": "rh_pct",
-    "wind_speed": "ws_ms", "solar_radiation": "sr_wm2",
+    "pm25": "pm25",
+    "pm10": "pm10",
+    "no2": "no2_ugm3",
+    "nox": "nox_ppb",
+    "nh3": "nh3_ugm3",
+    "so2": "so2_ugm3",
+    "co": "co_mgm3",
+    "o3": "ozone_ugm3",
+    "humidity": "rh_pct",
+    "wind_speed": "ws_ms",
+    "solar_radiation": "sr_wm2",
 }
 
 # Ceilings well above the largest value in the 2024-2026 CSVs (e.g. PM2.5 998, NOx 499, CO 9.76),
 # so real extremes pass but a 1000x scale error does not.
 PLAUSIBLE_MAX = {
-    "pm25": 1500.0, "pm10": 2000.0, "no2": 1000.0, "nox": 1000.0, "nh3": 1000.0, "so2": 1000.0,
-    "co": 50.0, "o3": 1000.0, "temperature": 55.0, "humidity": 100.0, "wind_speed": 60.0,
+    "pm25": 1500.0,
+    "pm10": 2000.0,
+    "no2": 1000.0,
+    "nox": 1000.0,
+    "nh3": 1000.0,
+    "so2": 1000.0,
+    "co": 50.0,
+    "o3": 1000.0,
+    "temperature": 55.0,
+    "humidity": 100.0,
+    "wind_speed": 60.0,
     "solar_radiation": 1500.0,
 }
 MIN_BY_COLUMN = {"temperature": -5.0}  # Delhi never goes below this; a unit mix-up would
@@ -84,8 +112,9 @@ WEATHER_ALL = WEATHER_COLUMNS + ["solar_radiation"]
 FILLED_PREFIX = "filled:"
 
 
-def finish_hourly(frame: pd.DataFrame, station: str, source: str, extra_flags: dict | None = None,
-                  row_flags: list[dict] | None = None) -> pd.DataFrame:
+def finish_hourly(
+    frame: pd.DataFrame, station: str, source: str, extra_flags: dict | None = None, row_flags: list[dict] | None = None
+) -> pd.DataFrame:
     """QC one station's hourly frame (index = hour label), tag it, and drop hours with no usable value.
 
     ``extra_flags`` is merged into every row's ``qc_flags``; ``row_flags`` (aligned with the frame's rows) are
@@ -108,11 +137,15 @@ def finish_hourly(frame: pd.DataFrame, station: str, source: str, extra_flags: d
         if row_flags:
             # a filled value that QC then rejected is no longer filled
             flags[position].update({k: v for k, v in row_flags[position].items() if k not in flags[position]})
-    filled = np.array([[str(f.get(c, "")).startswith(FILLED_PREFIX) for c in WEATHER_ALL] for f in flags]).reshape(len(flags), len(WEATHER_ALL))
+    filled = np.array([[str(f.get(c, "")).startswith(FILLED_PREFIX) for c in WEATHER_ALL] for f in flags]).reshape(
+        len(flags), len(WEATHER_ALL)
+    )
     present = clean[WEATHER_ALL].notna().to_numpy()
     n_present = present.sum(axis=1)
     n_filled = (filled & present).sum(axis=1)
-    source_label = np.where(n_present == 0, None, np.where(n_filled == 0, "station", np.where(n_filled == n_present, "open-meteo", "mixed")))
+    source_label = np.where(
+        n_present == 0, None, np.where(n_filled == 0, "station", np.where(n_filled == n_present, "open-meteo", "mixed"))
+    )
     out = clean.copy()
     out.insert(0, "station_id", STATION_IDS[station])
     out["station_name"] = station

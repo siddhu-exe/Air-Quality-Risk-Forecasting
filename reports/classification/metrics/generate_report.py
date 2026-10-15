@@ -1,9 +1,9 @@
 import pandas as pd
 
-metrics_df = pd.read_csv('reports/classification/metrics/multiclass_metrics_comparison.csv')
-episodes_df = pd.read_csv('reports/classification/episodes/grap_episode_lead_times.csv')
+metrics_df = pd.read_csv("reports/classification/metrics/multiclass_metrics_comparison.csv")
+episodes_df = pd.read_csv("reports/classification/episodes/grap_episode_lead_times.csv")
 
-with open('docs/phase_7_findings.md', 'w') as f:
+with open("docs/phase_7_findings.md", "w") as f:
     text = """# Phase 7 Findings: CPCB Risk Classification & GRAP Alerting
 
 **Document Version:** 1.0  
@@ -28,6 +28,7 @@ Phase 7 successfully transformed the frozen Phase 6 continuous AQI predictions i
 ### 2.1 Cross-Horizon Metrics Comparison
 """
     f.write(text)
+
     def df_to_markdown(df):
         cols = df.columns
         header = "| " + " | ".join(cols) + " |"
@@ -39,13 +40,19 @@ Phase 7 successfully transformed the frozen Phase 6 continuous AQI predictions i
             body.append("| " + " | ".join(row) + " |")
         return "\n".join([header, sep] + body)
 
-    f.write(df_to_markdown(metrics_df[['horizon', 'macro_f1', 'weighted_f1', 'weighted_kappa', 'ordinal_mae']]))
+    f.write(df_to_markdown(metrics_df[["horizon", "macro_f1", "weighted_f1", "weighted_kappa", "ordinal_mae"]]))
 
     text = """\n\n### 2.2 Deep Dive: Severe-Class & Policy Focus
 Because standard metrics typically dilute the performance of minority extreme classes (actual Severe incidents represented ~10% of the dataset), we evaluate specific thresholds. \n
 """
     f.write(text)
-    f.write(df_to_markdown(metrics_df[['horizon', 'severe_f1', 'severe_recall', 'severe_precision', 'vpoor_plus_recall', 'critical_miss_rate']]))
+    f.write(
+        df_to_markdown(
+            metrics_df[
+                ["horizon", "severe_f1", "severe_recall", "severe_precision", "vpoor_plus_recall", "critical_miss_rate"]
+            ]
+        )
+    )
 
     text = """\n\n**Insights:**
 1. **Critical Misses Assured:** At all horizons (including 24h), the `critical_miss_rate` is strictly **0.0**. The model *never* incorrectly down-plays an actual Severe episode as Moderate or Good.
@@ -76,16 +83,25 @@ The 2024 GRAP revision heavily prioritizes forecast-based, proactive mobilizatio
     f.write(text)
 
     lts = []
-    hits = episodes_df[episodes_df['detection'] == 'hit']
+    hits = episodes_df[episodes_df["detection"] == "hit"]
 
-    for h in ['1h', '6h', '24h']:
-        total_eps = len(episodes_df[episodes_df['horizon'] == h])
-        hits_h = hits[hits['horizon'] == h]
+    for h in ["1h", "6h", "24h"]:
+        total_eps = len(episodes_df[episodes_df["horizon"] == h])
+        hits_h = hits[hits["horizon"] == h]
         hit_len = len(hits_h)
-        mean_lt = hits_h['lead_time_hours'].mean()
-        actionable = len(hits_h[hits_h['lead_time_hours'] >= 6])
+        mean_lt = hits_h["lead_time_hours"].mean()
+        actionable = len(hits_h[hits_h["lead_time_hours"] >= 6])
         act_rate = (actionable / total_eps) * 100
-        lts.append({'horizon': h, 'total_episodes': total_eps, 'hits': hit_len, 'hit_rate (%)': f"{(hit_len/total_eps)*100:.1f}", 'mean_lead_time_hrs': f"{mean_lt:.1f}", 'actionable_warnings (>=6h)': f"{actionable} ({act_rate:.1f}%)"})
+        lts.append(
+            {
+                "horizon": h,
+                "total_episodes": total_eps,
+                "hits": hit_len,
+                "hit_rate (%)": f"{(hit_len / total_eps) * 100:.1f}",
+                "mean_lead_time_hrs": f"{mean_lt:.1f}",
+                "actionable_warnings (>=6h)": f"{actionable} ({act_rate:.1f}%)",
+            }
+        )
 
     f.write(df_to_markdown(pd.DataFrame(lts)))
 

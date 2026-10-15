@@ -1,4 +1,5 @@
 """Rate-limit handling for the Open-Meteo / FIRMS fetchers (no network: requests are mocked)."""
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -38,10 +39,13 @@ def _install(monkeypatch, responses):
 
 def test_minutely_429_is_retried_after_waiting(monkeypatch):
     waits = []
-    calls = _install(monkeypatch, [
-        FakeResponse(429, {"reason": "Minutely API request limit exceeded."}),
-        FakeResponse(200, {"ok": 1}),
-    ])
+    calls = _install(
+        monkeypatch,
+        [
+            FakeResponse(429, {"reason": "Minutely API request limit exceeded."}),
+            FakeResponse(200, {"ok": 1}),
+        ],
+    )
     response = ed._get_with_retry("http://x", sleep=waits.append)
     assert response.status_code == 200 and len(calls) == 2
     assert waits and waits[0] >= 65
@@ -80,10 +84,8 @@ def test_gives_up_after_max_attempts(monkeypatch):
 
 
 def test_year_chunks_cover_range_without_overlap():
-    assert ed._year_chunks("2024-01-01", "2025-12-31") == [
-        ("2024-01-01", "2024-12-31"), ("2025-01-01", "2025-12-31")]
-    assert ed._year_chunks("2024-06-15", "2025-02-01") == [
-        ("2024-06-15", "2024-12-31"), ("2025-01-01", "2025-02-01")]
+    assert ed._year_chunks("2024-01-01", "2025-12-31") == [("2024-01-01", "2024-12-31"), ("2025-01-01", "2025-12-31")]
+    assert ed._year_chunks("2024-06-15", "2025-02-01") == [("2024-06-15", "2024-12-31"), ("2025-01-01", "2025-02-01")]
 
 
 def test_weather_fetch_is_sequential_cached_and_resumable(monkeypatch, tmp_path):
@@ -101,13 +103,13 @@ def test_weather_fetch_is_sequential_cached_and_resumable(monkeypatch, tmp_path)
 
     monkeypatch.setattr(ed, "_fetch_station_chunk", fake_chunk)
     first = ed.fetch_open_meteo_weather("2024-01-01", "2025-12-31")
-    assert len(fetched) == len(ed.STATION_COORDS) * 2          # one request per station-year
+    assert len(fetched) == len(ed.STATION_COORDS) * 2  # one request per station-year
     assert {"wind_u", "wind_v"} <= set(first.columns)
 
     fetched.clear()
     second = ed.fetch_open_meteo_weather("2024-01-01", "2025-12-31")
-    assert fetched == []                                       # rerun makes no requests
+    assert fetched == []  # rerun makes no requests
     assert len(second) == len(first)
 
     ed.fetch_open_meteo_weather("2024-01-01", "2025-12-31", refresh=True)
-    assert len(fetched) == len(ed.STATION_COORDS) * 2          # --refresh refetches
+    assert len(fetched) == len(ed.STATION_COORDS) * 2  # --refresh refetches

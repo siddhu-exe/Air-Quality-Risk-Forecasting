@@ -30,6 +30,7 @@ Outputs
   reports/modeling/pm25/[<profile>/]pm25_forecast_metrics.{csv,md}   (selected variant, val + test)
   reports/modeling/pm25/[<profile>/]variant_selection.csv            (all fits, validation)
 """
+
 from __future__ import annotations
 
 import json
@@ -70,7 +71,10 @@ def fit_variant(train: pd.DataFrame, target: str, cols: list[str], form: str, cf
     cfg = DEFAULT_CONFIG if cfg is None else cfg
     y = train[target] - train["pm25_curr"] if form == "residual" else train[target]
     model = HistGradientBoostingRegressor(
-        max_iter=MAX_ITER, early_stopping=False, random_state=42, **cfg,
+        max_iter=MAX_ITER,
+        early_stopping=False,
+        random_state=42,
+        **cfg,
     )
     return model.fit(train[cols], y)
 
@@ -101,8 +105,10 @@ def main() -> None:
     frame["split"] = assign_split(frame["timestamp"])
     cols_with_cal = model_feature_columns(frame, drop_calendar=False)
     cols_no_cal = model_feature_columns(frame, drop_calendar=True)
-    print(f"profile={PROFILE['name']}: {len(cols_with_cal)} features with calendar, "
-          f"{len(cols_no_cal)} without", flush=True)
+    print(
+        f"profile={PROFILE['name']}: {len(cols_with_cal)} features with calendar, {len(cols_no_cal)} without",
+        flush=True,
+    )
     standard = is_standard()
 
     selection_rows, records = [], []
@@ -120,19 +126,28 @@ def main() -> None:
             cols = prune_columns(train, cols_with_cal if use_cal else cols_no_cal)
             model = fit_variant(train, target, cols, form)
             if standard:
-                index, val_mae = None, metrics(val[target].values,
-                                               predict_variant(model, val, cols, form))["mae"]
+                index, val_mae = None, metrics(val[target].values, predict_variant(model, val, cols, form))["mae"]
             else:
                 index, val_mae = staged_best(model, val, cols, target, form)
             fitted[(form, use_cal)] = (model, cols, val_mae, index, DEFAULT_CONFIG)
-            selection_rows.append({
-                "horizon": f"{horizon}h", "stage": "variant", "target_form": form, "calendar": use_cal,
-                "iterations": MAX_ITER if standard else index + 1, "params": json.dumps(DEFAULT_CONFIG),
-                "val_mae": round(val_mae, 3), "val_persistence_mae": round(persistence_val, 3),
-                "val_mae_skill": round(1 - val_mae / persistence_val, 4),
-            })
-            print(f"[{horizon}h] {form:8s} calendar={use_cal!s:5s} val MAE {val_mae:.3f} "
-                  f"(persistence {persistence_val:.3f})", flush=True)
+            selection_rows.append(
+                {
+                    "horizon": f"{horizon}h",
+                    "stage": "variant",
+                    "target_form": form,
+                    "calendar": use_cal,
+                    "iterations": MAX_ITER if standard else index + 1,
+                    "params": json.dumps(DEFAULT_CONFIG),
+                    "val_mae": round(val_mae, 3),
+                    "val_persistence_mae": round(persistence_val, 3),
+                    "val_mae_skill": round(1 - val_mae / persistence_val, 4),
+                }
+            )
+            print(
+                f"[{horizon}h] {form:8s} calendar={use_cal!s:5s} val MAE {val_mae:.3f} "
+                f"(persistence {persistence_val:.3f})",
+                flush=True,
+            )
 
         best_key = min(fitted, key=lambda k: fitted[k][2])
         form, use_cal = best_key
@@ -143,15 +158,25 @@ def main() -> None:
             for n, cfg in enumerate(search_configs(PROFILE["n_search"])[1:], start=1):
                 model = fit_variant(train, target, cols, form, cfg)
                 index, val_mae = staged_best(model, val, cols, target, form)
-                selection_rows.append({
-                    "horizon": f"{horizon}h", "stage": "search", "target_form": form, "calendar": use_cal,
-                    "iterations": index + 1, "params": json.dumps(cfg),
-                    "val_mae": round(val_mae, 3), "val_persistence_mae": round(persistence_val, 3),
-                    "val_mae_skill": round(1 - val_mae / persistence_val, 4),
-                })
+                selection_rows.append(
+                    {
+                        "horizon": f"{horizon}h",
+                        "stage": "search",
+                        "target_form": form,
+                        "calendar": use_cal,
+                        "iterations": index + 1,
+                        "params": json.dumps(cfg),
+                        "val_mae": round(val_mae, 3),
+                        "val_persistence_mae": round(persistence_val, 3),
+                        "val_mae_skill": round(1 - val_mae / persistence_val, 4),
+                    }
+                )
                 improved = val_mae < fitted[best_key][2]
-                print(f"[{horizon}h] search {n}/{PROFILE['n_search']} {cfg} -> val MAE {val_mae:.3f}"
-                      f"{'  *' if improved else ''}", flush=True)
+                print(
+                    f"[{horizon}h] search {n}/{PROFILE['n_search']} {cfg} -> val MAE {val_mae:.3f}"
+                    f"{'  *' if improved else ''}",
+                    flush=True,
+                )
                 if improved:
                     fitted[best_key] = (model, cols, val_mae, index, cfg)
 
@@ -159,34 +184,60 @@ def main() -> None:
         if export_dir() is not None:
             if not standard:
                 raise SystemExit("LIVE_EXPORT_DIR is only supported with T2_PROFILE=standard")
-            export(f"pm25-{horizon}h-hgb-live-v1", {"model": model, "columns": cols, "target_form": form, "horizon": horizon},
-                   {"horizon_hours": horizon, "target_form": form, "calendar": bool(use_cal), "iterations": MAX_ITER, "params": cfg,
-                    "n_features": len(cols), "matrix": str(FEATURES_PATH.name)})
+            export(
+                f"pm25-{horizon}h-hgb-live-v1",
+                {"model": model, "columns": cols, "target_form": form, "horizon": horizon},
+                {
+                    "horizon_hours": horizon,
+                    "target_form": form,
+                    "calendar": bool(use_cal),
+                    "iterations": MAX_ITER,
+                    "params": cfg,
+                    "n_features": len(cols),
+                    "matrix": str(FEATURES_PATH.name),
+                },
+            )
         for split_name, part in (("val", val), ("test", test)):
-            pred = (predict_variant(model, part, cols, form) if standard
-                    else predict_staged(model, part, cols, form, index))
+            pred = (
+                predict_variant(model, part, cols, form) if standard else predict_staged(model, part, cols, form, index)
+            )
             persistence = part["pm25_curr"].values
             y = part[target].values
             m, p = metrics(y, pred), metrics(y, persistence)
             ci = block_bootstrap(
-                y, pred, persistence, pd.to_datetime(part["timestamp"]).dt.date.values,
-                N_BOOT, SEED,
+                y,
+                pred,
+                persistence,
+                pd.to_datetime(part["timestamp"]).dt.date.values,
+                N_BOOT,
+                SEED,
             )
-            records.append({
-                "profile": PROFILE["name"],
-                "horizon": f"{horizon}h", "split": split_name, "n": len(part),
-                "target_form": form, "calendar": use_cal,
-                "iterations": MAX_ITER if standard else index + 1, "params": json.dumps(cfg),
-                "model_mae": round(m["mae"], 3), "model_rmse": round(m["rmse"], 3),
-                "model_r2": round(m["r2"], 3),
-                "persistence_mae": round(p["mae"], 3), "persistence_rmse": round(p["rmse"], 3),
-                "skill_mae": round(1 - m["mae"] / p["mae"], 4),
-                "skill_mae_ci_lo": round(ci["skill_mae_ci_lo"], 4),
-                "skill_mae_ci_hi": round(ci["skill_mae_ci_hi"], 4),
-                "skill_rmse": round(1 - m["rmse"] / p["rmse"], 4),
-            })
-            print(f"[{horizon}h {split_name}] selected {form}/cal={use_cal}: MAE {m['mae']:.2f} vs "
-                  f"persistence {p['mae']:.2f} (skill {records[-1]['skill_mae']:+.3f})", flush=True)
+            records.append(
+                {
+                    "profile": PROFILE["name"],
+                    "horizon": f"{horizon}h",
+                    "split": split_name,
+                    "n": len(part),
+                    "target_form": form,
+                    "calendar": use_cal,
+                    "iterations": MAX_ITER if standard else index + 1,
+                    "params": json.dumps(cfg),
+                    "model_mae": round(m["mae"], 3),
+                    "model_rmse": round(m["rmse"], 3),
+                    "model_r2": round(m["r2"], 3),
+                    "persistence_mae": round(p["mae"], 3),
+                    "persistence_rmse": round(p["rmse"], 3),
+                    "skill_mae": round(1 - m["mae"] / p["mae"], 4),
+                    "skill_mae_ci_lo": round(ci["skill_mae_ci_lo"], 4),
+                    "skill_mae_ci_hi": round(ci["skill_mae_ci_hi"], 4),
+                    "skill_rmse": round(1 - m["rmse"] / p["rmse"], 4),
+                }
+            )
+            print(
+                f"[{horizon}h {split_name}] selected {form}/cal={use_cal}: MAE {m['mae']:.2f} vs "
+                f"persistence {p['mae']:.2f} (skill {records[-1]['skill_mae']:+.3f})",
+                flush=True,
+            )
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     table = pd.DataFrame(records)
@@ -201,8 +252,7 @@ def main() -> None:
         "form, calendar features)"
         + (" and the hyper-parameters are" if not standard else " is")
         + " chosen per horizon on validation MAE only;",
-        "test is scored once. Skill CIs are 95% day-block bootstrap intervals "
-        f"({N_BOOT:,} resamples).",
+        f"test is scored once. Skill CIs are 95% day-block bootstrap intervals ({N_BOOT:,} resamples).",
         "",
         "| Horizon | Split | N | Variant | Model MAE | Persistence MAE | MAE skill | Skill 95% CI | RMSE skill |",
         "| :--- | :--- | ---: | :--- | ---: | ---: | ---: | :---: | ---: |",

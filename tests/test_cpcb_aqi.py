@@ -1,4 +1,5 @@
 """Tests for the CPCB AQI reconstruction (src/features/compute_cpcb_aqi.py)."""
+
 import pathlib
 import sys
 

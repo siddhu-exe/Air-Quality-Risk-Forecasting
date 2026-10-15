@@ -1,4 +1,5 @@
 """The shared, pure feature path (src.features.build_features.compute_feature_frame). Synthetic data only."""
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -19,12 +20,30 @@ def _synthetic(seed=0):
     for sid in STATIONS:
         n = len(idx)
         base = 150 + 60 * np.sin(np.arange(n) / 24 * 2 * np.pi) + rng.normal(0, 10, n)
-        c_parts.append(pd.DataFrame({
-            "station_id": sid, "timestamp": idx, "pm25": base, "pm10": base * 1.8, "no2": base / 3, "nox": base / 2,
-            "so2": base / 10, "co": base / 100, "o3": base / 4, "temperature": 20 + rng.normal(0, 2, n),
-            "humidity": 60 + rng.normal(0, 5, n), "wind_speed": np.abs(rng.normal(1.5, .5, n)), "solar_radiation": np.abs(rng.normal(100, 20, n)),
-        }))
-        a_parts.append(pd.DataFrame({"station_id": sid, "timestamp": idx, "aqi_value": base.clip(0, 500), "aqi_source": "recomputed"}))
+        c_parts.append(
+            pd.DataFrame(
+                {
+                    "station_id": sid,
+                    "timestamp": idx,
+                    "pm25": base,
+                    "pm10": base * 1.8,
+                    "no2": base / 3,
+                    "nox": base / 2,
+                    "so2": base / 10,
+                    "co": base / 100,
+                    "o3": base / 4,
+                    "temperature": 20 + rng.normal(0, 2, n),
+                    "humidity": 60 + rng.normal(0, 5, n),
+                    "wind_speed": np.abs(rng.normal(1.5, 0.5, n)),
+                    "solar_radiation": np.abs(rng.normal(100, 20, n)),
+                }
+            )
+        )
+        a_parts.append(
+            pd.DataFrame(
+                {"station_id": sid, "timestamp": idx, "aqi_value": base.clip(0, 500), "aqi_source": "recomputed"}
+            )
+        )
     return stations, pd.concat(c_parts, ignore_index=True), pd.concat(a_parts, ignore_index=True)
 
 
@@ -40,7 +59,11 @@ def test_target_and_lags_are_aligned_in_time():
     t = one.index[50]
     assert one.loc[t, "target_aqi_24h"] == one.loc[t + pd.Timedelta(hours=24), "aqi_curr"]
     assert one.loc[t, "aqi_lag_24h"] == one.loc[t - pd.Timedelta(hours=24), "aqi_curr"]
-    assert one.loc[t, "aqi_lag_168h"] == one.loc[t - pd.Timedelta(hours=168), "aqi_curr"] if t - pd.Timedelta(hours=168) in one.index else True
+    assert (
+        one.loc[t, "aqi_lag_168h"] == one.loc[t - pd.Timedelta(hours=168), "aqi_curr"]
+        if t - pd.Timedelta(hours=168) in one.index
+        else True
+    )
 
 
 def test_window_filter_and_row_order():
@@ -51,7 +74,9 @@ def test_window_filter_and_row_order():
 
 def test_masking_nox_changes_only_nox_derived_columns():
     base, masked = _frame(), _frame(nox=np.nan)
-    changed = [c for c in base.columns if not base[c].equals(masked[c]) and not (base[c].isna() & masked[c].isna()).all()]
+    changed = [
+        c for c in base.columns if not base[c].equals(masked[c]) and not (base[c].isna() & masked[c].isna()).all()
+    ]
     assert changed and all(c.startswith("nox_") for c in changed), changed
 
 

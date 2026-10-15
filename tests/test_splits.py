@@ -1,4 +1,5 @@
 """Tests for the chronological split + embargo helpers (src/models/splits.py)."""
+
 import pathlib
 import sys
 

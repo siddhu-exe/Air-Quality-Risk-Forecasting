@@ -3,6 +3,7 @@
 Switching the live source is a config change, not a code change: edit ``source`` in the file, set the
 ``LIVE_SOURCE`` repository variable, or pick it when dispatching the ingest workflow.
 """
+
 from __future__ import annotations
 
 import os
@@ -25,14 +26,18 @@ class IngestConfig:
     fallback: str = ""
     lookback_hours: int = 6
     stale_after_hours: float = 3.0
-    weather_display: str = "open-meteo"   # ingest stores Open-Meteo values in empty weather cells (tagged), for the app to display
-    weather_fill: str = "none"            # what the MODELS see: "none" = station/source cells only, filled cells are masked
+    weather_display: str = (
+        "open-meteo"  # ingest stores Open-Meteo values in empty weather cells (tagged), for the app to display
+    )
+    weather_fill: str = "none"  # what the MODELS see: "none" = station/source cells only, filled cells are masked
     allow_unverified: bool = False
 
     def __post_init__(self):
         for name, value in (("source", self.source), ("fallback", self.fallback)):
             if value and value not in VALID_SOURCES:
-                raise ConfigError(f"{name}={value!r}: must be one of {VALID_SOURCES}" + (" or empty" if name == "fallback" else ""))
+                raise ConfigError(
+                    f"{name}={value!r}: must be one of {VALID_SOURCES}" + (" or empty" if name == "fallback" else "")
+                )
         if not self.source:
             raise ConfigError("source must be set")
         if self.fallback == self.source:
@@ -56,9 +61,14 @@ def load_config(path: Path = CONFIG_PATH, env: dict | None = None) -> IngestConf
     values = {}
     if path.exists():
         values = dict(tomllib.loads(path.read_text()).get("ingest", {}))
-    mapping = {"LIVE_SOURCE": "source", "LIVE_FALLBACK": "fallback", "LIVE_LOOKBACK_HOURS": "lookback_hours",
-               "LIVE_WEATHER_FILL": "weather_fill", "LIVE_WEATHER_DISPLAY": "weather_display",
-               "LIVE_ALLOW_UNVERIFIED": "allow_unverified"}
+    mapping = {
+        "LIVE_SOURCE": "source",
+        "LIVE_FALLBACK": "fallback",
+        "LIVE_LOOKBACK_HOURS": "lookback_hours",
+        "LIVE_WEATHER_FILL": "weather_fill",
+        "LIVE_WEATHER_DISPLAY": "weather_display",
+        "LIVE_ALLOW_UNVERIFIED": "allow_unverified",
+    }
     for variable, key in mapping.items():
         if env.get(variable, "").strip():
             values[key] = env[variable].strip()

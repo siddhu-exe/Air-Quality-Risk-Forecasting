@@ -1,4 +1,5 @@
 """DB helper and station-loader tests. No network, no database."""
+
 import re
 from pathlib import Path
 
@@ -35,9 +36,9 @@ def test_connection_failure_message_has_no_credentials(monkeypatch):
 @pytest.mark.parametrize(
     "url",
     [
-        "postgresql://job_writer.ref:sec:ret+pw@host:5432/postgres",   # ':' in the password
-        "postgresql://job_writer.ref:sec@ret+pw@host:5432/postgres",   # '@' in the password
-        "postgresql://job_writer.ref:sec/ret#pw@host:5432/postgres",   # '/' and '#'
+        "postgresql://job_writer.ref:sec:ret+pw@host:5432/postgres",  # ':' in the password
+        "postgresql://job_writer.ref:sec@ret+pw@host:5432/postgres",  # '@' in the password
+        "postgresql://job_writer.ref:sec/ret#pw@host:5432/postgres",  # '/' and '#'
         "postgresql://job_writer.ref:s3cretpw@no-such-host.invalid:5432/postgres",
     ],
 )

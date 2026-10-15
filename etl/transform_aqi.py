@@ -33,8 +33,7 @@ def process_aqi_xlsx(file_path: Path) -> tuple[pd.DataFrame | None, dict]:
             time_cols = [c for c in df.columns if isinstance(c, str) and ":" in c and len(c) >= 5]
 
             # Melt wide to long
-            melted = pd.melt(df, id_vars=["Date"], value_vars=time_cols,
-                             var_name="HourStr", value_name="aqi")
+            melted = pd.melt(df, id_vars=["Date"], value_vars=time_cols, var_name="HourStr", value_name="aqi")
 
             # Drop null AQI upfront for efficiency
             melted = melted.dropna(subset=["aqi"])
@@ -50,7 +49,9 @@ def process_aqi_xlsx(file_path: Path) -> tuple[pd.DataFrame | None, dict]:
             # Remove any trailing .0 if Date was parsed as float
             date_int_str = date_int_str.str.replace(r"\.0$", "", regex=True)
 
-            melted["ts_str"] = file_year + "-" + file_month_str + "-" + date_int_str + " " + melted["HourStr"].astype(str)
+            melted["ts_str"] = (
+                file_year + "-" + file_month_str + "-" + date_int_str + " " + melted["HourStr"].astype(str)
+            )
             melted["ts"] = pd.to_datetime(melted["ts_str"], errors="coerce")
 
             # Remove invalid

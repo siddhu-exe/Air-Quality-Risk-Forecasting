@@ -45,7 +45,7 @@ def load_predictions_data():
 
     # Ensure timezone-aware datetime
     for df in [df1, df6, df24]:
-        df['timestamp'] = pd.to_datetime(df['timestamp'])
+        df["timestamp"] = pd.to_datetime(df["timestamp"])
 
     return df1, df6, df24
 
@@ -58,7 +58,7 @@ def load_causal_data():
     f_timeline = PROJECT_ROOT / "reports/causal/diwali_policy_status_timeline.csv"
 
     df_hourly = pd.read_csv(f_hourly)
-    df_hourly['timestamp'] = pd.to_datetime(df_hourly['timestamp'])
+    df_hourly["timestamp"] = pd.to_datetime(df_hourly["timestamp"])
 
     df_reg = pd.read_csv(f_reg)
     df_timeline = pd.read_csv(f_timeline)
@@ -85,8 +85,8 @@ def load_episodes_data():
     """Load crisis episode lead time audit dataset."""
     f_ep = PROJECT_ROOT / "reports/classification/episodes/grap_episode_lead_times.csv"
     df_ep = pd.read_csv(f_ep)
-    df_ep['start_time'] = pd.to_datetime(df_ep['start_time'])
-    df_ep['end_time'] = pd.to_datetime(df_ep['end_time'])
+    df_ep["start_time"] = pd.to_datetime(df_ep["start_time"])
+    df_ep["end_time"] = pd.to_datetime(df_ep["end_time"])
     return df_ep
 
 
@@ -146,7 +146,7 @@ df_sweep, df_cost_summary, df_operating = load_cost_threshold_data()
 df_episodes = load_episodes_data()
 img_forest, img_pr = load_cached_images()
 
-STATIONS = sorted(df_1h['station_name'].unique().tolist())
+STATIONS = sorted(df_1h["station_name"].unique().tolist())
 
 
 # -----------------------------------------------------------------------------
@@ -183,13 +183,9 @@ st.markdown(
 # =============================================================================
 # Main Navigation Tabs (5 Clean Focus Areas)
 # =============================================================================
-tab_overview, tab_forecasts, tab_diwali, tab_risk, tab_methodology = st.tabs([
-    "Overview",
-    "Forecasts",
-    "Diwali Policy Finding",
-    "Risk Threshold",
-    "Methodology"
-])
+tab_overview, tab_forecasts, tab_diwali, tab_risk, tab_methodology = st.tabs(
+    ["Overview", "Forecasts", "Diwali Policy Finding", "Risk Threshold", "Methodology"]
+)
 
 
 # =============================================================================
@@ -202,18 +198,20 @@ with tab_overview:
     )
 
     # 2. 7-station AQI snapshot (clean, tier only, native st.dataframe with column configuration)
-    latest_ts = df_1h['timestamp'].max()
-    df_latest = df_1h[df_1h['timestamp'] == latest_ts].copy().sort_values('station_name')
+    latest_ts = df_1h["timestamp"].max()
+    df_latest = df_1h[df_1h["timestamp"] == latest_ts].copy().sort_values("station_name")
 
     table_data = []
     for _, r in df_latest.iterrows():
-        aqi_val = int(round(float(r['y_true'])))
+        aqi_val = int(round(float(r["y_true"])))
         cpcb_name, _, _ = get_cpcb_tier(aqi_val)
-        table_data.append({
-            "Monitoring Station": r['station_name'],
-            "Recorded AQI (Dec 31, 2025)": aqi_val,
-            "CPCB Risk Tier": cpcb_name
-        })
+        table_data.append(
+            {
+                "Monitoring Station": r["station_name"],
+                "Recorded AQI (Dec 31, 2025)": aqi_val,
+                "CPCB Risk Tier": cpcb_name,
+            }
+        )
 
     df_table = pd.DataFrame(table_data)
     st.dataframe(
@@ -224,7 +222,7 @@ with tab_overview:
             "CPCB Risk Tier": st.column_config.TextColumn("CPCB Risk Tier"),
         },
         hide_index=True,
-        width="stretch"
+        width="stretch",
     )
 
     # 3. Single headline stat card: 24h model beats persistence by 4.2 MAE points
@@ -232,7 +230,7 @@ with tab_overview:
         label="24-Hour Ahead Forecasting Benchmark (Held-Out Winter Crisis Test Set)",
         value="MAE 34.11",
         delta="+4.23 MAE improvement over Persistence Baseline (38.34 MAE, outperforming across 100% of Delhi stations)",
-        delta_color="normal"
+        delta_color="normal",
     )
 
 
@@ -259,86 +257,104 @@ with tab_forecasts:
             [
                 "Final 72h of Test Split (Dec 28–31, 2025)",
                 "Final 14 Days of Test Split (Dec 18–31, 2025)",
-                "Full Peak Winter Test Set (Nov 01 – Dec 31, 2025)"
+                "Full Peak Winter Test Set (Nov 01 – Dec 31, 2025)",
             ],
             index=0,
-            key="forecast_window"
+            key="forecast_window",
         )
 
     with f_col3:
         # Default to 24-Hour Ahead (most challenging and informative horizon)
-        active_horizon = st.radio("Forecast Lead Horizon", ["1-Hour Ahead", "6-Hour Ahead", "24-Hour Ahead"], index=2, horizontal=True)
+        active_horizon = st.radio(
+            "Forecast Lead Horizon", ["1-Hour Ahead", "6-Hour Ahead", "24-Hour Ahead"], index=2, horizontal=True
+        )
 
     # Filter dataset for selected station and horizon
     if active_horizon == "1-Hour Ahead":
-        df_plot_source = df_1h[df_1h['station_name'] == selected_station].copy()
-        y_true_col = 'y_true'
-        y_pred_col = 'y_pred'
+        df_plot_source = df_1h[df_1h["station_name"] == selected_station].copy()
+        y_true_col = "y_true"
+        y_pred_col = "y_pred"
         mae_band = 2.29
         model_name = "Tuned LightGBM (1h)"
         r2_score = 0.9958
     elif active_horizon == "6-Hour Ahead":
-        df_plot_source = df_6h[df_6h['station_name'] == selected_station].copy()
-        y_true_col = 'y_true'
-        y_pred_col = 'y_pred'
+        df_plot_source = df_6h[df_6h["station_name"] == selected_station].copy()
+        y_true_col = "y_true"
+        y_pred_col = "y_pred"
         mae_band = 11.84
         model_name = "Tuned LightGBM (6h)"
         r2_score = 0.9126
     else:
-        df_plot_source = df_24h[df_24h['station_name'] == selected_station].copy()
-        y_true_col = 'target_aqi_24h'
-        y_pred_col = 'prediction_hybrid_6c_winning'
+        df_plot_source = df_24h[df_24h["station_name"] == selected_station].copy()
+        y_true_col = "target_aqi_24h"
+        y_pred_col = "prediction_hybrid_6c_winning"
         mae_band = 34.11
         model_name = "50/50 Hybrid Persistence + Ridge (24h)"
         r2_score = 0.3647
 
     # Filter time range
-    max_time = df_plot_source['timestamp'].max()
+    max_time = df_plot_source["timestamp"].max()
     if "72h" in time_window_choice:
-        df_plot = df_plot_source[df_plot_source['timestamp'] >= max_time - pd.Timedelta(hours=72)].copy()
+        df_plot = df_plot_source[df_plot_source["timestamp"] >= max_time - pd.Timedelta(hours=72)].copy()
     elif "14 Days" in time_window_choice:
-        df_plot = df_plot_source[df_plot_source['timestamp'] >= max_time - pd.Timedelta(days=14)].copy()
+        df_plot = df_plot_source[df_plot_source["timestamp"] >= max_time - pd.Timedelta(days=14)].copy()
     else:
         df_plot = df_plot_source.copy()
 
-    df_plot = df_plot.sort_values('timestamp')
+    df_plot = df_plot.sort_values("timestamp")
 
     # Single most important chart visible by default
     fig_forecast = go.Figure()
 
     # Shaded uncertainty band (MAE)
-    fig_forecast.add_trace(go.Scatter(
-        x=pd.concat([df_plot['timestamp'], df_plot['timestamp'][::-1]]),
-        y=pd.concat([df_plot[y_pred_col] + mae_band, (df_plot[y_pred_col] - mae_band)[::-1]]),
-        fill='toself',
-        fillcolor='rgba(37, 99, 235, 0.15)',
-        line=dict(color='rgba(255,255,255,0)'),
-        name=f'Model Uncertainty (±{mae_band:.1f} MAE)',
-        hoverinfo='skip'
-    ))
+    fig_forecast.add_trace(
+        go.Scatter(
+            x=pd.concat([df_plot["timestamp"], df_plot["timestamp"][::-1]]),
+            y=pd.concat([df_plot[y_pred_col] + mae_band, (df_plot[y_pred_col] - mae_band)[::-1]]),
+            fill="toself",
+            fillcolor="rgba(37, 99, 235, 0.15)",
+            line=dict(color="rgba(255,255,255,0)"),
+            name=f"Model Uncertainty (±{mae_band:.1f} MAE)",
+            hoverinfo="skip",
+        )
+    )
 
     # Model Forecast
-    fig_forecast.add_trace(go.Scatter(
-        x=df_plot['timestamp'],
-        y=df_plot[y_pred_col],
-        mode='lines',
-        name=f'Forecast ({model_name})',
-        line=dict(color='#2563EB', width=2.5)
-    ))
+    fig_forecast.add_trace(
+        go.Scatter(
+            x=df_plot["timestamp"],
+            y=df_plot[y_pred_col],
+            mode="lines",
+            name=f"Forecast ({model_name})",
+            line=dict(color="#2563EB", width=2.5),
+        )
+    )
 
     # Actual AQI
-    fig_forecast.add_trace(go.Scatter(
-        x=df_plot['timestamp'],
-        y=df_plot[y_true_col],
-        mode='lines',
-        name='Actual Verified AQI',
-        line=dict(color='#0F172A', width=2, dash='dot')
-    ))
+    fig_forecast.add_trace(
+        go.Scatter(
+            x=df_plot["timestamp"],
+            y=df_plot[y_true_col],
+            mode="lines",
+            name="Actual Verified AQI",
+            line=dict(color="#0F172A", width=2, dash="dot"),
+        )
+    )
 
     # CPCB Statutory Reference Lines
-    fig_forecast.add_hline(y=401, line_dash="dash", line_color="#7e0023", annotation_text="Severe (401)", annotation_position="top right")
-    fig_forecast.add_hline(y=301, line_dash="dash", line_color="#cc0033", annotation_text="Very Poor (301)", annotation_position="top right")
-    fig_forecast.add_hline(y=201, line_dash="dash", line_color="#ff9933", annotation_text="Poor (201)", annotation_position="top right")
+    fig_forecast.add_hline(
+        y=401, line_dash="dash", line_color="#7e0023", annotation_text="Severe (401)", annotation_position="top right"
+    )
+    fig_forecast.add_hline(
+        y=301,
+        line_dash="dash",
+        line_color="#cc0033",
+        annotation_text="Very Poor (301)",
+        annotation_position="top right",
+    )
+    fig_forecast.add_hline(
+        y=201, line_dash="dash", line_color="#ff9933", annotation_text="Poor (201)", annotation_position="top right"
+    )
 
     fig_forecast.update_layout(
         title=f"{selected_station} — {active_horizon} Lead Forecast vs. Actual AQI",
@@ -347,23 +363,25 @@ with tab_forecasts:
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
         template="plotly_white",
         height=400,
-        margin=dict(l=40, r=40, t=60, b=40)
+        margin=dict(l=40, r=40, t=60, b=40),
     )
 
     st.plotly_chart(fig_forecast)
-    st.caption("Model evaluated on historical held-out data (Nov–Dec 2025 test split, N=9,800) — not a live feed. The model never saw this data during training.")
+    st.caption(
+        "Model evaluated on historical held-out data (Nov–Dec 2025 test split, N=9,800) — not a live feed. The model never saw this data during training."
+    )
 
     # Supporting details inside collapsed expanders
     with st.expander("See station sub-sample error metrics & model parameters", expanded=False):
         m1, m2, m3, m4 = st.columns(4)
         station_mae = np.mean(np.abs(df_plot[y_true_col] - df_plot[y_pred_col]))
-        station_rmse = np.sqrt(np.mean((df_plot[y_true_col] - df_plot[y_pred_col])**2))
+        station_rmse = np.sqrt(np.mean((df_plot[y_true_col] - df_plot[y_pred_col]) ** 2))
         with m1:
             st.metric("Station Sub-Sample MAE", f"{station_mae:.2f}", delta=f"Benchmarked: ±{mae_band:.2f}")
         with m2:
             st.metric("Station Sub-Sample RMSE", f"{station_rmse:.2f}")
         with m3:
-            st.metric("Model Architecture", model_name.split('(')[0].strip())
+            st.metric("Model Architecture", model_name.split("(")[0].strip())
         with m4:
             st.metric("Out-of-Sample Test R²", f"{r2_score:.4f}")
 
@@ -374,7 +392,7 @@ with tab_forecasts:
             "Diwali 2023 (Nov 12, 2023) — Post-Diwali Surge",
             "Winter Smog Surge (Nov 02–05, 2025) — Severe Inversion Episode",
             "Extreme December Smog Crisis (Dec 02–06, 2025) — AQI > 450 Freeze",
-            "Late December Winter Inversion (Dec 26–29, 2025) — Shallow Boundary Layer"
+            "Late December Winter Inversion (Dec 26–29, 2025) — Shallow Boundary Layer",
         ]
         selected_event = st.selectbox("Select Historical Event to Replay", event_options, index=0)
 
@@ -395,39 +413,49 @@ with tab_forecasts:
                 peak_pm25 = 480.0
                 so2_surge = "52.0 µg/m³ (3.8x surge)"
 
-            df_d_event = df_diwali_hourly[df_diwali_hourly['event_name'] == event_tag].copy()
-            df_d_city = df_d_event.groupby('timestamp').agg({
-                'pm25': 'mean',
-                'so2': 'mean',
-                'aqi': 'mean',
-                'temp': 'mean',
-                'ws': 'mean'
-            }).reset_index().sort_values('timestamp')
+            df_d_event = df_diwali_hourly[df_diwali_hourly["event_name"] == event_tag].copy()
+            df_d_city = (
+                df_d_event.groupby("timestamp")
+                .agg({"pm25": "mean", "so2": "mean", "aqi": "mean", "temp": "mean", "ws": "mean"})
+                .reset_index()
+                .sort_values("timestamp")
+            )
 
             fig_chem = go.Figure()
-            fig_chem.add_trace(go.Scatter(
-                x=df_d_city['timestamp'],
-                y=df_d_city['pm25'],
-                name='PM2.5 Concentration (µg/m³)',
-                line=dict(color='#DC2626', width=3),
-                yaxis='y1'
-            ))
-            fig_chem.add_trace(go.Scatter(
-                x=df_d_city['timestamp'],
-                y=df_d_city['so2'],
-                name='SO2 Chemical Tracer (µg/m³)',
-                line=dict(color='#D97706', width=2, dash='dash'),
-                yaxis='y2'
-            ))
+            fig_chem.add_trace(
+                go.Scatter(
+                    x=df_d_city["timestamp"],
+                    y=df_d_city["pm25"],
+                    name="PM2.5 Concentration (µg/m³)",
+                    line=dict(color="#DC2626", width=3),
+                    yaxis="y1",
+                )
+            )
+            fig_chem.add_trace(
+                go.Scatter(
+                    x=df_d_city["timestamp"],
+                    y=df_d_city["so2"],
+                    name="SO2 Chemical Tracer (µg/m³)",
+                    line=dict(color="#D97706", width=2, dash="dash"),
+                    yaxis="y2",
+                )
+            )
             fig_chem.update_layout(
                 title=f"{event_tag} — Citywide Hourly PM2.5 Spike & SO2 Tracer Pulse Dynamics",
                 xaxis_title="Timeline",
-                yaxis=dict(title=dict(text="PM2.5 (µg/m³)", font=dict(color="#DC2626")), tickfont=dict(color="#DC2626")),
-                yaxis2=dict(title=dict(text="SO2 Tracer (µg/m³)", font=dict(color="#D97706")), tickfont=dict(color="#D97706"), overlaying='y', side='right'),
+                yaxis=dict(
+                    title=dict(text="PM2.5 (µg/m³)", font=dict(color="#DC2626")), tickfont=dict(color="#DC2626")
+                ),
+                yaxis2=dict(
+                    title=dict(text="SO2 Tracer (µg/m³)", font=dict(color="#D97706")),
+                    tickfont=dict(color="#D97706"),
+                    overlaying="y",
+                    side="right",
+                ),
                 legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
                 template="plotly_white",
                 height=340,
-                margin=dict(l=40, r=40, t=60, b=40)
+                margin=dict(l=40, r=40, t=60, b=40),
             )
             st.plotly_chart(fig_chem)
 
@@ -435,7 +463,12 @@ with tab_forecasts:
             with c1:
                 st.metric("Daytime Pre-Event PM2.5", f"{baseline_pm25:.1f} µg/m³")
             with c2:
-                st.metric("Midnight Peak PM2.5", f"{peak_pm25:.1f} µg/m³", delta=f"{peak_pm25/baseline_pm25:.1f}x Surge", delta_color="inverse")
+                st.metric(
+                    "Midnight Peak PM2.5",
+                    f"{peak_pm25:.1f} µg/m³",
+                    delta=f"{peak_pm25 / baseline_pm25:.1f}x Surge",
+                    delta_color="inverse",
+                )
             with c3:
                 st.metric("SO2 Tracer Peak", so2_surge)
             with c4:
@@ -451,17 +484,45 @@ with tab_forecasts:
                 t_start, t_end = "2025-12-26 00:00", "2025-12-29 23:00"
                 ep_label = "Late December Shallow Boundary Layer Inversion (Dec 26–29, 2025)"
 
-            df_ep_win = df_24h[(df_24h['timestamp'] >= t_start) & (df_24h['timestamp'] <= t_end)].copy()
-            df_ep_city = df_ep_win.groupby('timestamp').agg({
-                'target_aqi_24h': 'mean',
-                'prediction_hybrid_6c_winning': 'mean',
-                'prediction_naive_persistence': 'mean'
-            }).reset_index().sort_values('timestamp')
+            df_ep_win = df_24h[(df_24h["timestamp"] >= t_start) & (df_24h["timestamp"] <= t_end)].copy()
+            df_ep_city = (
+                df_ep_win.groupby("timestamp")
+                .agg(
+                    {
+                        "target_aqi_24h": "mean",
+                        "prediction_hybrid_6c_winning": "mean",
+                        "prediction_naive_persistence": "mean",
+                    }
+                )
+                .reset_index()
+                .sort_values("timestamp")
+            )
 
             fig_ep = go.Figure()
-            fig_ep.add_trace(go.Scatter(x=df_ep_city['timestamp'], y=df_ep_city['target_aqi_24h'], name='Actual Citywide AQI', line=dict(color='#0F172A', width=3)))
-            fig_ep.add_trace(go.Scatter(x=df_ep_city['timestamp'], y=df_ep_city['prediction_hybrid_6c_winning'], name='24h Hybrid Model Forecast', line=dict(color='#2563EB', width=2.5)))
-            fig_ep.add_trace(go.Scatter(x=df_ep_city['timestamp'], y=df_ep_city['prediction_naive_persistence'], name='Naive Persistence Baseline', line=dict(color='#94A3B8', width=1.5, dash='dot')))
+            fig_ep.add_trace(
+                go.Scatter(
+                    x=df_ep_city["timestamp"],
+                    y=df_ep_city["target_aqi_24h"],
+                    name="Actual Citywide AQI",
+                    line=dict(color="#0F172A", width=3),
+                )
+            )
+            fig_ep.add_trace(
+                go.Scatter(
+                    x=df_ep_city["timestamp"],
+                    y=df_ep_city["prediction_hybrid_6c_winning"],
+                    name="24h Hybrid Model Forecast",
+                    line=dict(color="#2563EB", width=2.5),
+                )
+            )
+            fig_ep.add_trace(
+                go.Scatter(
+                    x=df_ep_city["timestamp"],
+                    y=df_ep_city["prediction_naive_persistence"],
+                    name="Naive Persistence Baseline",
+                    line=dict(color="#94A3B8", width=1.5, dash="dot"),
+                )
+            )
             fig_ep.add_hline(y=401, line_dash="dash", line_color="#7e0023", annotation_text="Severe Cutoff (401)")
             fig_ep.update_layout(
                 title=f"{ep_label} — 24h Model Lead Trajectory vs Actual AQI",
@@ -470,7 +531,7 @@ with tab_forecasts:
                 legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
                 template="plotly_white",
                 height=340,
-                margin=dict(l=40, r=40, t=60, b=40)
+                margin=dict(l=40, r=40, t=60, b=40),
             )
             st.plotly_chart(fig_ep)
 
@@ -498,9 +559,14 @@ with tab_diwali:
 
     # Single most important visual visible by default
     if img_forest:
-        st.image(img_forest, caption="Regression Coefficient Forest Plot: Estimated Policy Effect Across 5 Econometric Specifications (95% CI)")
+        st.image(
+            img_forest,
+            caption="Regression Coefficient Forest Plot: Estimated Policy Effect Across 5 Econometric Specifications (95% CI)",
+        )
     else:
-        st.dataframe(df_reg_summary[['specification', 'coef_name', 'coef', 'std_err', 'p_value', 'ci_lower', 'ci_upper']])
+        st.dataframe(
+            df_reg_summary[["specification", "coef_name", "coef", "std_err", "p_value", "ci_lower", "ci_upper"]]
+        )
 
     # Supporting details inside collapsed expanders
     with st.expander("See the full 5-model regression comparison", expanded=False):
@@ -538,7 +604,9 @@ with tab_risk:
         "Select Public Health Loss Ratio (C_FN : C_FP — Missed Hazardous Crisis vs. False Alarm Disruption)",
         options=[1.0, 2.0, 3.0, 5.0, 10.0, 20.0],
         value=5.0,
-        format_func=lambda x: f"{int(x)}:1 ({'Symmetric Loss' if x==1 else 'Baseline Health Priority (Recommended)' if x==5 else 'Emergency Health Priority' if x==10 else 'Extreme Zero-Tolerance' if x==20 else 'Moderate Priority'})"
+        format_func=lambda x: (
+            f"{int(x)}:1 ({'Symmetric Loss' if x == 1 else 'Baseline Health Priority (Recommended)' if x == 5 else 'Emergency Health Priority' if x == 10 else 'Extreme Zero-Tolerance' if x == 20 else 'Moderate Priority'})"
+        ),
     )
 
     # Calculate optimal operating point
@@ -546,13 +614,13 @@ with tab_risk:
     if cost_col_name in df_sweep.columns:
         best_idx = df_sweep[cost_col_name].idxmin()
         opt_row = df_sweep.loc[best_idx]
-        tau_star = float(opt_row['threshold'])
-        recall_opt = float(opt_row['recall']) * 100
-        prec_opt = float(opt_row['precision']) * 100
-        fn_hours = int(opt_row['fn'])
-        fp_hours = int(opt_row['fp'])
+        tau_star = float(opt_row["threshold"])
+        recall_opt = float(opt_row["recall"]) * 100
+        prec_opt = float(opt_row["precision"]) * 100
+        fn_hours = int(opt_row["fn"])
+        fp_hours = int(opt_row["fp"])
 
-        stat_row = df_sweep[df_sweep['threshold'] == 401.0].iloc[0]
+        stat_row = df_sweep[df_sweep["threshold"] == 401.0].iloc[0]
         stat_cost = stat_row[cost_col_name]
         opt_cost = opt_row[cost_col_name]
         cost_reduction_pct = ((stat_cost - opt_cost) / stat_cost) * 100
@@ -566,7 +634,10 @@ with tab_risk:
 
     # Single most important visual visible by default
     if img_pr:
-        st.image(img_pr, caption="Precision-Recall Curve with Statutory Breakpoint (τ=401) and 5:1 Cost-Optimal Operating Point (τ*=341.5)")
+        st.image(
+            img_pr,
+            caption="Precision-Recall Curve with Statutory Breakpoint (τ=401) and 5:1 Cost-Optimal Operating Point (τ*=341.5)",
+        )
     else:
         st.dataframe(df_operating)
 
@@ -574,7 +645,9 @@ with tab_risk:
     with st.expander("See optimal operating point metrics & expected loss reduction", expanded=False):
         m1, m2, m3 = st.columns(3)
         with m1:
-            st.metric("Optimal Operating Cutoff (τ*)", f"{tau_star:.1f} AQI", delta=f"{tau_star - 401.0:.1f} pts vs CPCB 401")
+            st.metric(
+                "Optimal Operating Cutoff (τ*)", f"{tau_star:.1f} AQI", delta=f"{tau_star - 401.0:.1f} pts vs CPCB 401"
+            )
         with m2:
             st.metric("Severe Event Recall", f"{recall_opt:.1f}%", delta=f"+{recall_opt - 61.08:.1f}% vs CPCB (61.1%)")
         with m3:
@@ -582,7 +655,11 @@ with tab_risk:
 
         m4, m5, m6 = st.columns(3)
         with m4:
-            st.metric("Missed Hazardous Hours", f"{fn_hours:,} h", delta=f"-{1568 - fn_hours:,} h (-{(1568 - fn_hours)/15.68:.1f}%)")
+            st.metric(
+                "Missed Hazardous Hours",
+                f"{fn_hours:,} h",
+                delta=f"-{1568 - fn_hours:,} h (-{(1568 - fn_hours) / 15.68:.1f}%)",
+            )
         with m5:
             st.metric("Severe Precision", f"{prec_opt:.1f}%")
         with m6:
@@ -596,21 +673,23 @@ with tab_risk:
         """)
 
     with st.expander("See full threshold sensitivity & operating point comparison table", expanded=False):
-        df_operating_display = df_operating[[
-            'threshold_aqi',
-            'severe_recall_pct',
-            'severe_precision_pct',
-            'severe_missed_h',
-            'false_alarms_total_h',
-            'cost_rate_5x'
-        ]].copy()
+        df_operating_display = df_operating[
+            [
+                "threshold_aqi",
+                "severe_recall_pct",
+                "severe_precision_pct",
+                "severe_missed_h",
+                "false_alarms_total_h",
+                "cost_rate_5x",
+            ]
+        ].copy()
         df_operating_display.columns = [
-            'Threshold (AQI)',
-            'Severe Recall (%)',
-            'Severe Precision (%)',
-            'Missed Severe (Hours)',
-            'Total False Alarms (Hours)',
-            'Expected Loss Rate (5:1)'
+            "Threshold (AQI)",
+            "Severe Recall (%)",
+            "Severe Precision (%)",
+            "Missed Severe (Hours)",
+            "Total False Alarms (Hours)",
+            "Expected Loss Rate (5:1)",
         ]
         st.dataframe(df_operating_display, hide_index=True)
 
@@ -688,4 +767,6 @@ with tab_methodology:
 # Footer
 # =============================================================================
 st.markdown("---")
-st.caption("Delhi Air Quality Risk Forecasting System • Historical Backtest & Policy Evaluation • Continuous Ambient Air Quality Monitoring Network (DPCC/CPCB)")
+st.caption(
+    "Delhi Air Quality Risk Forecasting System • Historical Backtest & Policy Evaluation • Continuous Ambient Air Quality Monitoring Network (DPCC/CPCB)"
+)

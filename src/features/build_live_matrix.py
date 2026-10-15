@@ -14,6 +14,7 @@ used those columns).
     python -m src.features.build_live_matrix                     # writes both matrices to data/processed/
     python -m src.features.build_live_matrix --start 2025-07-01 --out-dir /tmp/x   # short window, code-path check
 """
+
 from __future__ import annotations
 
 import argparse
@@ -73,9 +74,13 @@ def build(mask: str = "none", start=None, end=None) -> pd.DataFrame:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--start", help="first hour (default 2024-01-01); a shorter window is for code-path checks only")
+    parser.add_argument(
+        "--start", help="first hour (default 2024-01-01); a shorter window is for code-path checks only"
+    )
     parser.add_argument("--end", help="last hour (default 2025-12-31 23:00)")
-    parser.add_argument("--out-dir", type=Path, default=PROCESSED, help="where features_live[_masked].parquet are written")
+    parser.add_argument(
+        "--out-dir", type=Path, default=PROCESSED, help="where features_live[_masked].parquet are written"
+    )
     args = parser.parse_args()
     args.out_dir.mkdir(parents=True, exist_ok=True)
     for mask, path in PATHS.items():

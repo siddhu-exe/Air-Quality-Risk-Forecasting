@@ -27,45 +27,51 @@ DEFAULT_OUTPUT_DIR = PROJECT_ROOT / "data" / "processed" / "ml"
 DEFAULT_MANIFEST_PATH = PROJECT_ROOT / "reports" / "modeling" / "ml_dataset_manifest.csv"
 
 # 7 Delhi Stations
-DELHI_STATIONS = [
-    'Anand Vihar',
-    'Bawana',
-    'Dwarka-Sector 8',
-    'ITO',
-    'Jahangirpuri',
-    'Punjabi Bagh',
-    'R K Puram'
-]
+DELHI_STATIONS = ["Anand Vihar", "Bawana", "Dwarka-Sector 8", "ITO", "Jahangirpuri", "Punjabi Bagh", "R K Puram"]
+
 
 # Feature group categorization helper
 def get_feature_group(col: str) -> str:
-    if col.startswith('aqi_lag_') or col == 'aqi_curr':
-        return 'Group A: Recent AQI Lags'
-    elif '_roll_' in col and ('aqi_' in col or 'pm25_' in col):
-        return 'Group C: Causal Rolling Statistics'
-    elif any(col.startswith(f'{p}_') for p in ['pm25', 'pm10', 'no2', 'nox', 'so2', 'co', 'o3']):
-        return 'Group B: Pollutant Lags'
-    elif col in ['hour', 'day_of_week', 'month', 'day_of_year', 'is_weekend',
-                 'sin_hour', 'cos_hour', 'sin_dow', 'cos_dow', 'sin_month', 'cos_month', 'sin_doy', 'cos_doy']:
-        return 'Group D: Temporal & Cyclical'
-    elif col.startswith('is_') and col != 'is_weekend':
-        return 'Group E: Seasonality Indicators'
-    elif any(k in col for k in ['temp_', 'humidity_', 'wind_speed_', 'solar_rad_']):
-        return 'Group F: Meteorology'
-    elif 'network_' in col or 'top_neighbor_' in col:
-        return 'Group G: Cross-Station Spatial'
+    if col.startswith("aqi_lag_") or col == "aqi_curr":
+        return "Group A: Recent AQI Lags"
+    elif "_roll_" in col and ("aqi_" in col or "pm25_" in col):
+        return "Group C: Causal Rolling Statistics"
+    elif any(col.startswith(f"{p}_") for p in ["pm25", "pm10", "no2", "nox", "so2", "co", "o3"]):
+        return "Group B: Pollutant Lags"
+    elif col in [
+        "hour",
+        "day_of_week",
+        "month",
+        "day_of_year",
+        "is_weekend",
+        "sin_hour",
+        "cos_hour",
+        "sin_dow",
+        "cos_dow",
+        "sin_month",
+        "cos_month",
+        "sin_doy",
+        "cos_doy",
+    ]:
+        return "Group D: Temporal & Cyclical"
+    elif col.startswith("is_") and col != "is_weekend":
+        return "Group E: Seasonality Indicators"
+    elif any(k in col for k in ["temp_", "humidity_", "wind_speed_", "solar_rad_"]):
+        return "Group F: Meteorology"
+    elif "network_" in col or "top_neighbor_" in col:
+        return "Group G: Cross-Station Spatial"
     else:
-        return 'Other'
+        return "Other"
 
 
 def get_git_commit() -> str:
     """Returns the current git commit hash."""
     try:
-        commit = subprocess.check_output(
-            ["git", "rev-parse", "HEAD"],
-            cwd=PROJECT_ROOT,
-            stderr=subprocess.DEVNULL
-        ).decode("utf-8").strip()
+        commit = (
+            subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=PROJECT_ROOT, stderr=subprocess.DEVNULL)
+            .decode("utf-8")
+            .strip()
+        )
         return commit
     except Exception:
         return "unknown"
@@ -87,29 +93,27 @@ def assign_split(df: pd.DataFrame) -> pd.Series:
       - 'val':   2025-09-01 to 2025-10-31 (Sep-Oct 2025, ~16.5%)
       - 'test':  2025-11-01 to 2025-12-31 (Nov-Dec 2025, ~16.5% - Peak Winter Crisis)
     """
-    ts = pd.to_datetime(df['timestamp'])
+    ts = pd.to_datetime(df["timestamp"])
     if ts.dt.tz is None:
-        ts = ts.dt.tz_localize('Asia/Kolkata')
+        ts = ts.dt.tz_localize("Asia/Kolkata")
     else:
-        ts = ts.dt.tz_convert('Asia/Kolkata')
+        ts = ts.dt.tz_convert("Asia/Kolkata")
 
-    split = pd.Series('train', index=df.index)
-    val_mask = (ts >= pd.Timestamp("2025-09-01 00:00:00", tz='Asia/Kolkata')) & \
-               (ts <= pd.Timestamp("2025-10-31 23:59:59", tz='Asia/Kolkata'))
-    test_mask = (ts >= pd.Timestamp("2025-11-01 00:00:00", tz='Asia/Kolkata')) & \
-                (ts <= pd.Timestamp("2025-12-31 23:59:59", tz='Asia/Kolkata'))
+    split = pd.Series("train", index=df.index)
+    val_mask = (ts >= pd.Timestamp("2025-09-01 00:00:00", tz="Asia/Kolkata")) & (
+        ts <= pd.Timestamp("2025-10-31 23:59:59", tz="Asia/Kolkata")
+    )
+    test_mask = (ts >= pd.Timestamp("2025-11-01 00:00:00", tz="Asia/Kolkata")) & (
+        ts <= pd.Timestamp("2025-12-31 23:59:59", tz="Asia/Kolkata")
+    )
 
-    split[val_mask] = 'val'
-    split[test_mask] = 'test'
+    split[val_mask] = "val"
+    split[test_mask] = "test"
     return split
 
 
 def export_horizon_dataset(
-    base_df: pd.DataFrame,
-    horizon: int,
-    version: str,
-    output_dir: Path,
-    git_commit: str
+    base_df: pd.DataFrame, horizon: int, version: str, output_dir: Path, git_commit: str
 ) -> dict:
     """
     Filters and formats the dataset for a single horizon (1h, 6h, or 24h),
@@ -129,23 +133,23 @@ def export_horizon_dataset(
     horizon_df = base_df[valid_mask].copy()
 
     # 2. Assign chronological split
-    horizon_df['split'] = assign_split(horizon_df)
+    horizon_df["split"] = assign_split(horizon_df)
 
     # 3. Identify feature columns and sort by group
     all_cols = horizon_df.columns.tolist()
-    meta_cols = ['station_id', 'station_name', 'timestamp', 'split']
-    target_cols = ['target_aqi_1h', 'target_aqi_6h', 'target_aqi_24h']
+    meta_cols = ["station_id", "station_name", "timestamp", "split"]
+    target_cols = ["target_aqi_1h", "target_aqi_6h", "target_aqi_24h"]
     feature_cols = [c for c in all_cols if c not in meta_cols and c not in target_cols]
 
     # Organize feature columns by Group A -> G
     group_order = [
-        'Group A: Recent AQI Lags',
-        'Group B: Pollutant Lags',
-        'Group C: Causal Rolling Statistics',
-        'Group D: Temporal & Cyclical',
-        'Group E: Seasonality Indicators',
-        'Group F: Meteorology',
-        'Group G: Cross-Station Spatial'
+        "Group A: Recent AQI Lags",
+        "Group B: Pollutant Lags",
+        "Group C: Causal Rolling Statistics",
+        "Group D: Temporal & Cyclical",
+        "Group E: Seasonality Indicators",
+        "Group F: Meteorology",
+        "Group G: Cross-Station Spatial",
     ]
     features_by_group = {g: [] for g in group_order}
     for c in feature_cols:
@@ -153,7 +157,7 @@ def export_horizon_dataset(
         if g in features_by_group:
             features_by_group[g].append(c)
         else:
-            features_by_group.setdefault('Other', []).append(c)
+            features_by_group.setdefault("Other", []).append(c)
 
     sorted_feature_cols = []
     for g in group_order:
@@ -161,18 +165,18 @@ def export_horizon_dataset(
 
     # Final ordered columns
     ordered_cols = meta_cols + [target_col] + sorted_feature_cols
-    export_df = horizon_df[ordered_cols].copy().sort_values(['station_id', 'timestamp']).reset_index(drop=True)
+    export_df = horizon_df[ordered_cols].copy().sort_values(["station_id", "timestamp"]).reset_index(drop=True)
 
     # Save Parquet
-    export_df.to_parquet(parquet_path, index=False, compression='snappy')
+    export_df.to_parquet(parquet_path, index=False, compression="snappy")
     filesize_bytes = parquet_path.stat().st_size
     filesize_mb = round(filesize_bytes / (1024 * 1024), 2)
     sha256_hash = compute_sha256(parquet_path)
 
     # Compute target statistics by split
     target_stats = {}
-    for sp in ['all', 'train', 'val', 'test']:
-        sub_series = export_df[target_col] if sp == 'all' else export_df[export_df['split'] == sp][target_col]
+    for sp in ["all", "train", "val", "test"]:
+        sub_series = export_df[target_col] if sp == "all" else export_df[export_df["split"] == sp][target_col]
         target_stats[sp] = {
             "count": int(len(sub_series)),
             "mean": round(float(sub_series.mean()), 2),
@@ -184,16 +188,16 @@ def export_horizon_dataset(
             "p95": round(float(sub_series.quantile(0.95)), 2),
             "max": round(float(sub_series.max()), 2),
             "extreme_ge_300_count": int((sub_series >= 300).sum()),
-            "extreme_ge_300_pct": round(float((sub_series >= 300).mean() * 100), 2)
+            "extreme_ge_300_pct": round(float((sub_series >= 300).mean() * 100), 2),
         }
 
     # Split breakdown
-    split_counts = export_df['split'].value_counts().to_dict()
+    split_counts = export_df["split"].value_counts().to_dict()
     total_rows = len(export_df)
     split_pcts = {k: round((v / total_rows) * 100, 2) for k, v in split_counts.items()}
 
     # Station breakdown
-    station_counts = export_df['station_name'].value_counts().to_dict()
+    station_counts = export_df["station_name"].value_counts().to_dict()
 
     # Missingness summary in features
     null_pct_by_group = {}
@@ -219,22 +223,23 @@ def export_horizon_dataset(
         "split_counts": split_counts,
         "split_percentages": split_pcts,
         "station_distribution": station_counts,
-        "date_range": {
-            "min": str(export_df['timestamp'].min()),
-            "max": str(export_df['timestamp'].max())
-        },
+        "date_range": {"min": str(export_df["timestamp"].min()), "max": str(export_df["timestamp"].max())},
         "feature_groups_summary": {g: len(cols) for g, cols in features_by_group.items()},
         "feature_names_by_group": features_by_group,
         "feature_group_missingness_pct": null_pct_by_group,
-        "target_statistics_by_split": target_stats
+        "target_statistics_by_split": target_stats,
     }
 
     with open(json_path, "w") as f:
         json.dump(metadata, f, indent=2)
 
     print(f"Parquet saved: {parquet_path}")
-    print(f"  Rows: {total_rows:,} | Cols: {len(export_df.columns)} | Features: {len(sorted_feature_cols)} | Size: {filesize_mb} MB")
-    print(f"  Splits: Train={split_counts.get('train', 0):,} ({split_pcts.get('train', 0)}%), Val={split_counts.get('val', 0):,} ({split_pcts.get('val', 0)}%), Test={split_counts.get('test', 0):,} ({split_pcts.get('test', 0)}%)")
+    print(
+        f"  Rows: {total_rows:,} | Cols: {len(export_df.columns)} | Features: {len(sorted_feature_cols)} | Size: {filesize_mb} MB"
+    )
+    print(
+        f"  Splits: Train={split_counts.get('train', 0):,} ({split_pcts.get('train', 0)}%), Val={split_counts.get('val', 0):,} ({split_pcts.get('val', 0)}%), Test={split_counts.get('test', 0):,} ({split_pcts.get('test', 0)}%)"
+    )
     print(f"  SHA-256: {sha256_hash}")
     print(f"Metadata JSON saved: {json_path}")
 
@@ -244,20 +249,22 @@ def export_horizon_dataset(
         "filename": f"{dataset_name}.parquet",
         "version": version,
         "total_rows": total_rows,
-        "train_rows": split_counts.get('train', 0),
-        "val_rows": split_counts.get('val', 0),
-        "test_rows": split_counts.get('test', 0),
+        "train_rows": split_counts.get("train", 0),
+        "val_rows": split_counts.get("val", 0),
+        "test_rows": split_counts.get("test", 0),
         "feature_count": len(sorted_feature_cols),
         "target_column": target_col,
         "filesize_mb": filesize_mb,
         "sha256_checksum": sha256_hash,
-        "created_at": metadata["created_at"]
+        "created_at": metadata["created_at"],
     }
 
 
 def main():
     parser = argparse.ArgumentParser(description="Export versioned ML datasets for Delhi AQI forecasting.")
-    parser.add_argument("--input-parquet", type=Path, default=DEFAULT_INPUT_PARQUET, help="Path to features_2025.parquet")
+    parser.add_argument(
+        "--input-parquet", type=Path, default=DEFAULT_INPUT_PARQUET, help="Path to features_2025.parquet"
+    )
     parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT_DIR, help="Output directory for ML datasets")
     parser.add_argument("--version", type=str, default="v1", help="Dataset version identifier (e.g. v1)")
     parser.add_argument("--manifest-path", type=Path, default=DEFAULT_MANIFEST_PATH, help="Path to manifest CSV")
@@ -276,6 +283,7 @@ def main():
     if not args.input_parquet.exists():
         print(f"Input parquet {args.input_parquet} not found. Attempting to build from database...")
         from src.features.build_features import build_feature_matrix
+
         build_feature_matrix()
 
     print(f"\nLoading master features matrix from {args.input_parquet}...")
@@ -289,11 +297,7 @@ def main():
     horizons = [1, 6, 24]
     for h in horizons:
         rec = export_horizon_dataset(
-            base_df=base_df,
-            horizon=h,
-            version=args.version,
-            output_dir=args.output_dir,
-            git_commit=git_commit
+            base_df=base_df, horizon=h, version=args.version, output_dir=args.output_dir, git_commit=git_commit
         )
         manifest_records.append(rec)
 

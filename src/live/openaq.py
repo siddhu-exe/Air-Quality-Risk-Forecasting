@@ -15,6 +15,7 @@ Everything here was derived from a measured overlap with the project's raw CSVs
 * **Dwarka-Sector 8** has no 2026 CSV, so its 2026 slot alignment could not be verified (Dec 2025 fits one
   15-minute step earlier). Its OpenAQ-derived rows carry ``{"_alignment": "unverified_2026"}``.
 """
+
 from __future__ import annotations
 
 import os
@@ -40,19 +41,40 @@ SOURCE_TAG = "openaq"
 # station name -> OpenAQ location id (CPCB provider, currently reporting; same-named 'caaqm'-provider
 # locations ended in 2018-2022).
 LOCATIONS = {
-    "Anand Vihar": 235, "Bawana": 8472, "Dwarka-Sector 8": 6931, "ITO": 5613,
-    "Jahangirpuri": 8235, "Punjabi Bagh": 50, "R K Puram": 17,
+    "Anand Vihar": 235,
+    "Bawana": 8472,
+    "Dwarka-Sector 8": 6931,
+    "ITO": 5613,
+    "Jahangirpuri": 8235,
+    "Punjabi Bagh": 50,
+    "R K Puram": 17,
 }
 # OpenAQ parameter -> live_readings column
 PARAM_TO_COLUMN = {
-    "pm25": "pm25", "pm10": "pm10", "no2": "no2", "so2": "so2", "o3": "o3", "co": "co", "nox": "nox",
-    "temperature": "temperature", "relativehumidity": "humidity", "wind_speed": "wind_speed",
+    "pm25": "pm25",
+    "pm10": "pm10",
+    "no2": "no2",
+    "so2": "so2",
+    "o3": "o3",
+    "co": "co",
+    "nox": "nox",
+    "temperature": "temperature",
+    "relativehumidity": "humidity",
+    "wind_speed": "wind_speed",
 }
 # OpenAQ's unit label for the live sensor of each parameter, as observed at all 7 stations on 2026-10-11.
 # These are NOT trusted as units (see module docstring); they are pinned only to detect upstream changes.
 EXPECTED_UNIT_LABELS = {
-    "pm25": "µg/m³", "pm10": "µg/m³", "no2": "ppb", "so2": "ppb", "o3": "µg/m³", "co": "ppb",
-    "nox": "ppb", "temperature": "c", "relativehumidity": "%", "wind_speed": "m/s",
+    "pm25": "µg/m³",
+    "pm10": "µg/m³",
+    "no2": "ppb",
+    "so2": "ppb",
+    "o3": "µg/m³",
+    "co": "ppb",
+    "nox": "ppb",
+    "temperature": "c",
+    "relativehumidity": "%",
+    "wind_speed": "m/s",
 }
 # value x factor = the unit our CSVs/training data use (derived from the data, not from the label)
 UNIT_FACTOR = {"nox": 1000.0}
@@ -95,7 +117,9 @@ def get(path: str, **params) -> dict:
 
 
 def check_unit_labels(station: str, sensors: dict[str, tuple[int, str]]) -> None:
-    changed = {p: (EXPECTED_UNIT_LABELS[p], unit) for p, (_, unit) in sensors.items() if unit != EXPECTED_UNIT_LABELS[p]}
+    changed = {
+        p: (EXPECTED_UNIT_LABELS[p], unit) for p, (_, unit) in sensors.items() if unit != EXPECTED_UNIT_LABELS[p]
+    }
     if changed:
         raise UnitLabelChanged(
             f"{station}: OpenAQ unit labels changed {changed} (pinned, observed). The numbers may have been "
@@ -127,26 +151,34 @@ def fetch_15min(sensor_id: int, start: str, end: str) -> pd.DataFrame:
             datetime_to=chunk_end.tz_convert("UTC").strftime("%Y-%m-%dT%H:%M:%SZ"),
             limit=1000,
         )["results"]
-        frames.append(pd.DataFrame({
-            "from": [pd.Timestamp(r["period"]["datetimeFrom"]["local"]).tz_localize(None) for r in rows],
-            "to": [pd.Timestamp(r["period"]["datetimeTo"]["local"]).tz_localize(None) for r in rows],
-            "value": [r["value"] for r in rows],
-        }))
+        frames.append(
+            pd.DataFrame(
+                {
+                    "from": [pd.Timestamp(r["period"]["datetimeFrom"]["local"]).tz_localize(None) for r in rows],
+                    "to": [pd.Timestamp(r["period"]["datetimeTo"]["local"]).tz_localize(None) for r in rows],
+                    "value": [r["value"] for r in rows],
+                }
+            )
+        )
         cursor = chunk_end
     out = pd.concat(frames, ignore_index=True) if frames else pd.DataFrame(columns=["from", "to", "value"])
     return out.drop_duplicates("from", keep="last").sort_values("from").reset_index(drop=True)
 
 
-def slots_to_hourly(raw: pd.DataFrame, hours: pd.DatetimeIndex, start_offset_min: int = 0,
-                    factor: float = 1.0) -> pd.Series:
+def slots_to_hourly(
+    raw: pd.DataFrame, hours: pd.DatetimeIndex, start_offset_min: int = 0, factor: float = 1.0
+) -> pd.Series:
     """Value for each hour label T = mean of the four 15-minute slots starting at T + offset.
 
     An hour with fewer than four slots is NaN (never averaged from a partial hour).
     """
     grid = raw.drop_duplicates("from", keep="last").set_index("from")["value"].sort_index() * factor
-    parts = np.vstack([
-        grid.reindex(hours + pd.Timedelta(minutes=start_offset_min + k)).to_numpy(dtype=float) for k in (0, 15, 30, 45)
-    ])
+    parts = np.vstack(
+        [
+            grid.reindex(hours + pd.Timedelta(minutes=start_offset_min + k)).to_numpy(dtype=float)
+            for k in (0, 15, 30, 45)
+        ]
+    )
     complete = (~np.isnan(parts)).sum(axis=0) == 4
     return pd.Series(np.where(complete, np.nansum(parts, axis=0) / 4, np.nan), index=hours)
 
@@ -154,7 +186,9 @@ def slots_to_hourly(raw: pd.DataFrame, hours: pd.DatetimeIndex, start_offset_min
 def hourly_frame(raw_by_param: dict[str, pd.DataFrame], hours: pd.DatetimeIndex) -> pd.DataFrame:
     """One station's hourly frame in live_readings column names, in training units."""
     data = {
-        PARAM_TO_COLUMN[param]: slots_to_hourly(raw, hours, SLOT_START_OFFSET_MIN.get(param, 0), UNIT_FACTOR.get(param, 1.0))
+        PARAM_TO_COLUMN[param]: slots_to_hourly(
+            raw, hours, SLOT_START_OFFSET_MIN.get(param, 0), UNIT_FACTOR.get(param, 1.0)
+        )
         for param, raw in raw_by_param.items()
     }
     return pd.DataFrame(data, index=hours)

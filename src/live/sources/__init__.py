@@ -1,4 +1,5 @@
 """Live data sources behind one interface (see ``base.LiveSource``). Pick one by name from the config."""
+
 from __future__ import annotations
 
 from src.live.sources.base import LiveSource, SourceNotVerified, SourceUnavailable
@@ -15,4 +16,12 @@ def get_source(name: str) -> LiveSource:
         raise ValueError(f"unknown source {name!r}; choose one of {sorted(REGISTRY)}") from None
 
 
-__all__ = ["LiveSource", "SourceNotVerified", "SourceUnavailable", "OpenAQSource", "DataGovInSource", "REGISTRY", "get_source"]
+__all__ = [
+    "LiveSource",
+    "SourceNotVerified",
+    "SourceUnavailable",
+    "OpenAQSource",
+    "DataGovInSource",
+    "REGISTRY",
+    "get_source",
+]

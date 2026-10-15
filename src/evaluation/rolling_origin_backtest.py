@@ -18,6 +18,7 @@ Outputs
   reports/modeling/24h/rolling_origin_backtest.csv
   reports/modeling/24h/rolling_origin_backtest.md
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -78,9 +79,8 @@ def main() -> None:
     frame = frame.dropna(subset=["target_aqi_24h"])
 
     refined_cols = [
-        c for c in define_feature_candidate_sets(joblib.load(FEATURE_NAMES_AB))[
-            "Set Refined (Curated 54 Feats)"
-        ]
+        c
+        for c in define_feature_candidate_sets(joblib.load(FEATURE_NAMES_AB))["Set Refined (Curated 54 Feats)"]
         if c in frame.columns
     ]
 
@@ -105,8 +105,12 @@ def main() -> None:
         m_hybrid = metrics(test["target_aqi_24h"].values, hybrid)
         m_naive = metrics(test["target_aqi_24h"].values, naive)
         ci = block_bootstrap(
-            test["target_aqi_24h"].values, hybrid, naive,
-            test["timestamp"].dt.date.values, N_BOOT, SEED,
+            test["target_aqi_24h"].values,
+            hybrid,
+            naive,
+            test["timestamp"].dt.date.values,
+            N_BOOT,
+            SEED,
         )
         records.append(
             {
@@ -127,8 +131,10 @@ def main() -> None:
                 "skill_mae_ci_hi": round(ci["skill_mae_ci_hi"], 4),
             }
         )
-        print(f"[{fold.name}] n_train={len(train):,} n_test={len(test):,} "
-              f"skill_mae={records[-1]['skill_mae']:+.4f} skill_rmse={records[-1]['skill_rmse']:+.4f}")
+        print(
+            f"[{fold.name}] n_train={len(train):,} n_test={len(test):,} "
+            f"skill_mae={records[-1]['skill_mae']:+.4f} skill_rmse={records[-1]['skill_rmse']:+.4f}"
+        )
 
     table = pd.DataFrame(records)
     OUT_DIR.mkdir(parents=True, exist_ok=True)

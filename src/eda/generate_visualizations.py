@@ -46,6 +46,7 @@ FIGURES_DIR = PROJECT_DIR / "reports" / "eda" / "figures"
 FIGURES_DIR.mkdir(parents=True, exist_ok=True)
 REPORTS_DIR = PROJECT_DIR / "reports" / "eda"
 
+
 def fetch_daily_aqi_and_pm(conn):
     query = """
     SELECT
@@ -60,6 +61,7 @@ def fetch_daily_aqi_and_pm(conn):
     ORDER BY s.station_name, log_date;
     """
     return pd.read_sql_query(query, conn)
+
 
 def fetch_weather_pollutant_samples(conn):
     query = """
@@ -81,6 +83,7 @@ def fetch_weather_pollutant_samples(conn):
     LIMIT 30000;
     """
     return pd.read_sql_query(query, conn)
+
 
 def plot_01_aqi_timeseries(conn):
     print("Plotting 01: AQI Time Series...")
@@ -114,39 +117,63 @@ def plot_01_aqi_timeseries(conn):
     fig.savefig(FIGURES_DIR / "01_aqi_timeseries.png")
     plt.close(fig)
 
+
 def plot_02_diurnal_profiles():
     print("Plotting 02: Hourly Diurnal Profiles...")
     df = pd.read_csv(REPORTS_DIR / "hourly_summary.csv")
 
     # Calculate Delhi-wide mean diurnal cycle across stations
-    diurnal = df.groupby("hour_of_day").agg({
-        "pm25_mean": "mean",
-        "pm10_mean": "mean",
-        "no2_mean": "mean",
-        "o3_mean": "mean",
-        "aqi_mean": "mean"
-    }).reset_index()
+    diurnal = (
+        df.groupby("hour_of_day")
+        .agg({"pm25_mean": "mean", "pm10_mean": "mean", "no2_mean": "mean", "o3_mean": "mean", "aqi_mean": "mean"})
+        .reset_index()
+    )
 
     fig, axes = plt.subplots(2, 2, figsize=(12, 8), sharex=True)
 
     # PM2.5 & PM10
-    axes[0, 0].plot(diurnal["hour_of_day"], diurnal["pm25_mean"], marker="o", color="#d62728", label="PM2.5 (µg/m³)", linewidth=2)
-    axes[0, 0].plot(diurnal["hour_of_day"], diurnal["pm10_mean"], marker="s", color="#ff7f0e", label="PM10 (µg/m³)", linewidth=2)
+    axes[0, 0].plot(
+        diurnal["hour_of_day"], diurnal["pm25_mean"], marker="o", color="#d62728", label="PM2.5 (µg/m³)", linewidth=2
+    )
+    axes[0, 0].plot(
+        diurnal["hour_of_day"], diurnal["pm10_mean"], marker="s", color="#ff7f0e", label="PM10 (µg/m³)", linewidth=2
+    )
     axes[0, 0].set_title("Particulate Matter (PM2.5 & PM10) Diurnal Cycle", fontweight="bold")
     axes[0, 0].set_ylabel("Concentration (µg/m³)")
     axes[0, 0].legend()
     axes[0, 0].grid(True, linestyle="--", alpha=0.6)
 
     # NO2 vs O3 Photochemical Coupling
-    axes[0, 1].plot(diurnal["hour_of_day"], diurnal["no2_mean"], marker="^", color="#9467bd", label="NO2 (µg/m³) - Primary/Traffic", linewidth=2)
-    axes[0, 1].plot(diurnal["hour_of_day"], diurnal["o3_mean"], marker="d", color="#2ca02c", label="O3 (µg/m³) - Secondary/Photochemical", linewidth=2)
+    axes[0, 1].plot(
+        diurnal["hour_of_day"],
+        diurnal["no2_mean"],
+        marker="^",
+        color="#9467bd",
+        label="NO2 (µg/m³) - Primary/Traffic",
+        linewidth=2,
+    )
+    axes[0, 1].plot(
+        diurnal["hour_of_day"],
+        diurnal["o3_mean"],
+        marker="d",
+        color="#2ca02c",
+        label="O3 (µg/m³) - Secondary/Photochemical",
+        linewidth=2,
+    )
     axes[0, 1].set_title("Photochemical Balance: NO2 vs Ozone (O3)", fontweight="bold")
     axes[0, 1].set_ylabel("Concentration (µg/m³)")
     axes[0, 1].legend()
     axes[0, 1].grid(True, linestyle="--", alpha=0.6)
 
     # AQI Profile
-    axes[1, 0].plot(diurnal["hour_of_day"], diurnal["aqi_mean"], marker="p", color="#8c564b", label="AQI (24h Buffered)", linewidth=2)
+    axes[1, 0].plot(
+        diurnal["hour_of_day"],
+        diurnal["aqi_mean"],
+        marker="p",
+        color="#8c564b",
+        label="AQI (24h Buffered)",
+        linewidth=2,
+    )
     axes[1, 0].set_title("Reported AQI Diurnal Curve", fontweight="bold")
     axes[1, 0].set_xlabel("Hour of Day (IST)")
     axes[1, 0].set_ylabel("AQI Value")
@@ -155,13 +182,28 @@ def plot_02_diurnal_profiles():
     axes[1, 0].grid(True, linestyle="--", alpha=0.6)
 
     # Normalized Comparison (Diurnal Rhythm Decoupling)
-    norm_pm25 = (diurnal["pm25_mean"] - diurnal["pm25_mean"].min()) / (diurnal["pm25_mean"].max() - diurnal["pm25_mean"].min())
+    norm_pm25 = (diurnal["pm25_mean"] - diurnal["pm25_mean"].min()) / (
+        diurnal["pm25_mean"].max() - diurnal["pm25_mean"].min()
+    )
     norm_o3 = (diurnal["o3_mean"] - diurnal["o3_mean"].min()) / (diurnal["o3_mean"].max() - diurnal["o3_mean"].min())
-    norm_aqi = (diurnal["aqi_mean"] - diurnal["aqi_mean"].min()) / (diurnal["aqi_mean"].max() - diurnal["aqi_mean"].min())
+    norm_aqi = (diurnal["aqi_mean"] - diurnal["aqi_mean"].min()) / (
+        diurnal["aqi_mean"].max() - diurnal["aqi_mean"].min()
+    )
 
-    axes[1, 1].plot(diurnal["hour_of_day"], norm_pm25, label="PM2.5 (Peak: 07:00 & 23:00)", color="#d62728", linewidth=2)
-    axes[1, 1].plot(diurnal["hour_of_day"], norm_o3, label="Ozone (Peak: 14:00 Photochemical)", color="#2ca02c", linewidth=2)
-    axes[1, 1].plot(diurnal["hour_of_day"], norm_aqi, label="AQI (Buffered Rolling Index)", color="#8c564b", linewidth=2, linestyle="--")
+    axes[1, 1].plot(
+        diurnal["hour_of_day"], norm_pm25, label="PM2.5 (Peak: 07:00 & 23:00)", color="#d62728", linewidth=2
+    )
+    axes[1, 1].plot(
+        diurnal["hour_of_day"], norm_o3, label="Ozone (Peak: 14:00 Photochemical)", color="#2ca02c", linewidth=2
+    )
+    axes[1, 1].plot(
+        diurnal["hour_of_day"],
+        norm_aqi,
+        label="AQI (Buffered Rolling Index)",
+        color="#8c564b",
+        linewidth=2,
+        linestyle="--",
+    )
     axes[1, 1].set_title("Normalized Comparison (Min-Max Scaled)", fontweight="bold")
     axes[1, 1].set_xlabel("Hour of Day (IST)")
     axes[1, 1].set_ylabel("Normalized Index [0-1]")
@@ -173,6 +215,7 @@ def plot_02_diurnal_profiles():
     fig.tight_layout()
     fig.savefig(FIGURES_DIR / "02_diurnal_profiles.png")
     plt.close(fig)
+
 
 def plot_03_monthly_trends():
     print("Plotting 03: Monthly Trends...")
@@ -203,16 +246,18 @@ def plot_03_monthly_trends():
     fig.savefig(FIGURES_DIR / "03_monthly_trends.png")
     plt.close(fig)
 
+
 def plot_04_seasonal_comparison():
     print("Plotting 04: Seasonal Comparison...")
     df = pd.read_csv(REPORTS_DIR / "seasonal_summary.csv")
 
     season_order = ["Winter", "Summer", "Monsoon", "Post-Monsoon"]
-    df_agg = df.groupby("season").agg({
-        "aqi_mean": "mean",
-        "pm25_mean": "mean",
-        "pm10_mean": "mean"
-    }).reindex(season_order).reset_index()
+    df_agg = (
+        df.groupby("season")
+        .agg({"aqi_mean": "mean", "pm25_mean": "mean", "pm10_mean": "mean"})
+        .reindex(season_order)
+        .reset_index()
+    )
 
     x = np.arange(len(season_order))
     width = 0.25
@@ -220,7 +265,15 @@ def plot_04_seasonal_comparison():
     fig, ax = plt.subplots(figsize=(9, 5))
     ax.bar(x - width, df_agg["aqi_mean"], width, label="Mean AQI", color="#d62728", edgecolor="black", alpha=0.85)
     ax.bar(x, df_agg["pm10_mean"], width, label="Mean PM10 (µg/m³)", color="#ff7f0e", edgecolor="black", alpha=0.85)
-    ax.bar(x + width, df_agg["pm25_mean"], width, label="Mean PM2.5 (µg/m³)", color="#1f77b4", edgecolor="black", alpha=0.85)
+    ax.bar(
+        x + width,
+        df_agg["pm25_mean"],
+        width,
+        label="Mean PM2.5 (µg/m³)",
+        color="#1f77b4",
+        edgecolor="black",
+        alpha=0.85,
+    )
 
     ax.set_title("Seasonal Pollution Comparison in Delhi (AQI, PM2.5, PM10)", fontweight="bold")
     ax.set_xlabel("Season")
@@ -231,13 +284,18 @@ def plot_04_seasonal_comparison():
     ax.grid(True, linestyle="--", alpha=0.6, axis="y")
 
     for i in range(len(season_order)):
-        ax.text(x[i]-width, df_agg["aqi_mean"].iloc[i] + 5, f"{df_agg['aqi_mean'].iloc[i]:.0f}", ha="center", fontsize=9)
+        ax.text(
+            x[i] - width, df_agg["aqi_mean"].iloc[i] + 5, f"{df_agg['aqi_mean'].iloc[i]:.0f}", ha="center", fontsize=9
+        )
         ax.text(x[i], df_agg["pm10_mean"].iloc[i] + 5, f"{df_agg['pm10_mean'].iloc[i]:.0f}", ha="center", fontsize=9)
-        ax.text(x[i]+width, df_agg["pm25_mean"].iloc[i] + 5, f"{df_agg['pm25_mean'].iloc[i]:.0f}", ha="center", fontsize=9)
+        ax.text(
+            x[i] + width, df_agg["pm25_mean"].iloc[i] + 5, f"{df_agg['pm25_mean'].iloc[i]:.0f}", ha="center", fontsize=9
+        )
 
     fig.tight_layout()
     fig.savefig(FIGURES_DIR / "04_seasonal_comparison.png")
     plt.close(fig)
+
 
 def plot_05_station_comparison():
     print("Plotting 05: Station Metric Comparison...")
@@ -248,10 +306,10 @@ def plot_05_station_comparison():
     # AQI Metrics
     x = np.arange(len(df))
     w = 0.2
-    axes[0].bar(x - 1.5*w, df["aqi_mean"], w, label="Mean", color="#e41a1c")
-    axes[0].bar(x - 0.5*w, df["aqi_median"], w, label="Median", color="#377eb8")
-    axes[0].bar(x + 0.5*w, df["aqi_p90"], w, label="P90", color="#ff7f00")
-    axes[0].bar(x + 1.5*w, df["aqi_p95"], w, label="P95", color="#984ea3")
+    axes[0].bar(x - 1.5 * w, df["aqi_mean"], w, label="Mean", color="#e41a1c")
+    axes[0].bar(x - 0.5 * w, df["aqi_median"], w, label="Median", color="#377eb8")
+    axes[0].bar(x + 0.5 * w, df["aqi_p90"], w, label="P90", color="#ff7f00")
+    axes[0].bar(x + 1.5 * w, df["aqi_p95"], w, label="P95", color="#984ea3")
     axes[0].set_title("AQI Distribution Metrics Across Stations", fontweight="bold")
     axes[0].set_xticks(x)
     axes[0].set_xticklabels(df["station_name"], rotation=30, ha="right")
@@ -260,9 +318,9 @@ def plot_05_station_comparison():
     axes[0].grid(True, linestyle="--", alpha=0.5, axis="y")
 
     # PM2.5 Metrics
-    axes[1].bar(x - 1.5*w, df["pm25_mean"], w, label="Mean", color="#e41a1c")
-    axes[1].bar(x - 0.5*w, df["pm25_median"], w, label="Median", color="#377eb8")
-    axes[1].bar(x + 0.5*w, df["pm25_p90"], w, label="P90", color="#ff7f00")
+    axes[1].bar(x - 1.5 * w, df["pm25_mean"], w, label="Mean", color="#e41a1c")
+    axes[1].bar(x - 0.5 * w, df["pm25_median"], w, label="Median", color="#377eb8")
+    axes[1].bar(x + 0.5 * w, df["pm25_p90"], w, label="P90", color="#ff7f00")
     # Using 1.25 * p90 as proxy for p95 where needed or omitting
     axes[1].set_title("PM2.5 Distribution Metrics Across Stations", fontweight="bold")
     axes[1].set_xticks(x)
@@ -274,6 +332,7 @@ def plot_05_station_comparison():
     fig.tight_layout()
     fig.savefig(FIGURES_DIR / "05_station_comparison.png")
     plt.close(fig)
+
 
 def plot_06_distributions_skewness(conn):
     print("Plotting 06: Distributions and Skewness...")
@@ -292,7 +351,7 @@ def plot_06_distributions_skewness(conn):
         ("pm25", "PM2.5 (µg/m³)", axes[0, 0], "#d62728", 500),
         ("pm10", "PM10 (µg/m³)", axes[0, 1], "#ff7f0e", 800),
         ("no2", "NO2 (µg/m³)", axes[1, 0], "#9467bd", 250),
-        ("aqi_value", "Air Quality Index (AQI)", axes[1, 1], "#1f77b4", 500)
+        ("aqi_value", "Air Quality Index (AQI)", axes[1, 1], "#1f77b4", 500),
     ]
 
     for col, title, ax, color, xmax in params:
@@ -310,8 +369,14 @@ def plot_06_distributions_skewness(conn):
         ax.set_title(f"{title} Distribution", fontweight="bold")
         ax.set_xlabel(title)
         ax.set_ylabel("Frequency")
-        ax.text(0.65, 0.70, f"Skewness: {skew_val:+.2f}\nKurtosis: {kurt_val:+.2f}", transform=ax.transAxes,
-                bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="gray", alpha=0.8), fontsize=9)
+        ax.text(
+            0.65,
+            0.70,
+            f"Skewness: {skew_val:+.2f}\nKurtosis: {kurt_val:+.2f}",
+            transform=ax.transAxes,
+            bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="gray", alpha=0.8),
+            fontsize=9,
+        )
         ax.legend(loc="upper right", fontsize=8)
         ax.grid(True, linestyle="--", alpha=0.5)
 
@@ -320,23 +385,43 @@ def plot_06_distributions_skewness(conn):
     fig.savefig(FIGURES_DIR / "06_distributions_skewness.png")
     plt.close(fig)
 
+
 def plot_07_correlation_heatmaps():
     print("Plotting 07: Pearson & Spearman Correlation Heatmaps...")
     p_df = pd.read_csv(REPORTS_DIR / "correlation_matrix.csv", index_col=0)
     s_df = pd.read_csv(REPORTS_DIR / "spearman_correlation_matrix.csv", index_col=0)
 
     # Filter to main variables for readability
-    main_vars = ["pm25", "pm10", "no", "no2", "nox", "nh3", "so2", "co", "o3", "temperature", "humidity", "wind_speed", "solar_radiation", "aqi_value"]
+    main_vars = [
+        "pm25",
+        "pm10",
+        "no",
+        "no2",
+        "nox",
+        "nh3",
+        "so2",
+        "co",
+        "o3",
+        "temperature",
+        "humidity",
+        "wind_speed",
+        "solar_radiation",
+        "aqi_value",
+    ]
     p_sub = p_df.loc[p_df.index.isin(main_vars), p_df.columns.isin(main_vars)]
     s_sub = s_df.loc[s_df.index.isin(main_vars), s_df.columns.isin(main_vars)]
 
     fig, axes = plt.subplots(1, 2, figsize=(16, 7))
 
-    sns.heatmap(p_sub, annot=True, fmt=".2f", cmap="coolwarm", vmin=-0.8, vmax=1.0, ax=axes[0], cbar_kws={"shrink": 0.8})
+    sns.heatmap(
+        p_sub, annot=True, fmt=".2f", cmap="coolwarm", vmin=-0.8, vmax=1.0, ax=axes[0], cbar_kws={"shrink": 0.8}
+    )
     axes[0].set_title("Pearson Linear Correlation Matrix", fontweight="bold")
     axes[0].set_xticklabels(axes[0].get_xticklabels(), rotation=45, ha="right")
 
-    sns.heatmap(s_sub, annot=True, fmt=".2f", cmap="coolwarm", vmin=-0.8, vmax=1.0, ax=axes[1], cbar_kws={"shrink": 0.8})
+    sns.heatmap(
+        s_sub, annot=True, fmt=".2f", cmap="coolwarm", vmin=-0.8, vmax=1.0, ax=axes[1], cbar_kws={"shrink": 0.8}
+    )
     axes[1].set_title("Spearman Rank Non-Linear Correlation Matrix", fontweight="bold")
     axes[1].set_xticklabels(axes[1].get_xticklabels(), rotation=45, ha="right")
 
@@ -344,6 +429,7 @@ def plot_07_correlation_heatmaps():
     fig.tight_layout()
     fig.savefig(FIGURES_DIR / "07_correlation_heatmaps.png")
     plt.close(fig)
+
 
 def plot_08_pm25_vs_aqi_breakpoints(conn):
     print("Plotting 08: PM2.5 vs AQI Breakpoints Curve...")
@@ -382,6 +468,7 @@ def plot_08_pm25_vs_aqi_breakpoints(conn):
     fig.savefig(FIGURES_DIR / "08_pm25_vs_aqi_breakpoints.png")
     plt.close(fig)
 
+
 def plot_09_weather_relationships(conn):
     print("Plotting 09: Meteorological Relationships...")
     df = fetch_weather_pollutant_samples(conn)
@@ -389,27 +476,42 @@ def plot_09_weather_relationships(conn):
     fig, axes = plt.subplots(1, 3, figsize=(15, 4.5))
 
     # Temperature vs PM2.5
-    sns.regplot(x="temperature", y="pm25", data=df[df["pm25"] <= 500], ax=axes[0],
-                scatter_kws={"alpha": 0.1, "color": "#e41a1c", "s": 8},
-                line_kws={"color": "darkred", "linewidth": 2})
+    sns.regplot(
+        x="temperature",
+        y="pm25",
+        data=df[df["pm25"] <= 500],
+        ax=axes[0],
+        scatter_kws={"alpha": 0.1, "color": "#e41a1c", "s": 8},
+        line_kws={"color": "darkred", "linewidth": 2},
+    )
     axes[0].set_title("Temperature vs PM2.5 (r = -0.52)", fontweight="bold")
     axes[0].set_xlabel("Ambient Temperature (°C)")
     axes[0].set_ylabel("PM2.5 (µg/m³)")
     axes[0].grid(True, linestyle="--", alpha=0.5)
 
     # Wind Speed vs PM2.5
-    sns.regplot(x="wind_speed", y="pm25", data=df[(df["pm25"] <= 500) & (df["wind_speed"] <= 10)], ax=axes[1],
-                scatter_kws={"alpha": 0.1, "color": "#377eb8", "s": 8},
-                line_kws={"color": "navy", "linewidth": 2})
+    sns.regplot(
+        x="wind_speed",
+        y="pm25",
+        data=df[(df["pm25"] <= 500) & (df["wind_speed"] <= 10)],
+        ax=axes[1],
+        scatter_kws={"alpha": 0.1, "color": "#377eb8", "s": 8},
+        line_kws={"color": "navy", "linewidth": 2},
+    )
     axes[1].set_title("Wind Speed vs PM2.5 (Dispersion)", fontweight="bold")
     axes[1].set_xlabel("Wind Speed (m/s)")
     axes[1].set_ylabel("PM2.5 (µg/m³)")
     axes[1].grid(True, linestyle="--", alpha=0.5)
 
     # Humidity vs PM2.5
-    sns.regplot(x="humidity", y="pm25", data=df[df["pm25"] <= 500], ax=axes[2],
-                scatter_kws={"alpha": 0.1, "color": "#4daf4a", "s": 8},
-                line_kws={"color": "darkgreen", "linewidth": 2})
+    sns.regplot(
+        x="humidity",
+        y="pm25",
+        data=df[df["pm25"] <= 500],
+        ax=axes[2],
+        scatter_kws={"alpha": 0.1, "color": "#4daf4a", "s": 8},
+        line_kws={"color": "darkgreen", "linewidth": 2},
+    )
     axes[2].set_title("Relative Humidity vs PM2.5 (r = +0.27)", fontweight="bold")
     axes[2].set_xlabel("Relative Humidity (%)")
     axes[2].set_ylabel("PM2.5 (µg/m³)")
@@ -420,6 +522,7 @@ def plot_09_weather_relationships(conn):
     fig.savefig(FIGURES_DIR / "09_weather_relationships.png")
     plt.close(fig)
 
+
 def plot_10_missingness_heatmap():
     print("Plotting 10: Missingness Heatmap...")
     df = pd.read_csv(REPORTS_DIR / "station_missingness_matrix.csv", index_col=0)
@@ -429,7 +532,16 @@ def plot_10_missingness_heatmap():
     df_pct = df[col_order]
 
     fig, ax = plt.subplots(figsize=(13, 5))
-    sns.heatmap(df_pct, annot=True, fmt=".1f", cmap="YlOrRd", vmin=0, vmax=100, ax=ax, cbar_kws={"label": "Missingness Percentage (%)"})
+    sns.heatmap(
+        df_pct,
+        annot=True,
+        fmt=".1f",
+        cmap="YlOrRd",
+        vmin=0,
+        vmax=100,
+        ax=ax,
+        cbar_kws={"label": "Missingness Percentage (%)"},
+    )
 
     ax.set_title("Data Missingness & Sensor Availability Matrix Across Delhi Stations (%)", fontweight="bold")
     ax.set_xlabel("Atmospheric / Weather Variable")
@@ -439,6 +551,7 @@ def plot_10_missingness_heatmap():
     fig.tight_layout()
     fig.savefig(FIGURES_DIR / "10_missingness_heatmap.png")
     plt.close(fig)
+
 
 def get_season_from_month(m):
     if m in [12, 1, 2]:
@@ -450,6 +563,7 @@ def get_season_from_month(m):
     else:
         return "Post-Monsoon"
 
+
 def plot_11_extreme_episodes():
     print("Plotting 11: Extreme AQI Episodes...")
     df = pd.read_csv(REPORTS_DIR / "episode_summary.csv")
@@ -458,7 +572,9 @@ def plot_11_extreme_episodes():
     fig, axes = plt.subplots(1, 2, figsize=(13, 5))
 
     # Duration vs Peak AQI
-    sns.scatterplot(x="duration_hours", y="max_aqi", hue="station_name", style="season", data=df, s=80, alpha=0.85, ax=axes[0])
+    sns.scatterplot(
+        x="duration_hours", y="max_aqi", hue="station_name", style="season", data=df, s=80, alpha=0.85, ax=axes[0]
+    )
     axes[0].set_title("Severe Episode Duration vs Peak AQI (AQI ≥ 400)", fontweight="bold")
     axes[0].set_xlabel("Episode Duration (Hours)")
     axes[0].set_ylabel("Maximum AQI Reached")
@@ -481,6 +597,7 @@ def plot_11_extreme_episodes():
     fig.savefig(FIGURES_DIR / "11_extreme_episodes.png")
     plt.close(fig)
 
+
 def main():
     env = load_env()
     conn = get_connection(env)
@@ -500,6 +617,7 @@ def main():
 
     conn.close()
     print("=== ALL 11 FIGURES GENERATED SUCCESSFULLY! ===")
+
 
 if __name__ == "__main__":
     main()

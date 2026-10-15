@@ -359,29 +359,32 @@ def run_temporal_and_station_analysis():
     # 6. Station Seasonal Ranking Stability
     print("\n6. Analyzing Station Ranking Stability across seasons...")
     ranking_records = []
-    seasons = ['Winter', 'Summer', 'Monsoon', 'Post-Monsoon']
+    seasons = ["Winter", "Summer", "Monsoon", "Post-Monsoon"]
     for season in seasons:
-        sub = df_seasonal[df_seasonal['season'] == season].copy()
-        sub['aqi_rank'] = sub['aqi_mean'].rank(ascending=False, method='min').astype(int)
-        sub['pm25_rank'] = sub['pm25_mean'].rank(ascending=False, method='min').astype(int)
-        sub['pm10_rank'] = sub['pm10_mean'].rank(ascending=False, method='min').astype(int)
+        sub = df_seasonal[df_seasonal["season"] == season].copy()
+        sub["aqi_rank"] = sub["aqi_mean"].rank(ascending=False, method="min").astype(int)
+        sub["pm25_rank"] = sub["pm25_mean"].rank(ascending=False, method="min").astype(int)
+        sub["pm10_rank"] = sub["pm10_mean"].rank(ascending=False, method="min").astype(int)
         for _, row in sub.iterrows():
-            ranking_records.append({
-                "season": season,
-                "station_name": row["station_name"],
-                "aqi_mean": row["aqi_mean"],
-                "aqi_rank": row["aqi_rank"],
-                "pm25_mean": row["pm25_mean"],
-                "pm25_rank": row["pm25_rank"],
-                "pm10_mean": row["pm10_mean"],
-                "pm10_rank": row["pm10_rank"],
-            })
+            ranking_records.append(
+                {
+                    "season": season,
+                    "station_name": row["station_name"],
+                    "aqi_mean": row["aqi_mean"],
+                    "aqi_rank": row["aqi_rank"],
+                    "pm25_mean": row["pm25_mean"],
+                    "pm25_rank": row["pm25_rank"],
+                    "pm10_mean": row["pm10_mean"],
+                    "pm10_rank": row["pm10_rank"],
+                }
+            )
     df_rankings = pd.DataFrame(ranking_records)
     df_rankings.to_csv(reports_dir / "station_seasonal_ranking.csv", index=False)
     print(f"  Saved {reports_dir / 'station_seasonal_ranking.csv'}")
 
     conn.close()
     print("=== TEMPORAL, SEASONAL & STATION ANALYSIS COMPLETED ===")
+
 
 if __name__ == "__main__":
     run_temporal_and_station_analysis()

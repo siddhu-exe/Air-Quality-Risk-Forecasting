@@ -19,6 +19,7 @@ Outputs
   reports/modeling/24h/final/final_predictions_extended.parquet
   reports/modeling/24h/final/val_predictions_extended.parquet
 """
+
 from __future__ import annotations
 
 import json
@@ -80,10 +81,14 @@ def main() -> None:
         print(f"[{name}] hybrid: {results[name]}")
         print(f"[{name}] persistence: {naive_metrics}")
 
-        out = part[["station_id", "station_name", "timestamp", "split", "aqi_curr", "target_aqi_24h", "aqi_source"]].copy()
+        out = part[
+            ["station_id", "station_name", "timestamp", "split", "aqi_curr", "target_aqi_24h", "aqi_source"]
+        ].copy()
         out["prediction_naive_persistence"] = naive
         out["prediction_hybrid_6c_winning"] = pred
-        target = OUT_DIR / ("final_predictions_extended.parquet" if name == "test" else "val_predictions_extended.parquet")
+        target = OUT_DIR / (
+            "final_predictions_extended.parquet" if name == "test" else "val_predictions_extended.parquet"
+        )
         target.parent.mkdir(parents=True, exist_ok=True)
         out.to_parquet(target, index=False)
         print(f"Wrote {target}")

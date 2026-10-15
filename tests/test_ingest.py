@@ -1,4 +1,5 @@
 """Ingest flow and weather fill with a fake store and fake sources. Mocked only: no network, no database."""
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -9,16 +10,29 @@ from src.live.config import IngestConfig
 from src.live.sources.base import SOURCE_COLUMNS, LiveSource, SourceUnavailable
 
 STATIONS = ["Anand Vihar", "Bawana", "Dwarka-Sector 8", "ITO", "Jahangirpuri", "Punjabi Bagh", "R K Puram"]
-NOW = pd.Timestamp("2026-10-11 14:10", tz="Asia/Kolkata")     # newest complete hour label: 13:00
+NOW = pd.Timestamp("2026-10-11 14:10", tz="Asia/Kolkata")  # newest complete hour label: 13:00
 
 
 def synthetic(hours, stations=STATIONS, **overrides):
     rows = []
     for station in stations:
         for hour in hours:
-            row = {"station_name": station, "hour": hour, "pm25": 120.0, "pm10": 200.0, "no2": 40.0, "so2": 8.0, "co": 1.2, "o3": 30.0,
-                   "nox": 60.0, "nh3": np.nan, "temperature": np.nan if station == "ITO" else 30.0, "humidity": np.nan if station == "ITO" else 50.0,
-                   "wind_speed": np.nan if station == "ITO" else 1.5, "solar_radiation": np.nan}
+            row = {
+                "station_name": station,
+                "hour": hour,
+                "pm25": 120.0,
+                "pm10": 200.0,
+                "no2": 40.0,
+                "so2": 8.0,
+                "co": 1.2,
+                "o3": 30.0,
+                "nox": 60.0,
+                "nh3": np.nan,
+                "temperature": np.nan if station == "ITO" else 30.0,
+                "humidity": np.nan if station == "ITO" else 50.0,
+                "wind_speed": np.nan if station == "ITO" else 1.5,
+                "solar_radiation": np.nan,
+            }
             row.update(overrides)
             rows.append(row)
     return pd.DataFrame(rows, columns=SOURCE_COLUMNS)
@@ -26,6 +40,7 @@ def synthetic(hours, stations=STATIONS, **overrides):
 
 def make_source(frame=None, *, error=None, verified=True, name="openaq", tag="openaq", flags=None):
     """A LiveSource subclass (a class, as the registry factory returns instances of it)."""
+
     class Fake(LiveSource):
         def fetch(self, start, end):
             if error:
@@ -72,8 +87,20 @@ class FakeStore:
 
 def weather_stub():
     hours = pd.date_range("2026-10-09", "2026-10-12", freq="h")
-    return pd.DataFrame([{"station_name": s, "hour": h, "temperature": 25.0, "humidity": 60.0, "wind_speed": 2.0, "solar_radiation": 300.0}
-                         for s in STATIONS for h in hours])
+    return pd.DataFrame(
+        [
+            {
+                "station_name": s,
+                "hour": h,
+                "temperature": 25.0,
+                "humidity": 60.0,
+                "wind_speed": 2.0,
+                "solar_radiation": 300.0,
+            }
+            for s in STATIONS
+            for h in hours
+        ]
+    )
 
 
 def cfg(**kw):
@@ -107,7 +134,7 @@ def test_a_stale_station_makes_the_run_partial_and_a_fully_stale_feed_makes_it_f
     result, st = run(pd.concat([fresh, old]))
     assert result["status"] == "partial" and "R K Puram" in st.last_run["details"]["stale_stations"]
     result, st = run(synthetic(pd.date_range("2026-10-11 05:00", "2026-10-11 07:00", freq="h")))
-    assert result["status"] == "failed"                         # OpenAQ frozen at an old time: fail loudly, do not call it success
+    assert result["status"] == "failed"  # OpenAQ frozen at an old time: fail loudly, do not call it success
     assert len(st.last_run["details"]["fresh_stations"]) == 0 if "fresh_stations" in st.last_run["details"] else True
 
 
@@ -120,15 +147,19 @@ def test_age_is_measured_to_the_end_of_the_hour():
     status, info = ingest.classify(synthetic(hours()).set_index("hour").assign(), NOW, 3.0) if False else (None, None)
     rows = synthetic([pd.Timestamp("2026-10-11 13:00")]).set_index("hour")
     status, info = ingest.classify(rows, NOW, 3.0)
-    assert info["age_hours"]["Bawana"] == pytest.approx(10 / 60, abs=0.01)        # hour 13:00 ended at 14:00; now 14:10
+    assert info["age_hours"]["Bawana"] == pytest.approx(10 / 60, abs=0.01)  # hour 13:00 ended at 14:00; now 14:10
 
 
 # ------------------------------------------------------------------ source switching and failures
 def test_the_fallback_is_used_only_when_the_primary_fails():
     primary = make_source(error=SourceUnavailable("primary down"), name="data_gov_in", tag="data.gov.in")
     backup = make_source(synthetic(hours()))
-    result = ingest.run(cfg(source="data_gov_in", fallback="openaq"), (st := FakeStore()), now=NOW,
-                        factory=lambda n: (primary if n == "data_gov_in" else backup)())
+    result = ingest.run(
+        cfg(source="data_gov_in", fallback="openaq"),
+        (st := FakeStore()),
+        now=NOW,
+        factory=lambda n: (primary if n == "data_gov_in" else backup)(),
+    )
     assert result["status"] == "success" and result["details"]["source_used"] == "openaq"
     assert any("fallback 'openaq' used" in n for n in result["details"]["notes"])
 
@@ -137,14 +168,20 @@ def test_the_fallback_is_not_touched_when_the_primary_works():
     called = []
     backup = make_source(synthetic(hours()))
     primary = make_source(synthetic(hours()), name="data_gov_in", tag="data.gov.in")
-    ingest.run(cfg(source="data_gov_in", fallback="openaq", allow_unverified=True), FakeStore(), now=NOW,
-               factory=lambda n: called.append(n) or (primary if n == "data_gov_in" else backup)())
+    ingest.run(
+        cfg(source="data_gov_in", fallback="openaq", allow_unverified=True),
+        FakeStore(),
+        now=NOW,
+        factory=lambda n: called.append(n) or (primary if n == "data_gov_in" else backup)(),
+    )
     assert called == ["data_gov_in"]
 
 
 def test_both_sources_down_fails_with_a_message_and_writes_nothing():
     down = lambda: make_source(error=SourceUnavailable("nope"))()
-    result = ingest.run(cfg(fallback="data_gov_in", allow_unverified=True), (st := FakeStore()), now=NOW, factory=lambda n: down())
+    result = ingest.run(
+        cfg(fallback="data_gov_in", allow_unverified=True), (st := FakeStore()), now=NOW, factory=lambda n: down()
+    )
     assert result["status"] == "failed" and st.readings == [] and "nope" in result["error"]
     assert st.last_run["status"] == "failed"
 
@@ -153,7 +190,9 @@ def test_an_unverified_source_is_refused_unless_explicitly_allowed():
     frame = synthetic(hours(), nox=np.nan)
     result, st = run(frame, cfg(source="data_gov_in"), verified=False, name="data_gov_in", tag="data.gov.in")
     assert result["status"] == "failed" and "not verified" in result["error"] and st.readings == []
-    result, st = run(frame, cfg(source="data_gov_in", allow_unverified=True), verified=False, name="data_gov_in", tag="data.gov.in")
+    result, st = run(
+        frame, cfg(source="data_gov_in", allow_unverified=True), verified=False, name="data_gov_in", tag="data.gov.in"
+    )
     assert result["status"] == "success" and set(st.readings[0].source) == {"data.gov.in"}
 
 
@@ -175,6 +214,7 @@ def test_unexpected_errors_are_recorded_then_raised():
     class Boom(FakeStore):
         def upsert_readings(self, readings):
             raise RuntimeError("db exploded")
+
     st = Boom()
     with pytest.raises(RuntimeError):
         ingest.run(cfg(), st, now=NOW, factory=lambda n: make_source(synthetic(hours()))(), weather_fetch=weather_stub)
@@ -189,7 +229,7 @@ def test_weather_gaps_are_filled_from_open_meteo_and_marked():
     assert (ito.temperature == 25.0).all() and (ito.weather_source == "open-meteo").all()
     assert all(f.get("temperature") == "filled:open-meteo" for f in ito.qc_flags)
     bawana = rows[rows.station_name == "Bawana"]
-    assert (bawana.temperature == 30.0).all()                               # station sensor values are never replaced
+    assert (bawana.temperature == 30.0).all()  # station sensor values are never replaced
     assert (bawana.solar_radiation == 300.0).all() and (bawana.weather_source == "mixed").all()
     assert st.last_run["details"]["weather"] == "open-meteo"
 
@@ -203,8 +243,15 @@ def test_weather_display_can_be_switched_off():
 def test_a_weather_outage_does_not_fail_the_ingest():
     def down():
         raise RuntimeError("open-meteo 429")
+
     st = FakeStore()
-    result = ingest.run(cfg(weather_display="open-meteo"), st, now=NOW, factory=lambda n: make_source(synthetic(hours()))(), weather_fetch=down)
+    result = ingest.run(
+        cfg(weather_display="open-meteo"),
+        st,
+        now=NOW,
+        factory=lambda n: make_source(synthetic(hours()))(),
+        weather_fetch=down,
+    )
     assert result["status"] == "success" and result["details"]["weather"].startswith("unavailable")
 
 
@@ -212,28 +259,46 @@ def test_open_meteo_request_asks_for_wind_in_metres_per_second_and_uses_the_retr
     seen = []
 
     class Resp:
-        def json(self): return {"hourly": {"time": ["2026-10-11T12:00", "2026-10-11T13:00"], "temperature_2m": [30.0, 31.0],
-                                           "relative_humidity_2m": [50, 49], "wind_speed_10m": [2.0, 2.5], "shortwave_radiation": [400.0, 380.0]}}
+        def json(self):
+            return {
+                "hourly": {
+                    "time": ["2026-10-11T12:00", "2026-10-11T13:00"],
+                    "temperature_2m": [30.0, 31.0],
+                    "relative_humidity_2m": [50, 49],
+                    "wind_speed_10m": [2.0, 2.5],
+                    "shortwave_radiation": [400.0, 380.0],
+                }
+            }
 
     def fake_get(url, params, **kw):
         seen.append((url, params, kw))
         return Resp()
+
     frame = wx.fetch_recent({"ITO": (28.6, 77.2), "Bawana": (28.7, 77.0)}, get=fake_get, sleep=lambda s: None)
     assert len(seen) == 2 and seen[0][0] == wx.FORECAST_URL
-    assert seen[0][1]["wind_speed_unit"] == "ms" and seen[0][1]["past_days"] == 3 and seen[0][1]["timezone"] == "Asia/Kolkata"
+    assert (
+        seen[0][1]["wind_speed_unit"] == "ms"
+        and seen[0][1]["past_days"] == 3
+        and seen[0][1]["timezone"] == "Asia/Kolkata"
+    )
     assert seen[0][2]["max_attempts"] == 3
-    assert set(frame.columns) == {"station_name", "hour", "temperature", "humidity", "wind_speed", "solar_radiation"} and len(frame) == 4
+    assert (
+        set(frame.columns) == {"station_name", "hour", "temperature", "humidity", "wind_speed", "solar_radiation"}
+        and len(frame) == 4
+    )
 
 
 # ------------------------------------------------------------------ AQI and the store
 def test_aqi_is_recomputed_from_stored_history_plus_the_new_rows():
     history_hours = pd.date_range("2026-10-09 12:00", "2026-10-11 07:00", freq="h")
-    hist = synthetic(history_hours, nh3=5.0).drop(columns=["nox", "temperature", "humidity", "wind_speed", "solar_radiation"])
+    hist = synthetic(history_hours, nh3=5.0).drop(
+        columns=["nox", "temperature", "humidity", "wind_speed", "solar_radiation"]
+    )
     hist["station_id"] = hist.station_name.map({s: i for s, i in ingest.STATION_IDS.items()})
     st = FakeStore(history=hist.drop(columns="station_name"))
     result, st = run(synthetic(hours()), st=st)
     assert result["details"]["aqi_rows"] > 0 and st.aqi[0].aqi.between(0, 500).all()
-    assert st.aqi[0].hour.min() >= pd.Timestamp("2026-10-11 08:00")        # only the fetched window is re-written
+    assert st.aqi[0].hour.min() >= pd.Timestamp("2026-10-11 08:00")  # only the fetched window is re-written
 
 
 def test_dry_run_store_touches_nothing():
@@ -249,15 +314,21 @@ def test_store_sql_refreshes_only_rows_of_the_same_source_and_never_deletes():
 
 def test_main_exit_code_follows_the_run_status(monkeypatch):
     for status, code in (("success", 0), ("partial", 0), ("failed", 1)):
-        monkeypatch.setattr(ingest, "run", lambda cfg, st, status=status: {"status": status, "rows": 0, "error": None, "details": {}})
+        monkeypatch.setattr(
+            ingest, "run", lambda cfg, st, status=status: {"status": status, "rows": 0, "error": None, "details": {}}
+        )
         assert ingest.main(["--dry-run"]) == code
 
 
 def test_a_scale_error_at_one_station_is_nullified_and_flagged_but_does_not_fail_the_run():
     frame = synthetic(hours())
-    frame.loc[frame.station_name == "Bawana", "nox"] = 150000.0         # 6 of 42 values: a sensor problem, not a source-wide change
+    frame.loc[frame.station_name == "Bawana", "nox"] = (
+        150000.0  # 6 of 42 values: a sensor problem, not a source-wide change
+    )
     result, st = run(frame)
     assert result["status"] == "success"
     rows = st.readings[0]
-    assert rows[rows.station_name == "Bawana"].nox.isna().all() and rows[rows.station_name != "Bawana"].nox.notna().all()
+    assert (
+        rows[rows.station_name == "Bawana"].nox.isna().all() and rows[rows.station_name != "Bawana"].nox.notna().all()
+    )
     assert st.last_run["details"]["qc_flagged_cells"]["nox"] == 6

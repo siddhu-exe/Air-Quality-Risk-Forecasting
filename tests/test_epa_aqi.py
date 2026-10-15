@@ -1,12 +1,34 @@
 """Pins the US-EPA conversion used to read WAQI ``iaqi`` back as concentrations (src/live/epa_aqi.py)."""
+
 import numpy as np
 import pytest
 
 from src.live.epa_aqi import AQI_MAX, POLLUTANTS, from_aqi, roundtrip, to_aqi
 
 # (concentration ug/m3, AQI) copied from the PM2.5 conversion table on https://aqicn.org/calculator/
-WAQI_PM25_TABLE = [(0, 0), (1, 4), (5, 21), (10, 42), (12, 50), (13, 52), (20, 67), (30, 88), (35, 99), (36, 101), (40, 111),
-                   (50, 136), (60, 152), (70, 158), (80, 163), (100, 173), (120, 184), (150, 200), (151, 201), (180, 230), (199, 249)]
+WAQI_PM25_TABLE = [
+    (0, 0),
+    (1, 4),
+    (5, 21),
+    (10, 42),
+    (12, 50),
+    (13, 52),
+    (20, 67),
+    (30, 88),
+    (35, 99),
+    (36, 101),
+    (40, 111),
+    (50, 136),
+    (60, 152),
+    (70, 158),
+    (80, 163),
+    (100, 173),
+    (120, 184),
+    (150, 200),
+    (151, 201),
+    (180, 230),
+    (199, 249),
+]
 
 
 @pytest.mark.parametrize("conc,expected", WAQI_PM25_TABLE)
@@ -28,7 +50,9 @@ def test_monotonic_and_within_half_an_aqi_unit_of_the_input(pollutant):
     assert (np.diff(index) >= 0).all()
     # the inverse of a rounded index lands within half an index step of the original concentration
     back = roundtrip(pollutant, grid)
-    widest = max(np.diff(from_aqi(pollutant, [0, 50, 100, 150, 200, 300, 400, 500])) / np.array([50, 50, 50, 50, 100, 100, 100]))
+    widest = max(
+        np.diff(from_aqi(pollutant, [0, 50, 100, 150, 200, 300, 400, 500])) / np.array([50, 50, 50, 50, 100, 100, 100])
+    )
     assert np.abs(back - grid).max() <= 0.5 * widest + 1e-9
 
 

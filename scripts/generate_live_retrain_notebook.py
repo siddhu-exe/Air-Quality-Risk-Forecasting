@@ -7,6 +7,7 @@ hashes differ, and every file in the bundle is re-hashed after extraction.
 
     python scripts/generate_live_retrain_notebook.py
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -19,12 +20,20 @@ NOTEBOOK = ROOT / "notebooks" / "live_retrain_colab.ipynb"
 BUNDLE = ROOT / "tier3_live_retrain_bundle.zip"
 
 FROZEN = [
-    "models/lgb_model_1h_v1.joblib", "models/lgb_model_6h_v1.joblib",
-    "models/24h/final/24h_final_model.joblib", "models/24h/final/scaler_final_24h.joblib",
-    "models/24h/final/imputer_final_24h.joblib", "models/24h/final/feature_names_final.joblib",
+    "models/lgb_model_1h_v1.joblib",
+    "models/lgb_model_6h_v1.joblib",
+    "models/24h/final/24h_final_model.joblib",
+    "models/24h/final/scaler_final_24h.joblib",
+    "models/24h/final/imputer_final_24h.joblib",
+    "models/24h/final/feature_names_final.joblib",
 ]
-EXTRA = ["config/model_hashes.json", "requirements-forecast.txt", "requirements-live.txt",
-         "reports/modeling/pm25/pm25_forecast_metrics.csv", "reports/modeling/probabilistic/probabilistic_metrics.json"]
+EXTRA = [
+    "config/model_hashes.json",
+    "requirements-forecast.txt",
+    "requirements-live.txt",
+    "reports/modeling/pm25/pm25_forecast_metrics.csv",
+    "reports/modeling/probabilistic/probabilistic_metrics.json",
+]
 SOURCE_DIRS = ["src", "etl"]
 RAW_GLOBS = ["Og Data/Delhi data/*/Raw Data/2024_*_1H.csv", "Og Data/Delhi data/*/Raw Data/2025_*_1H.csv"]
 
@@ -46,7 +55,13 @@ def md(text: str) -> dict:
 
 
 def code(text: str) -> dict:
-    return {"cell_type": "code", "metadata": {}, "execution_count": None, "outputs": [], "source": text.strip("\n").splitlines(keepends=True)}
+    return {
+        "cell_type": "code",
+        "metadata": {},
+        "execution_count": None,
+        "outputs": [],
+        "source": text.strip("\n").splitlines(keepends=True),
+    }
 
 
 def build_notebook(manifest: dict[str, str]) -> dict:
@@ -169,8 +184,15 @@ except ImportError:
     print('results zip written locally:', str(stage) + '.zip')
 """),
     ]
-    return {"cells": cells, "metadata": {"kernelspec": {"display_name": "Python 3", "language": "python", "name": "python3"},
-                                         "language_info": {"name": "python"}}, "nbformat": 4, "nbformat_minor": 5}
+    return {
+        "cells": cells,
+        "metadata": {
+            "kernelspec": {"display_name": "Python 3", "language": "python", "name": "python3"},
+            "language_info": {"name": "python"},
+        },
+        "nbformat": 4,
+        "nbformat_minor": 5,
+    }
 
 
 def main() -> None:
@@ -181,7 +203,9 @@ def main() -> None:
     with zipfile.ZipFile(BUNDLE, "w", zipfile.ZIP_DEFLATED) as zf:
         for path in files:
             zf.write(path, path.relative_to(ROOT).as_posix())
-    print(f"wrote {NOTEBOOK.relative_to(ROOT)} and {BUNDLE.name} ({BUNDLE.stat().st_size / 1e6:.1f} MB, {len(files)} files)")
+    print(
+        f"wrote {NOTEBOOK.relative_to(ROOT)} and {BUNDLE.name} ({BUNDLE.stat().st_size / 1e6:.1f} MB, {len(files)} files)"
+    )
 
 
 if __name__ == "__main__":

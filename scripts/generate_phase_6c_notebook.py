@@ -11,20 +11,20 @@ def create_notebook():
     cells = []
 
     def add_markdown(source):
-        cells.append({
-            "cell_type": "markdown",
-            "metadata": {},
-            "source": [line + "\n" for line in source.strip().split("\n")]
-        })
+        cells.append(
+            {"cell_type": "markdown", "metadata": {}, "source": [line + "\n" for line in source.strip().split("\n")]}
+        )
 
     def add_code(source):
-        cells.append({
-            "cell_type": "code",
-            "execution_count": None,
-            "metadata": {},
-            "outputs": [],
-            "source": [line + "\n" for line in source.strip().split("\n")]
-        })
+        cells.append(
+            {
+                "cell_type": "code",
+                "execution_count": None,
+                "metadata": {},
+                "outputs": [],
+                "source": [line + "\n" for line in source.strip().split("\n")],
+            }
+        )
 
     # Header
     add_markdown("""# Phase 6C: Final 24-Hour Forecast Refinement Notebook
@@ -494,25 +494,19 @@ PROCEED TO PHASE 7: CPCB RISK CLASSIFICATION & GRAP ALERTING
     notebook_dict = {
         "cells": cells,
         "metadata": {
-            "kernelspec": {
-                "display_name": "Python 3",
-                "language": "python",
-                "name": "python3"
-            },
-            "language_info": {
-                "name": "python",
-                "version": "3.10.0"
-            }
+            "kernelspec": {"display_name": "Python 3", "language": "python", "name": "python3"},
+            "language_info": {"name": "python", "version": "3.10.0"},
         },
         "nbformat": 4,
-        "nbformat_minor": 4
+        "nbformat_minor": 4,
     }
 
-    os.makedirs('notebooks', exist_ok=True)
-    with open('notebooks/phase_6c_24h_final_refinement.ipynb', 'w') as f:
+    os.makedirs("notebooks", exist_ok=True)
+    with open("notebooks/phase_6c_24h_final_refinement.ipynb", "w") as f:
         json.dump(notebook_dict, f, indent=2)
 
     print("Successfully generated notebooks/phase_6c_24h_final_refinement.ipynb")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     create_notebook()

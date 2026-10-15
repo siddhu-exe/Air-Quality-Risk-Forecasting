@@ -10,6 +10,7 @@ Usage (needs migrations applied and DATABASE_URL set):
     python -m src.live.load_stations --dry-run
     python -m src.live.load_stations
 """
+
 from __future__ import annotations
 
 import argparse

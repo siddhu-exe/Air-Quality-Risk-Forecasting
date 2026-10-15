@@ -14,8 +14,9 @@ from sklearn.metrics import (
 # ==============================================================================
 
 CPCB_BOUNDARIES = np.array([0, 51, 101, 201, 301, 401, 501])
-CPCB_LABELS = ['Good', 'Satisfactory', 'Moderate', 'Poor', 'Very Poor', 'Severe']
-HORIZON_HOURS = {'1h': 1, '6h': 6, '24h': 24}
+CPCB_LABELS = ["Good", "Satisfactory", "Moderate", "Poor", "Very Poor", "Severe"]
+HORIZON_HOURS = {"1h": 1, "6h": 6, "24h": 24}
+
 
 def cpcb_classify(aqi_values: np.ndarray) -> np.ndarray:
     """Map continuous AQI to 0-5 CPCB ordinal classes."""
@@ -24,6 +25,7 @@ def cpcb_classify(aqi_values: np.ndarray) -> np.ndarray:
     classes = np.digitize(aqi_values, CPCB_BOUNDARIES[1:-1], right=False)
     # Clip just in case there are negative numbers or highly out of bounds positives
     return np.clip(classes, 0, 5)
+
 
 def grap_stage_from_aqi(aqi_values: np.ndarray) -> np.ndarray:
     """
@@ -41,8 +43,10 @@ def grap_stage_from_aqi(aqi_values: np.ndarray) -> np.ndarray:
     stages[aqi_values > 450] = 4
     return stages
 
+
 def compute_ordinal_mae(y_true_class, y_pred_class):
     return np.mean(np.abs(y_true_class - y_pred_class))
+
 
 def compute_weighted_kappa(y_true_class, y_pred_class, k=6):
     cm = confusion_matrix(y_true_class, y_pred_class, labels=np.arange(k))
@@ -68,9 +72,11 @@ def compute_weighted_kappa(y_true_class, y_pred_class, k=6):
 
     return 1 - (num / den)
 
+
 # ==============================================================================
 # 2. Episode Logic
 # ==============================================================================
+
 
 def detect_episodes(df: pd.DataFrame, threshold: float, col_name: str, max_gap: int = 3):
     """
@@ -80,8 +86,8 @@ def detect_episodes(df: pd.DataFrame, threshold: float, col_name: str, max_gap: 
     """
     episodes = []
 
-    for station_id, group in df.groupby('station_id'):
-        group = group.sort_values('timestamp').reset_index()
+    for station_id, group in df.groupby("station_id"):
+        group = group.sort_values("timestamp").reset_index()
 
         # Binary flag for exceedance
         is_exceeding = group[col_name] >= threshold
@@ -123,38 +129,51 @@ def detect_episodes(df: pd.DataFrame, threshold: float, col_name: str, max_gap: 
                 end_idx = i - 1
 
                 # Record episode
-                ep_data = group.iloc[start_idx:end_idx+1]
-                episodes.append({
-                    'station_id': station_id,
-                    'station_name': group['station_name'].iloc[0],
-                    'start_time': ep_data['timestamp'].min(),
-                    'end_time': ep_data['timestamp'].max(),
-                    'peak_aqi': ep_data[col_name].max(),
-                    'duration_hours': (ep_data['timestamp'].max() - ep_data['timestamp'].min()).total_seconds() / 3600 + 1,
-                    # We need the exact original threshold crossing for evaluation, not the smoothed one
-                    'first_actual_crossing': ep_data[ep_data[col_name] >= threshold]['timestamp'].min()
-                })
+                ep_data = group.iloc[start_idx : end_idx + 1]
+                episodes.append(
+                    {
+                        "station_id": station_id,
+                        "station_name": group["station_name"].iloc[0],
+                        "start_time": ep_data["timestamp"].min(),
+                        "end_time": ep_data["timestamp"].max(),
+                        "peak_aqi": ep_data[col_name].max(),
+                        "duration_hours": (ep_data["timestamp"].max() - ep_data["timestamp"].min()).total_seconds()
+                        / 3600
+                        + 1,
+                        # We need the exact original threshold crossing for evaluation, not the smoothed one
+                        "first_actual_crossing": ep_data[ep_data[col_name] >= threshold]["timestamp"].min(),
+                    }
+                )
 
         # Handle episode at end of series
         if in_episode:
             end_idx = n - 1
-            ep_data = group.iloc[start_idx:end_idx+1]
-            episodes.append({
-                'station_id': station_id,
-                'station_name': group['station_name'].iloc[0],
-                'start_time': ep_data['timestamp'].min(),
-                'end_time': ep_data['timestamp'].max(),
-                'peak_aqi': ep_data[col_name].max(),
-                'duration_hours': (ep_data['timestamp'].max() - ep_data['timestamp'].min()).total_seconds() / 3600 + 1,
-                'first_actual_crossing': ep_data[ep_data[col_name] >= threshold]['timestamp'].min()
-            })
+            ep_data = group.iloc[start_idx : end_idx + 1]
+            episodes.append(
+                {
+                    "station_id": station_id,
+                    "station_name": group["station_name"].iloc[0],
+                    "start_time": ep_data["timestamp"].min(),
+                    "end_time": ep_data["timestamp"].max(),
+                    "peak_aqi": ep_data[col_name].max(),
+                    "duration_hours": (ep_data["timestamp"].max() - ep_data["timestamp"].min()).total_seconds() / 3600
+                    + 1,
+                    "first_actual_crossing": ep_data[ep_data[col_name] >= threshold]["timestamp"].min(),
+                }
+            )
 
     return pd.DataFrame(episodes)
 
 
-def episode_detection_report(df: pd.DataFrame, horizon: str, actual_col: str,
-                             model_pred_col: str, persist_pred_col: str,
-                             threshold: float = 401.0, max_gap: int = 3):
+def episode_detection_report(
+    df: pd.DataFrame,
+    horizon: str,
+    actual_col: str,
+    model_pred_col: str,
+    persist_pred_col: str,
+    threshold: float = 401.0,
+    max_gap: int = 3,
+):
     """Baseline-aware episode hit-rate and lead-time metric with explicit time alignment.
 
     Alignment (verified against ``build_features.py``):
@@ -171,55 +190,63 @@ def episode_detection_report(df: pd.DataFrame, horizon: str, actual_col: str,
     """
     h_td = pd.Timedelta(hours=HORIZON_HOURS[horizon])
     frame = df.copy()
-    frame['issue_time'] = pd.to_datetime(frame['timestamp'])
-    frame['target_time'] = frame['issue_time'] + h_td
+    frame["issue_time"] = pd.to_datetime(frame["timestamp"])
+    frame["target_time"] = frame["issue_time"] + h_td
 
     # Detect episodes on ACTUAL AQI keyed by target time.
-    actual = (frame[['station_id', 'station_name', 'target_time', actual_col]]
-              .dropna(subset=[actual_col])
-              .rename(columns={'target_time': 'timestamp', actual_col: 'actual_aqi'})
-              .drop_duplicates(subset=['station_id', 'timestamp'])
-              .sort_values(['station_id', 'timestamp']))
-    episodes = detect_episodes(actual, threshold, 'actual_aqi', max_gap=max_gap)
+    actual = (
+        frame[["station_id", "station_name", "target_time", actual_col]]
+        .dropna(subset=[actual_col])
+        .rename(columns={"target_time": "timestamp", actual_col: "actual_aqi"})
+        .drop_duplicates(subset=["station_id", "timestamp"])
+        .sort_values(["station_id", "timestamp"])
+    )
+    episodes = detect_episodes(actual, threshold, "actual_aqi", max_gap=max_gap)
     if len(episodes) == 0:
         return pd.DataFrame()
 
     rows = []
     for _, ep in episodes.iterrows():
-        for model_name, pred_col in (('final', model_pred_col), ('persistence', persist_pred_col)):
-            station_preds = frame[(frame['station_id'] == ep['station_id']) & (frame[pred_col] >= threshold)]
+        for model_name, pred_col in (("final", model_pred_col), ("persistence", persist_pred_col)):
+            station_preds = frame[(frame["station_id"] == ep["station_id"]) & (frame[pred_col] >= threshold)]
 
             def first_alert(tolerance_hours):
                 valid = station_preds[
-                    (station_preds['issue_time'] <= ep['first_actual_crossing'])
-                    & (station_preds['target_time'] >= ep['first_actual_crossing'] - pd.Timedelta(hours=tolerance_hours))
-                    & (station_preds['target_time'] <= ep['end_time'])
+                    (station_preds["issue_time"] <= ep["first_actual_crossing"])
+                    & (
+                        station_preds["target_time"]
+                        >= ep["first_actual_crossing"] - pd.Timedelta(hours=tolerance_hours)
+                    )
+                    & (station_preds["target_time"] <= ep["end_time"])
                 ]
                 if len(valid) == 0:
-                    return 'miss', 0.0, 0
-                lead = (ep['first_actual_crossing'] - valid['issue_time'].min()).total_seconds() / 3600.0
-                return 'hit', lead, int(len(valid))
+                    return "miss", 0.0, 0
+                lead = (ep["first_actual_crossing"] - valid["issue_time"].min()).total_seconds() / 3600.0
+                return "hit", lead, int(len(valid))
 
             detection, lead, n_alerts = first_alert(0)
             detection_tol12, lead_tol12, n_alerts_tol12 = first_alert(12)
-            rows.append({
-                'station_id': ep['station_id'],
-                'station_name': ep['station_name'],
-                'start_time': ep['start_time'],
-                'end_time': ep['end_time'],
-                'peak_aqi': ep['peak_aqi'],
-                'duration_hours': ep['duration_hours'],
-                'first_actual_crossing': ep['first_actual_crossing'],
-                'horizon': horizon,
-                'model': model_name,
-                'detection': detection,
-                'lead_time_hours': lead,
-                'n_alerts': n_alerts,
-                'detection_tol12': detection_tol12,
-                'lead_time_hours_tol12': lead_tol12,
-                'n_alerts_tol12': n_alerts_tol12,
-            })
+            rows.append(
+                {
+                    "station_id": ep["station_id"],
+                    "station_name": ep["station_name"],
+                    "start_time": ep["start_time"],
+                    "end_time": ep["end_time"],
+                    "peak_aqi": ep["peak_aqi"],
+                    "duration_hours": ep["duration_hours"],
+                    "first_actual_crossing": ep["first_actual_crossing"],
+                    "horizon": horizon,
+                    "model": model_name,
+                    "detection": detection,
+                    "lead_time_hours": lead,
+                    "n_alerts": n_alerts,
+                    "detection_tol12": detection_tol12,
+                    "lead_time_hours_tol12": lead_tol12,
+                    "n_alerts_tol12": n_alerts_tol12,
+                }
+            )
     return pd.DataFrame(rows)
+
 
 def analyze_horizon(df: pd.DataFrame, horizon: str, actual_col: str, pred_col: str):
     """Run all classification & evaluation logic for a single horizon."""
@@ -233,50 +260,50 @@ def analyze_horizon(df: pd.DataFrame, horizon: str, actual_col: str, pred_col: s
     y_true_cpcb = cpcb_classify(df[actual_col].values)
     y_pred_cpcb = cpcb_classify(df[pred_col].values)
 
-    df['category_actual'] = y_true_cpcb
-    df['category_predicted'] = y_pred_cpcb
-    df['category_name_actual'] = [CPCB_LABELS[i] for i in y_true_cpcb]
-    df['category_name_predicted'] = [CPCB_LABELS[i] for i in y_pred_cpcb]
+    df["category_actual"] = y_true_cpcb
+    df["category_predicted"] = y_pred_cpcb
+    df["category_name_actual"] = [CPCB_LABELS[i] for i in y_true_cpcb]
+    df["category_name_predicted"] = [CPCB_LABELS[i] for i in y_pred_cpcb]
 
-    df['is_correct'] = y_true_cpcb == y_pred_cpcb
-    df['ordinal_error'] = y_pred_cpcb - y_true_cpcb
-    df['abs_ordinal_error'] = np.abs(df['ordinal_error'])
+    df["is_correct"] = y_true_cpcb == y_pred_cpcb
+    df["ordinal_error"] = y_pred_cpcb - y_true_cpcb
+    df["abs_ordinal_error"] = np.abs(df["ordinal_error"])
 
-    df['severe_actual'] = df[actual_col] >= 401
-    df['severe_predicted'] = df[pred_col] >= 401
+    df["severe_actual"] = df[actual_col] >= 401
+    df["severe_predicted"] = df[pred_col] >= 401
 
-    df['vpoor_plus_actual'] = df[actual_col] >= 301
-    df['vpoor_plus_predicted'] = df[pred_col] >= 301
+    df["vpoor_plus_actual"] = df[actual_col] >= 301
+    df["vpoor_plus_predicted"] = df[pred_col] >= 301
 
     # GRAP logic
-    df['grap_stage_actual'] = grap_stage_from_aqi(df[actual_col].values)
-    df['grap_stage_forecast'] = grap_stage_from_aqi(df[pred_col].values)
-    df['stage_iii_alert'] = df[pred_col] >= 401
-    df['stage_iv_alert'] = df[pred_col] > 450
-    df['any_grap_alert'] = df[pred_col] >= 201
+    df["grap_stage_actual"] = grap_stage_from_aqi(df[actual_col].values)
+    df["grap_stage_forecast"] = grap_stage_from_aqi(df[pred_col].values)
+    df["stage_iii_alert"] = df[pred_col] >= 401
+    df["stage_iv_alert"] = df[pred_col] > 450
+    df["any_grap_alert"] = df[pred_col] >= 201
 
     # Export row-level classified data
     df.to_parquet(f"reports/classification/{horizon}/classified_predictions.parquet", index=False)
 
     # Metrics computation
     # Macro F1, Weighted F1
-    macro_f1 = f1_score(y_true_cpcb, y_pred_cpcb, average='macro')
-    weighted_f1 = f1_score(y_true_cpcb, y_pred_cpcb, average='weighted')
+    macro_f1 = f1_score(y_true_cpcb, y_pred_cpcb, average="macro")
+    weighted_f1 = f1_score(y_true_cpcb, y_pred_cpcb, average="weighted")
 
-    macro_prec = precision_score(y_true_cpcb, y_pred_cpcb, average='macro', zero_division=0)
-    macro_rec = recall_score(y_true_cpcb, y_pred_cpcb, average='macro', zero_division=0)
+    macro_prec = precision_score(y_true_cpcb, y_pred_cpcb, average="macro", zero_division=0)
+    macro_rec = recall_score(y_true_cpcb, y_pred_cpcb, average="macro", zero_division=0)
 
     w_kappa = compute_weighted_kappa(y_true_cpcb, y_pred_cpcb)
     ord_mae = compute_ordinal_mae(y_true_cpcb, y_pred_cpcb)
 
     # Class-specific (Severe is 5)
     labels = np.unique(np.concatenate([y_true_cpcb, y_pred_cpcb]))
-    severe_mask = (y_true_cpcb == 5)
+    severe_mask = y_true_cpcb == 5
 
     if 5 in labels:
-        severe_f1 = f1_score(y_true_cpcb, y_pred_cpcb, labels=[5], average='macro')
-        severe_rec = recall_score(y_true_cpcb, y_pred_cpcb, labels=[5], average='macro', zero_division=0)
-        severe_prec = precision_score(y_true_cpcb, y_pred_cpcb, labels=[5], average='macro', zero_division=0)
+        severe_f1 = f1_score(y_true_cpcb, y_pred_cpcb, labels=[5], average="macro")
+        severe_rec = recall_score(y_true_cpcb, y_pred_cpcb, labels=[5], average="macro", zero_division=0)
+        severe_prec = precision_score(y_true_cpcb, y_pred_cpcb, labels=[5], average="macro", zero_division=0)
     else:
         severe_f1, severe_rec, severe_prec = np.nan, np.nan, np.nan
 
@@ -301,26 +328,26 @@ def analyze_horizon(df: pd.DataFrame, horizon: str, actual_col: str, pred_col: s
         critical_miss_rate = np.nan
 
     metrics = {
-        'horizon': horizon,
-        'macro_f1': macro_f1,
-        'weighted_f1': weighted_f1,
-        'macro_precision': macro_prec,
-        'macro_recall': macro_rec,
-        'weighted_kappa': w_kappa,
-        'ordinal_mae': ord_mae,
-        'severe_f1': severe_f1,
-        'severe_recall': severe_rec,
-        'severe_precision': severe_prec,
-        'severe_tp': severe_tp,
-        'severe_fp': severe_fp,
-        'severe_fn': severe_fn,
-        'vpoor_plus_recall': vpoor_plus_rec,
-        'vpoor_plus_precision': vpoor_plus_prec,
-        'vpoor_plus_f1': vpoor_plus_f1,
-        'vpoor_plus_tp': vp_tp,
-        'vpoor_plus_fp': vp_fp,
-        'vpoor_plus_fn': vp_fn,
-        'critical_miss_rate': critical_miss_rate
+        "horizon": horizon,
+        "macro_f1": macro_f1,
+        "weighted_f1": weighted_f1,
+        "macro_precision": macro_prec,
+        "macro_recall": macro_rec,
+        "weighted_kappa": w_kappa,
+        "ordinal_mae": ord_mae,
+        "severe_f1": severe_f1,
+        "severe_recall": severe_rec,
+        "severe_precision": severe_prec,
+        "severe_tp": severe_tp,
+        "severe_fp": severe_fp,
+        "severe_fn": severe_fn,
+        "vpoor_plus_recall": vpoor_plus_rec,
+        "vpoor_plus_precision": vpoor_plus_prec,
+        "vpoor_plus_f1": vpoor_plus_f1,
+        "vpoor_plus_tp": vp_tp,
+        "vpoor_plus_fp": vp_fp,
+        "vpoor_plus_fn": vp_fn,
+        "critical_miss_rate": critical_miss_rate,
     }
 
     # Confusion matrix
@@ -330,31 +357,32 @@ def analyze_horizon(df: pd.DataFrame, horizon: str, actual_col: str, pred_col: s
 
     return metrics, df
 
+
 def process_all():
     print("Loading 1h predictions...")
-    p1 = pd.read_parquet('data/Artifacts/1h/predictions_1h_test.parquet')
+    p1 = pd.read_parquet("data/Artifacts/1h/predictions_1h_test.parquet")
 
     print("Loading 6h predictions...")
-    p6 = pd.read_parquet('data/Artifacts/6h/predictions_6h_test.parquet')
+    p6 = pd.read_parquet("data/Artifacts/6h/predictions_6h_test.parquet")
 
     print("Loading 24h predictions...")
-    p24 = pd.read_parquet('reports/modeling/24h/final/final_predictions.parquet')
+    p24 = pd.read_parquet("reports/modeling/24h/final/final_predictions.parquet")
 
     metrics_list = []
 
-    m1, df1 = analyze_horizon(p1, '1h', 'y_true', 'y_pred')
+    m1, df1 = analyze_horizon(p1, "1h", "y_true", "y_pred")
     metrics_list.append(m1)
 
-    m6, df6 = analyze_horizon(p6, '6h', 'y_true', 'y_pred')
+    m6, df6 = analyze_horizon(p6, "6h", "y_true", "y_pred")
     metrics_list.append(m6)
 
-    m24, df24 = analyze_horizon(p24, '24h', 'target_aqi_24h', 'prediction_hybrid_6c_winning')
+    m24, df24 = analyze_horizon(p24, "24h", "target_aqi_24h", "prediction_hybrid_6c_winning")
     metrics_list.append(m24)
 
     metrics_df = pd.DataFrame(metrics_list)
-    metrics_df.to_csv('reports/classification/metrics/multiclass_metrics_comparison.csv', index=False)
+    metrics_df.to_csv("reports/classification/metrics/multiclass_metrics_comparison.csv", index=False)
     print("\nMetrics comparison saved to reports/classification/metrics/multiclass_metrics_comparison.csv")
-    print(metrics_df[['horizon', 'macro_f1', 'severe_recall', 'ordinal_mae']])
+    print(metrics_df[["horizon", "macro_f1", "severe_recall", "ordinal_mae"]])
 
     # ----------------------------------------------------
     # Episode hit-rate & lead-time (explicit time alignment)
@@ -365,9 +393,9 @@ def process_all():
     # the episode start with a target time inside the episode. There is no 12h pre-episode
     # tolerance by default; the legacy tolerance is reported alongside for comparison.
     horizon_specs = [
-        ('1h', df1, 'y_true', 'y_pred', 'naive_pred'),
-        ('6h', df6, 'y_true', 'y_pred', 'naive_pred'),
-        ('24h', df24, 'target_aqi_24h', 'prediction_hybrid_6c_winning', 'prediction_naive_persistence'),
+        ("1h", df1, "y_true", "y_pred", "naive_pred"),
+        ("6h", df6, "y_true", "y_pred", "naive_pred"),
+        ("24h", df24, "target_aqi_24h", "prediction_hybrid_6c_winning", "prediction_naive_persistence"),
     ]
 
     episodes_all = []
@@ -387,25 +415,34 @@ def process_all():
 
     if len(episodes_all) > 0:
         all_eps_df = pd.concat(episodes_all, ignore_index=True)
-        all_eps_df.to_csv('reports/classification/episodes/grap_episode_lead_times.csv', index=False)
+        all_eps_df.to_csv("reports/classification/episodes/grap_episode_lead_times.csv", index=False)
 
         print("\nEpisode detection (>=401), model vs persistence, no pre-episode tolerance:")
-        summary = (all_eps_df.groupby(['horizon', 'model'])
-                   .agg(episodes=('detection', 'size'),
-                        hits=('detection', lambda s: int((s == 'hit').sum())),
-                        mean_lead_hours=('lead_time_hours', 'mean'))
-                   .reset_index())
-        summary['hit_rate'] = summary['hits'] / summary['episodes']
+        summary = (
+            all_eps_df.groupby(["horizon", "model"])
+            .agg(
+                episodes=("detection", "size"),
+                hits=("detection", lambda s: int((s == "hit").sum())),
+                mean_lead_hours=("lead_time_hours", "mean"),
+            )
+            .reset_index()
+        )
+        summary["hit_rate"] = summary["hits"] / summary["episodes"]
         print(summary.to_string(index=False))
 
         print("\nSame metric with the legacy 12h pre-episode tolerance (for comparison):")
-        tol = (all_eps_df.groupby(['horizon', 'model'])
-               .agg(episodes=('detection', 'size'),
-                    hits=('detection_tol12', lambda s: int((s == 'hit').sum())),
-                    mean_lead_hours=('lead_time_hours_tol12', 'mean'))
-               .reset_index())
-        tol['hit_rate'] = tol['hits'] / tol['episodes']
+        tol = (
+            all_eps_df.groupby(["horizon", "model"])
+            .agg(
+                episodes=("detection", "size"),
+                hits=("detection_tol12", lambda s: int((s == "hit").sum())),
+                mean_lead_hours=("lead_time_hours_tol12", "mean"),
+            )
+            .reset_index()
+        )
+        tol["hit_rate"] = tol["hits"] / tol["episodes"]
         print(tol.to_string(index=False))
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     process_all()

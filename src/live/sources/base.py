@@ -4,6 +4,7 @@ A source returns hourly rows in **training units and the training hour conventio
 starting at T, local Asia/Kolkata, naive), before QC. Everything after that (QC, weather fill, upsert, AQI) is
 source-independent, so switching source is a config value.
 """
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -25,8 +26,8 @@ class SourceUnavailable(RuntimeError):
 
 
 class LiveSource(ABC):
-    name: ClassVar[str]          # config value
-    tag: ClassVar[str]           # value stored in live_readings.source
+    name: ClassVar[str]  # config value
+    tag: ClassVar[str]  # value stored in live_readings.source
     #: False until the hour convention and units were verified against real data.
     verified: ClassVar[bool] = True
     #: what the source cannot supply at all (documented, tested; the audit decides how to cope)

@@ -11,10 +11,11 @@ PROJECT_ROOT = SCRIPT_DIR.parent
 DATA_ROOT = PROJECT_ROOT / "Og Data" / "Delhi data"
 MUMBAI_ROOT = PROJECT_ROOT / "Og Data" / "Mumbai data"
 
+
 def run_dry_run():
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print("  Air Quality ETL Pipeline — DRY RUN")
-    print(f"{'='*60}\n")
+    print(f"{'=' * 60}\n")
 
     files = discover_files(DATA_ROOT)
     files.extend(discover_files(MUMBAI_ROOT))
@@ -30,7 +31,7 @@ def run_dry_run():
         "dropped_epoch_ts_aqi": 0,
         "total_sentinels": 0,
         "total_oob": 0,
-        "qc_flagged_rows": 0
+        "qc_flagged_rows": 0,
     }
 
     stations_discovered = {}
@@ -40,6 +41,7 @@ def run_dry_run():
     total_records = 0
 
     import time
+
     start = time.time()
 
     for i, meta in enumerate(files):
@@ -53,11 +55,9 @@ def run_dry_run():
             clean_name, city, op = clean_station_name(station_raw)
             if station_raw == "Mumbai City":
                 clean_name, city, op = "Mumbai City", "Mumbai", "Unknown"
-            stations_discovered[station_raw] = {
-                "clean_name": clean_name, "city": city, "operator": op, "obs": 0
-            }
+            stations_discovered[station_raw] = {"clean_name": clean_name, "city": city, "operator": op, "obs": 0}
 
-        print(f"[{i+1}/{len(files)}] Processing: {path.name} ", end="")
+        print(f"[{i + 1}/{len(files)}] Processing: {path.name} ", end="")
 
         if ext == ".csv":
             df, stats = process_caaqms_csv(path)
@@ -71,8 +71,8 @@ def run_dry_run():
             global_stats["files_failed"] += 1
             continue
 
-        valid_rows = stats['processed_rows']
-        dropped_ts = stats.get('dropped_invalid_ts', 0)
+        valid_rows = stats["processed_rows"]
+        dropped_ts = stats.get("dropped_invalid_ts", 0)
 
         if mode == "CAAQMS":
             global_stats["caaqms_rows_staged"] += valid_rows
@@ -93,14 +93,16 @@ def run_dry_run():
         if df is not None and not df.empty and "ts" in df.columns:
             f_min = df["ts"].min()
             f_max = df["ts"].max()
-            if min_ts is None or f_min < min_ts: min_ts = f_min
-            if max_ts is None or f_max > max_ts: max_ts = f_max
+            if min_ts is None or f_min < min_ts:
+                min_ts = f_min
+            if max_ts is None or f_max > max_ts:
+                max_ts = f_max
 
     end = time.time()
 
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print("  DRY RUN RESULTS")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
     print(f"  Stations normalized: {len(stations_discovered)}")
     for raw, details in stations_discovered.items():
         print(f"    - '{raw}' -> '{details['clean_name']}' ({details['obs']:,} observations)")
@@ -112,7 +114,7 @@ def run_dry_run():
     print(f"    - CAAQMS insert-ready records: {global_stats['caaqms_rows_staged']:,}")
     print(f"    - AQI insert-ready records: {global_stats['aqi_rows_staged']:,}")
     print(f"    - Total Date Range: {min_ts} to {max_ts}")
-    print(f"    - Total Time Elapsed: {round(end-start, 2)} seconds")
+    print(f"    - Total Time Elapsed: {round(end - start, 2)} seconds")
 
     print("\n  Invalid Timestamps (Dropped Records):")
     print(f"    - CAAQMS: {global_stats['dropped_epoch_ts']:,}")
@@ -124,6 +126,7 @@ def run_dry_run():
     print(f"    - Out-of-bounds metrics nulled: {global_stats['total_oob']:,}")
 
     print("\n  (Dry run complete. No database changes were made.)\n")
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Air Quality ETL Pipeline")

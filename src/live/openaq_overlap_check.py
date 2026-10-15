@@ -17,6 +17,7 @@ Needs OPENAQ_API_KEY (header only, never printed). Run from the repo root:
 Set FORCE_IPV4=1 on networks whose IPv6/NAT64 route hangs, OPENAQ_CACHE=<file> to reuse downloads.
 Writes docs/TIER_3/openaq_overlap_check.{md,csv}; exits non-zero if the pass criteria fail.
 """
+
 from __future__ import annotations
 
 import os
@@ -46,9 +47,16 @@ OUT_CSV = REPO_ROOT / "docs" / "TIER_3" / "openaq_overlap_check.csv"
 OUT_MD = REPO_ROOT / "docs" / "TIER_3" / "openaq_overlap_check.md"
 
 PARAM_TO_CSV = {
-    "pm25": "PM2.5 (µg/m³)", "pm10": "PM10 (µg/m³)", "no2": "NO2 (µg/m³)", "so2": "SO2 (µg/m³)",
-    "o3": "Ozone (µg/m³)", "co": "CO (mg/m³)", "nox": "NOx (ppb)",
-    "temperature": "AT (°C)", "relativehumidity": "RH (%)", "wind_speed": "WS (m/s)",
+    "pm25": "PM2.5 (µg/m³)",
+    "pm10": "PM10 (µg/m³)",
+    "no2": "NO2 (µg/m³)",
+    "so2": "SO2 (µg/m³)",
+    "o3": "Ozone (µg/m³)",
+    "co": "CO (mg/m³)",
+    "nox": "NOx (ppb)",
+    "temperature": "AT (°C)",
+    "relativehumidity": "RH (%)",
+    "wind_speed": "WS (m/s)",
 }
 # Windows both sources cover. 2026 CSVs end 2026-08-31; Dwarka-Sector 8 has no 2026 file, so its
 # window is Dec 2025, when OpenAQ's slot labels sat 15 minutes earlier (its fit is at -15 min).
@@ -94,10 +102,15 @@ def collect() -> tuple[dict, list]:
     samples, freshness = {}, []
     for station, location_id in LOCATIONS.items():
         window = WINDOW_2025 if station == "Dwarka-Sector 8" else WINDOW_2026
-        csv = load_csv(station, int(window[0][:4])).loc[window[0]:window[1]]
+        csv = load_csv(station, int(window[0][:4])).loc[window[0] : window[1]]
         last = pd.Timestamp(get(f"/locations/{location_id}")["results"][0]["datetimeLast"]["utc"])
-        freshness.append({"station": station, "openaq_last_utc": str(last),
-                          "age_hours_at_check": round((now - last.to_pydatetime()).total_seconds() / 3600, 1)})
+        freshness.append(
+            {
+                "station": station,
+                "openaq_last_utc": str(last),
+                "age_hours_at_check": round((now - last.to_pydatetime()).total_seconds() / 3600, 1),
+            }
+        )
         for parameter, (sensor_id, _label) in live_sensors(location_id, station).items():
             if PARAM_TO_CSV[parameter] in csv:
                 samples[(station, parameter)] = (fetch_15min(sensor_id, *window), csv[PARAM_TO_CSV[parameter]])
@@ -117,7 +130,13 @@ def main() -> int:
         keys = [k for k in samples if k[1] == parameter and k[0] != "Dwarka-Sector 8"]
         per_offset = {}
         for d in SCAN_MIN:
-            stats = [compare(slots_to_hourly(samples[k][0], samples[k][1].index, d, UNIT_FACTOR.get(parameter, 1.0)), samples[k][1]) for k in keys]
+            stats = [
+                compare(
+                    slots_to_hourly(samples[k][0], samples[k][1].index, d, UNIT_FACTOR.get(parameter, 1.0)),
+                    samples[k][1],
+                )
+                for k in keys
+            ]
             stats = [s for s in stats if s.get("n", 0) >= 20]
             if stats:
                 w = [s["n"] for s in stats]
@@ -130,9 +149,16 @@ def main() -> int:
     for (station, parameter), (raw, ref) in sorted(samples.items()):
         oaq = slots_to_hourly(raw, ref.index, SLOT_START_OFFSET_MIN.get(parameter, 0), UNIT_FACTOR.get(parameter, 1.0))
         raw_scale = compare(slots_to_hourly(raw, ref.index, SLOT_START_OFFSET_MIN.get(parameter, 0), 1.0), ref)
-        rows.append({"station": station, "parameter": parameter, "csv_unit": PARAM_TO_CSV[parameter].split("(")[1][:-1],
-                     "factor_applied": UNIT_FACTOR.get(parameter, 1.0), "raw_slope_csv_per_oaq": raw_scale.get("slope_csv_per_oaq"),
-                     **compare(oaq, ref)})
+        rows.append(
+            {
+                "station": station,
+                "parameter": parameter,
+                "csv_unit": PARAM_TO_CSV[parameter].split("(")[1][:-1],
+                "factor_applied": UNIT_FACTOR.get(parameter, 1.0),
+                "raw_slope_csv_per_oaq": raw_scale.get("slope_csv_per_oaq"),
+                **compare(oaq, ref),
+            }
+        )
     table = pd.DataFrame(rows)
     OUT_CSV.parent.mkdir(parents=True, exist_ok=True)
     table.to_csv(OUT_CSV, index=False)
@@ -148,8 +174,17 @@ def main() -> int:
         ok = pooled_mae <= MAX_POOLED_MAE_PCT and worst["corr"] >= MIN_STATION_CORR
         if not ok:
             failures.append(parameter)
-        verdict_rows.append({"parameter": parameter, "stations": len(g), "pairs": int(g.n.sum()), "pooled_mae_pct": pooled_mae,
-                             "worst_corr": float(worst["corr"]), "worst_station": worst.station, "ok": ok})
+        verdict_rows.append(
+            {
+                "parameter": parameter,
+                "stations": len(g),
+                "pairs": int(g.n.sum()),
+                "pooled_mae_pct": pooled_mae,
+                "worst_corr": float(worst["corr"]),
+                "worst_station": worst.station,
+                "ok": ok,
+            }
+        )
     verdict = pd.DataFrame(verdict_rows)
     dwarka = table[table.station == "Dwarka-Sector 8"]
 
@@ -171,8 +206,12 @@ def main() -> int:
         "",
         "| Parameter | " + " | ".join(f"{d:+d}" for d in SCAN_MIN) + " | Chosen |",
         "| :--- | " + " | ".join("---:" for _ in SCAN_MIN) + " | ---: |",
-        *[f"| {p} | " + " | ".join(f"{scan[p][d]:.2f}" if d in scan[p] else "" for d in SCAN_MIN) + f" | {SLOT_START_OFFSET_MIN.get(p, 0):+d} |"
-          for p in scan],
+        *[
+            f"| {p} | "
+            + " | ".join(f"{scan[p][d]:.2f}" if d in scan[p] else "" for d in SCAN_MIN)
+            + f" | {SLOT_START_OFFSET_MIN.get(p, 0):+d} |"
+            for p in scan
+        ],
         "",
         "## Agreement with the chosen convention",
         "",
@@ -180,8 +219,10 @@ def main() -> int:
         "",
         "| Parameter | CSV unit | Stations | Pairs | Pooled MAE % | Worst station correlation | Verdict |",
         "| :--- | :--- | ---: | ---: | ---: | :--- | :---: |",
-        *[f"| {r.parameter} | {PARAM_TO_CSV[r.parameter].split('(')[1][:-1]} | {r.stations} | {r.pairs} | {r.pooled_mae_pct:.2f} | {r.worst_corr:.3f} ({r.worst_station}) | {'pass' if r.ok else '**FAIL**'} |"
-          for r in verdict.itertuples()],
+        *[
+            f"| {r.parameter} | {PARAM_TO_CSV[r.parameter].split('(')[1][:-1]} | {r.stations} | {r.pairs} | {r.pooled_mae_pct:.2f} | {r.worst_corr:.3f} ({r.worst_station}) | {'pass' if r.ok else '**FAIL**'} |"
+            for r in verdict.itertuples()
+        ],
         "",
         "Not available from OpenAQ: solar radiation (all stations); temperature, humidity and wind speed at ITO.",
         "",
@@ -193,7 +234,8 @@ def main() -> int:
         "",
         "## Freshness of OpenAQ at check time",
         "",
-        "| Station | Newest OpenAQ value (UTC) | Age (hours) |", "| :--- | :--- | ---: |",
+        "| Station | Newest OpenAQ value (UTC) | Age (hours) |",
+        "| :--- | :--- | ---: |",
         *[f"| {f['station']} | {f['openaq_last_utc']} | {f['age_hours_at_check']} |" for f in freshness],
         "",
         "Per-station detail: `openaq_overlap_check.csv`.",

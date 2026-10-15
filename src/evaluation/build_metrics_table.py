@@ -9,6 +9,7 @@ Usage (from the repo root):
 
     ./venv/bin/python src/evaluation/build_metrics_table.py
 """
+
 from __future__ import annotations
 
 import argparse
@@ -75,9 +76,7 @@ SPECS = [
 
 def load_frame(spec: HorizonSpec) -> pd.DataFrame:
     if not spec.path.exists():
-        raise FileNotFoundError(
-            f"Missing predictions for {spec.horizon}: {spec.path}"
-        )
+        raise FileNotFoundError(f"Missing predictions for {spec.horizon}: {spec.path}")
     df = pd.read_parquet(spec.path)
     required = {spec.truth_col, spec.pred_col, spec.persistence_col, spec.timestamp_col}
     missing = required - set(df.columns)
@@ -170,27 +169,33 @@ def build_rows(n_boot: int, seed: int) -> pd.DataFrame:
         for label, pred in ((spec.model_label, y_pred), ("Naive persistence", y_persist)):
             m = point_metrics(y_true, pred)
             is_persist = label == "Naive persistence"
-            skill_mae = (
-                1.0 - m["mae"] / persist_metrics["mae"] if not is_persist else 0.0
-            )
-            skill_rmse = (
-                1.0 - m["rmse"] / persist_metrics["rmse"] if not is_persist else 0.0
-            )
+            skill_mae = 1.0 - m["mae"] / persist_metrics["mae"] if not is_persist else 0.0
+            skill_rmse = 1.0 - m["rmse"] / persist_metrics["rmse"] if not is_persist else 0.0
             row = {"horizon": spec.horizon, "model": label, **m}
             row["skill_mae"] = skill_mae
             row["skill_rmse"] = skill_rmse
-            row.update(
-                block_bootstrap(
-                    y_true, pred, y_persist, days, n_boot=n_boot, seed=seed
-                )
-            )
+            row.update(block_bootstrap(y_true, pred, y_persist, days, n_boot=n_boot, seed=seed))
             rows.append(row)
 
     columns = [
-        "horizon", "model", "n", "mae", "mae_ci_lo", "mae_ci_hi",
-        "rmse", "rmse_ci_lo", "rmse_ci_hi", "r2", "bias", "mae_extreme",
-        "skill_mae", "skill_mae_ci_lo", "skill_mae_ci_hi",
-        "skill_rmse", "skill_rmse_ci_lo", "skill_rmse_ci_hi",
+        "horizon",
+        "model",
+        "n",
+        "mae",
+        "mae_ci_lo",
+        "mae_ci_hi",
+        "rmse",
+        "rmse_ci_lo",
+        "rmse_ci_hi",
+        "r2",
+        "bias",
+        "mae_extreme",
+        "skill_mae",
+        "skill_mae_ci_lo",
+        "skill_mae_ci_hi",
+        "skill_rmse",
+        "skill_rmse_ci_lo",
+        "skill_rmse_ci_hi",
     ]
     # Several models can share a horizon; the persistence reference is then identical, keep one.
     return pd.DataFrame(rows)[columns].drop_duplicates().reset_index(drop=True)

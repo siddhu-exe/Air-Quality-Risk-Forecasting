@@ -12,9 +12,5 @@ def discover_files(data_root: Path) -> list[dict]:
         if path.is_file() and path.suffix.lower() in (".csv", ".xlsx"):
             parts = path.relative_to(data_root).parts
             station_folder = parts[0] if len(parts) >= 1 else "Unknown"
-            files.append({
-                "path": path,
-                "ext": path.suffix.lower(),
-                "station_folder": station_folder
-            })
+            files.append({"path": path, "ext": path.suffix.lower(), "station_folder": station_folder})
     return files

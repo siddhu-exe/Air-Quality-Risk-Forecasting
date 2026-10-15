@@ -15,6 +15,7 @@ guess cannot reach the database. Items to settle (all TODO(verify)):
 The feed is a *snapshot*: no history, no NOx, no weather. ``fetch`` therefore returns only the newest hour per
 station and pollutant; a missed hour cannot be recovered from this source.
 """
+
 from __future__ import annotations
 
 import os
@@ -26,7 +27,15 @@ from src.features.compute_cpcb_aqi import STATION_IDS, _station_for_folder
 from src.live.sources.base import LiveSource, SourceUnavailable
 
 RESOURCE_URL = "https://api.data.gov.in/resource/3b01bcb8-0b14-4abf-b6f2-c1bfd384ba69"
-POLLUTANT_TO_COLUMN = {"PM2.5": "pm25", "PM10": "pm10", "NO2": "no2", "NH3": "nh3", "SO2": "so2", "CO": "co", "OZONE": "o3"}
+POLLUTANT_TO_COLUMN = {
+    "PM2.5": "pm25",
+    "PM10": "pm10",
+    "NO2": "no2",
+    "NH3": "nh3",
+    "SO2": "so2",
+    "CO": "co",
+    "OZONE": "o3",
+}
 #: GUESS: last_update marks the END of the averaged hour, so the hour label T = last_update - 1h.
 HOUR_ENDS_AT_LAST_UPDATE = True
 
@@ -53,7 +62,7 @@ def parse_records(records: list[dict]) -> pd.DataFrame:
         if station is None or column is None:
             continue
         stamp = pd.to_datetime(record.get("last_update"), format="%d-%m-%Y %H:%M:%S", errors="coerce")
-        value = pd.to_numeric(record.get("pollutant_avg"), errors="coerce")    # "NA" -> NaN
+        value = pd.to_numeric(record.get("pollutant_avg"), errors="coerce")  # "NA" -> NaN
         if pd.isna(stamp):
             continue
         hour = stamp.floor("h") - (pd.Timedelta(hours=1) if HOUR_ENDS_AT_LAST_UPDATE else pd.Timedelta(0))
@@ -61,7 +70,9 @@ def parse_records(records: list[dict]) -> pd.DataFrame:
     if not rows:
         return LiveSource.empty()
     long = pd.DataFrame(rows)
-    wide = long.pivot_table(index=["station_name", "hour"], columns="column", values="value", aggfunc="last").reset_index()
+    wide = long.pivot_table(
+        index=["station_name", "hour"], columns="column", values="value", aggfunc="last"
+    ).reset_index()
     wide.columns.name = None
     return wide.reindex(columns=LiveSource.empty().columns)
 

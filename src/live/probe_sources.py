@@ -10,6 +10,7 @@ It is informational: it exits 0 whenever it ran to the end, whatever the sources
 from the environment, sent only to their own service, and masked in everything printed or written.
 Trigger: workflow_dispatch only (.github/workflows/probe-sources.yml).
 """
+
 from __future__ import annotations
 
 import os
@@ -78,8 +79,10 @@ def probe_data_gov_in(key: str) -> None:
     except requests.RequestException as exc:
         emit(f"- keyed request failed: {type(exc).__name__}: {redact(str(exc), [key])[:200]}", [key])
         return
-    emit(f"- keyed request: HTTP {resp.status_code} in {time.monotonic() - started:.1f}s, {len(resp.content)} bytes, "
-         f"content-type {resp.headers.get('content-type')}")
+    emit(
+        f"- keyed request: HTTP {resp.status_code} in {time.monotonic() - started:.1f}s, {len(resp.content)} bytes, "
+        f"content-type {resp.headers.get('content-type')}"
+    )
     for header in ("x-ratelimit-limit", "x-ratelimit-remaining", "retry-after"):
         if header in resp.headers:
             emit(f"- header {header}: {resp.headers[header]}")
@@ -89,20 +92,28 @@ def probe_data_gov_in(key: str) -> None:
         emit(f"- response is not JSON: {redact(resp.text[:200], [key])!r}", [key])
         return
     records = body.get("records", [])
-    emit(f"- top-level keys: {sorted(body)}; total={body.get('total')} count={body.get('count')} returned={len(records)}")
+    emit(
+        f"- top-level keys: {sorted(body)}; total={body.get('total')} count={body.get('count')} returned={len(records)}"
+    )
     if not records:
         return
     emit(f"- record keys: {sorted(records[0])}")
     emit(f"- distinct pollutant_id: {sorted({r.get('pollutant_id') for r in records})}")
     emit(f"- last_update samples: {sorted({r.get('last_update') for r in records})[:4]}")
-    names = sorted({r.get('station') for r in records})
+    names = sorted({r.get("station") for r in records})
     emit(f"- Delhi stations in feed: {len(names)}")
     for ours in OUR_STATIONS:
-        matches = [n for n in names if ours.lower().split('-')[0].strip() in (n or '').lower()]
+        matches = [n for n in names if ours.lower().split("-")[0].strip() in (n or "").lower()]
         emit(f"  - {ours}: {matches or 'NOT FOUND'}")
-    sample = [r for r in records if 'r k puram' in (r.get('station') or '').lower()][:8]
+    sample = [r for r in records if "r k puram" in (r.get("station") or "").lower()][:8]
     for r in sample:
-        emit("  - sample " + ", ".join(f"{k}={r.get(k)}" for k in ("station", "pollutant_id", "pollutant_min", "pollutant_max", "pollutant_avg", "last_update")))
+        emit(
+            "  - sample "
+            + ", ".join(
+                f"{k}={r.get(k)}"
+                for k in ("station", "pollutant_id", "pollutant_min", "pollutant_max", "pollutant_avg", "last_update")
+            )
+        )
 
 
 def probe_openaq(key: str) -> None:

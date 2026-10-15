@@ -46,12 +46,12 @@ SEMANTIC_MAP = {
     "pm10": "PM10",
     "no2": "NO2",
     "nox": "NOx",
-    " no ": "NO",       # avoid matching NOx / NO2
+    " no ": "NO",  # avoid matching NOx / NO2
     "nh3": "NH3",
     "so2": "SO2",
     "ozone": "O3",
     "o3": "O3",
-    "co ": "CO",        # trailing space avoids matching 'ozone', 'nox' etc.
+    "co ": "CO",  # trailing space avoids matching 'ozone', 'nox' etc.
     "benzene": "Benzene",
     "toluene": "Toluene",
     "xylene": "Xylene",
@@ -125,8 +125,7 @@ def discover_files(root: Path) -> list[dict]:
 # ---------------------------------------------------------------------------
 def read_csv_file(path: Path) -> tuple[pd.DataFrame | None, str | None]:
     try:
-        df = pd.read_csv(path, na_values=["NA", "na", "N/A", "n/a", "--", ""],
-                         keep_default_na=True, low_memory=False)
+        df = pd.read_csv(path, na_values=["NA", "na", "N/A", "n/a", "--", ""], keep_default_na=True, low_memory=False)
         return df, None
     except Exception as e:
         return None, str(e)
@@ -139,8 +138,7 @@ def read_xlsx_file(path: Path) -> tuple[dict[str, pd.DataFrame], dict[str, str]]
         xl = pd.ExcelFile(path, engine="openpyxl")
         for sheet in xl.sheet_names:
             try:
-                df = xl.parse(sheet, na_values=["NA", "na", "N/A", "n/a", "--", ""],
-                               keep_default_na=True)
+                df = xl.parse(sheet, na_values=["NA", "na", "N/A", "n/a", "--", ""], keep_default_na=True)
                 frames[sheet] = df
             except Exception as e:
                 errors[sheet] = str(e)
@@ -184,8 +182,7 @@ def numeric_stats(series: pd.Series) -> dict:
     n_total = len(s)
     n_valid = s.count()
     if n_valid == 0:
-        return {k: None for k in ["min", "max", "mean", "median", "n_zeros",
-                                   "n_negative", "n_sentinel", "pct_missing"]}
+        return {k: None for k in ["min", "max", "mean", "median", "n_zeros", "n_negative", "n_sentinel", "pct_missing"]}
     sentinels = int(s.isin(SENTINEL_VALUES).sum())
     return {
         "min": float(round(s.min(), 4)),
@@ -203,11 +200,11 @@ def numeric_stats(series: pd.Series) -> dict:
 # Main profiler
 # ---------------------------------------------------------------------------
 def profile_all() -> None:
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print("  Air Quality Raw Data Profiler — Phase 1")
     print(f"  Data root : {DATA_ROOT}")
     print(f"  Output dir: {OUT_DIR}")
-    print(f"{'='*60}\n")
+    print(f"{'=' * 60}\n")
 
     files_meta = discover_files(DATA_ROOT)
     print(f"Discovered {len(files_meta)} files.\n")
@@ -215,16 +212,16 @@ def profile_all() -> None:
     # -------------------------------------------------------------------
     # Containers for all reports
     # -------------------------------------------------------------------
-    inv_rows = []          # file_inventory
-    schema_rows = []       # schema_report (one row per column per file)
-    ts_rows = []           # timestamp_report
-    miss_rows = []         # missingness_report
-    dup_rows = []          # duplicate_report
-    num_rows = []          # numeric_quality_report
+    inv_rows = []  # file_inventory
+    schema_rows = []  # schema_report (one row per column per file)
+    ts_rows = []  # timestamp_report
+    miss_rows = []  # missingness_report
+    dup_rows = []  # duplicate_report
+    num_rows = []  # numeric_quality_report
 
     # For cross-file comparison
-    file_column_sets: dict[str, set] = {}   # file_key -> set of column names
-    station_presence: dict[str, dict] = defaultdict(dict)   # station -> {file_key: bool}
+    file_column_sets: dict[str, set] = {}  # file_key -> set of column names
+    station_presence: dict[str, dict] = defaultdict(dict)  # station -> {file_key: bool}
 
     summary_stats = {
         "total_files": 0,
@@ -518,10 +515,12 @@ def profile_all() -> None:
 
     role_summary_lines = []
     for role in sorted(role_miss):
-    	vals = role_miss[role]
-    	avg_miss = round(sum(vals) / len(vals), 1)
-    	max_miss = round(max(vals), 1)
-    	role_summary_lines.append(f"  - **{role}**: avg miss {avg_miss}%, max miss {max_miss}% across {len(vals)} column instances")
+        vals = role_miss[role]
+        avg_miss = round(sum(vals) / len(vals), 1)
+        max_miss = round(max(vals), 1)
+        role_summary_lines.append(
+            f"  - **{role}**: avg miss {avg_miss}%, max miss {max_miss}% across {len(vals)} column instances"
+        )
 
     # duplicate summary
     total_full_dups = sum(r["n_full_duplicate_rows"] for r in dup_rows)
@@ -573,14 +572,17 @@ def profile_all() -> None:
         f.write("## 4. Stations Found\n\n")
         f.write(f"**{len(station_rows)} unique station folders** (Delhi data):\n\n")
         for st_r in station_rows:
-            note = f" ⚠️ {st_r['note']}" if st_r['note'] else ""
-            f.write(f"- `{st_r['station_folder']}`  ({st_r['n_files']} files, "
-                    f"{st_r['data_ts_min']} → {st_r['data_ts_max']}){note}\n")
+            note = f" ⚠️ {st_r['note']}" if st_r["note"] else ""
+            f.write(
+                f"- `{st_r['station_folder']}`  ({st_r['n_files']} files, "
+                f"{st_r['data_ts_min']} → {st_r['data_ts_max']}){note}\n"
+            )
         f.write("\n")
 
         f.write("## 5. Pollutants / Variables Available\n\n")
-        all_roles = sorted({r["semantic_role"] for r in schema_rows
-                            if r["semantic_role"] not in ("unknown", "timestamp")})
+        all_roles = sorted(
+            {r["semantic_role"] for r in schema_rows if r["semantic_role"] not in ("unknown", "timestamp")}
+        )
         f.write(", ".join(f"`{r}`" for r in all_roles) + "\n\n")
 
         f.write("## 6. Time Resolution\n\n")
@@ -595,22 +597,24 @@ def profile_all() -> None:
             for fk, cn in empty_cols[:30]:
                 f.write(f"- `{fk}` → `{cn}`\n")
             if len(empty_cols) > 30:
-                f.write(f"- … and {len(empty_cols)-30} more (see schema_report.csv)\n")
+                f.write(f"- … and {len(empty_cols) - 30} more (see schema_report.csv)\n")
         f.write("\n")
 
         f.write("## 8. Duplicate Issues\n\n")
         f.write(f"- Fully duplicate rows (same file): **{total_full_dups}**\n")
         f.write(f"- Duplicate timestamps within a file: **{total_ts_dups}**\n")
-        f.write("- Cross-file overlap: not measured at this stage (files are month/year splits — "
-                "overlap possible at boundaries; check timestamp_report.csv ranges).\n\n")
+        f.write(
+            "- Cross-file overlap: not measured at this stage (files are month/year splits — "
+            "overlap possible at boundaries; check timestamp_report.csv ranges).\n\n"
+        )
 
         f.write("## 9. Schema Inconsistencies\n\n")
         f.write(f"- Files with column-set differences vs. reference: **{n_schema_diffs}**\n")
         if diff_rows:
             f.write("- See `schema_differences.csv` for details.\n")
             for d in diff_rows[:10]:
-                added = d['columns_added_vs_reference'][:80] or "—"
-                removed = d['columns_removed_vs_reference'][:80] or "—"
+                added = d["columns_added_vs_reference"][:80] or "—"
+                removed = d["columns_removed_vs_reference"][:80] or "—"
                 f.write(f"  - `{d['compared_file']}`: +[{added}] -[{removed}]\n")
         f.write("\n")
 
@@ -622,7 +626,9 @@ def profile_all() -> None:
         f.write("## 11. Files Requiring Special Handling\n\n")
         f.write("| Issue | Affected |\n|---|---|\n")
         f.write("| Trailing tab in folder name | `Jahangirpuri, Delhi - DPCC\\t` |\n")
-        f.write("| Partial-year 2026 CSVs | Anand Vihar, Bawana, ITO, Jahangirpuri, Punjabi Bagh, R K Puram (≈5088 rows) |\n")
+        f.write(
+            "| Partial-year 2026 CSVs | Anand Vihar, Bawana, ITO, Jahangirpuri, Punjabi Bagh, R K Puram (≈5088 rows) |\n"
+        )
         f.write("| Dwarka only has 2023–2025 raw CSVs (no 2026) | Dwarka-Sector 8 |\n")
         f.write("| ITO operated by CPCB (others DPCC) — calibration may differ | ITO |\n")
         f.write("| XLSX files have AQI computed values, not raw pollutants | All AQI Hourly subdirs |\n\n")
@@ -704,9 +710,9 @@ aqi_hourly (
 """)
 
     print("  ✓ profiling_summary.md")
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print("  Profiling complete.")
-    print(f"{'='*60}\n")
+    print(f"{'=' * 60}\n")
 
 
 if __name__ == "__main__":

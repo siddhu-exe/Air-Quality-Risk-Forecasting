@@ -15,31 +15,33 @@ O3 uses the 8-hour table up to AQI 300 and the 1-hour table above it (an approxi
 Units. Our stored concentrations are ug/m3 (CO in mg/m3). EPA works in ppb/ppm at 25 C and 1 atm (molar volume 24.45 L/mol).
 TODO: confirm which reference temperature WAQI uses for Indian stations; at 25 C the conversion is the EPA one.
 """
+
 from __future__ import annotations
 
 import numpy as np
 
 AQI_KNOTS = np.array([0, 50, 100, 150, 200, 300, 400, 500], dtype=float)
-MOLAR_VOLUME_L = 24.45                      # 25 C, 1 atm
+MOLAR_VOLUME_L = 24.45  # 25 C, 1 atm
 MOLAR_MASS = {"no2": 46.0055, "so2": 64.066, "o3": 47.998, "co": 28.01}
 
 # concentration knots in the EPA unit of each pollutant
 CONC_KNOTS = {
-    "pm25": [0, 12, 35.5, 55.5, 150.5, 250.5, 350.5, 500.5],          # ug/m3
-    "pm10": [0, 55, 155, 255, 355, 425, 505, 605],                    # ug/m3
-    "no2": [0, 54, 101, 361, 650, 1250, 1650, 2050],                  # ppb
-    "so2": [0, 36, 76, 186, 305, 605, 805, 1005],                     # ppb
-    "co": [0, 4.5, 9.5, 12.5, 15.5, 30.5, 40.5, 50.5],                # ppm
-    "o3": [0, 0.055, 0.071, 0.086, 0.106, 0.201, 0.505, 0.605],       # ppm
+    "pm25": [0, 12, 35.5, 55.5, 150.5, 250.5, 350.5, 500.5],  # ug/m3
+    "pm10": [0, 55, 155, 255, 355, 425, 505, 605],  # ug/m3
+    "no2": [0, 54, 101, 361, 650, 1250, 1650, 2050],  # ppb
+    "so2": [0, 36, 76, 186, 305, 605, 805, 1005],  # ppb
+    "co": [0, 4.5, 9.5, 12.5, 15.5, 30.5, 40.5, 50.5],  # ppm
+    "o3": [0, 0.055, 0.071, 0.086, 0.106, 0.201, 0.505, 0.605],  # ppm
 }
 POLLUTANTS = tuple(CONC_KNOTS)
 # our stored unit -> EPA unit: multiply by this
 _TO_EPA = {
-    "pm25": 1.0, "pm10": 1.0,
-    "no2": MOLAR_VOLUME_L / MOLAR_MASS["no2"],            # ug/m3 -> ppb
-    "so2": MOLAR_VOLUME_L / MOLAR_MASS["so2"],            # ug/m3 -> ppb
-    "co": MOLAR_VOLUME_L / MOLAR_MASS["co"],              # mg/m3 -> ppm
-    "o3": MOLAR_VOLUME_L / MOLAR_MASS["o3"] / 1000.0,     # ug/m3 -> ppm
+    "pm25": 1.0,
+    "pm10": 1.0,
+    "no2": MOLAR_VOLUME_L / MOLAR_MASS["no2"],  # ug/m3 -> ppb
+    "so2": MOLAR_VOLUME_L / MOLAR_MASS["so2"],  # ug/m3 -> ppb
+    "co": MOLAR_VOLUME_L / MOLAR_MASS["co"],  # mg/m3 -> ppm
+    "o3": MOLAR_VOLUME_L / MOLAR_MASS["o3"] / 1000.0,  # ug/m3 -> ppm
 }
 AQI_MAX = 500
 

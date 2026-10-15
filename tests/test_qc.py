@@ -1,4 +1,5 @@
 """Cell-level QC shared by the backfill and the live ingest."""
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -13,7 +14,7 @@ def _frame(**cols):
 def test_sentinel_nullifies_the_cell_not_the_row():
     clean, flags = apply_qc(_frame(pm25=[50.0, -9999.0, 70.0], no2=[10.0, 20.0, 30.0]))
     assert len(clean) == 3 and np.isnan(clean.pm25.iloc[1])
-    assert clean.no2.tolist() == [10.0, 20.0, 30.0]            # other cells of the same row survive
+    assert clean.no2.tolist() == [10.0, 20.0, 30.0]  # other cells of the same row survive
     assert flags[1] == {"pm25": "sentinel"} and flags[0] == {} and flags[2] == {}
 
 
@@ -29,7 +30,9 @@ def test_a_1000x_scale_error_is_flagged_implausible():
 
 
 def test_real_extremes_from_the_training_csvs_pass():
-    clean, flags = apply_qc(_frame(pm25=[998.0], pm10=[1000.0], nox=[499.0], co=[9.76], o3=[932.0], temperature=[49.8], wind_speed=[36.6]))
+    clean, flags = apply_qc(
+        _frame(pm25=[998.0], pm10=[1000.0], nox=[499.0], co=[9.76], o3=[932.0], temperature=[49.8], wind_speed=[36.6])
+    )
     assert flags == [{}] and clean.notna().all().all()
 
 
@@ -49,4 +52,4 @@ def test_batch_with_many_implausible_values_raises_a_unit_change_warning():
 def test_isolated_glitches_do_not_raise():
     values = [100.0] * 95 + [90000.0] * 5
     clean, flags = apply_qc(_frame(pm25=values))
-    check_batch(clean, flags)   # 5% implausible: a sensor glitch, not a unit change
+    check_batch(clean, flags)  # 5% implausible: a sensor glitch, not a unit change

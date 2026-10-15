@@ -9,6 +9,7 @@ metric against the actuals is computed and nothing is tuned, so the test window 
 
 Needs the raw CSVs (``Og Data/``) and ``data/processed/features_extended.parquet`` (both git-ignored); 1h/6h need lightgbm.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -28,8 +29,10 @@ FEATURES_PATH = REPO_ROOT / "data" / "processed" / "features_extended.parquet"
 TOLERANCE = 1e-6
 #: horizon -> [(label, stored predictions file, prediction column)]
 STORED = {
-    24: [("validation", "reports/modeling/24h/final/val_predictions.parquet", "prediction_hybrid_6c_winning"),
-         ("test", "reports/modeling/24h/final/final_predictions.parquet", None)],
+    24: [
+        ("validation", "reports/modeling/24h/final/val_predictions.parquet", "prediction_hybrid_6c_winning"),
+        ("test", "reports/modeling/24h/final/final_predictions.parquet", None),
+    ],
     1: [("test", "data/Artifacts/1h/predictions_1h_test.parquet", "y_pred")],
     6: [("test", "data/Artifacts/6h/predictions_6h_test.parquet", "y_pred")],
 }
@@ -67,7 +70,7 @@ def sample_times(stored: pd.DataFrame, n: int, seed: int) -> list[pd.Timestamp]:
     return sorted(pd.Timestamp(t) for t in chosen)
 
 
-TRAINING_ROLL_START = pd.Timestamp("2024-01-01", tz=KST)    # where the training matrix's rolling windows started
+TRAINING_ROLL_START = pd.Timestamp("2024-01-01", tz=KST)  # where the training matrix's rolling windows started
 
 
 def _features_with_training_rolling(caaqms, aqi_df, t) -> pd.DataFrame:
@@ -79,20 +82,41 @@ def _features_with_training_rolling(caaqms, aqi_df, t) -> pd.DataFrame:
     from src.features.build_features import _stations_frame, compute_feature_frame
 
     with contextlib.redirect_stdout(io.StringIO()):
-        base = compute_feature_frame(_stations_frame(), caaqms[caaqms["timestamp"] <= t], aqi_df[aqi_df["timestamp"] <= t],
-                                     TRAINING_ROLL_START, t, t - pd.Timedelta(hours=forecast.WINDOW_HOURS), t)
+        base = compute_feature_frame(
+            _stations_frame(),
+            caaqms[caaqms["timestamp"] <= t],
+            aqi_df[aqi_df["timestamp"] <= t],
+            TRAINING_ROLL_START,
+            t,
+            t - pd.Timedelta(hours=forecast.WINDOW_HOURS),
+            t,
+        )
     return forecast.add_long_horizon(base)
 
 
-def compare(horizon: int, label: str, path: str, column: str | None, readings: pd.DataFrame, aqi: pd.DataFrame,
-            models: model_mod.Models, n_times: int, seed: int, variant: str = "live path") -> pd.DataFrame:
+def compare(
+    horizon: int,
+    label: str,
+    path: str,
+    column: str | None,
+    readings: pd.DataFrame,
+    aqi: pd.DataFrame,
+    models: model_mod.Models,
+    n_times: int,
+    seed: int,
+    variant: str = "live path",
+) -> pd.DataFrame:
     stored = pd.read_parquet(REPO_ROOT / path)
     stored["timestamp"] = pd.to_datetime(stored["timestamp"]).dt.tz_convert(KST)
     column = prediction_column(stored, column)
     caaqms, aqi_df = forecast.to_inputs(readings, aqi, weather_fill="none")
     rows_out = []
     for t in sample_times(stored, n_times, seed):
-        featured = _features_with_training_rolling(caaqms, aqi_df, t) if variant != "live path" else forecast.build_frames(caaqms, aqi_df, t)[1]
+        featured = (
+            _features_with_training_rolling(caaqms, aqi_df, t)
+            if variant != "live path"
+            else forecast.build_frames(caaqms, aqi_df, t)[1]
+        )
         at = featured[featured["timestamp"] == t].dropna(subset=["aqi_curr"])
         want = stored[stored["timestamp"] == t][["station_id", column]]
         at = at.merge(want, on="station_id", how="inner")
@@ -100,8 +124,20 @@ def compare(horizon: int, label: str, path: str, column: str | None, readings: p
             continue
         mine = model_mod.predict(models, horizon, at)
         diff = np.abs(mine - at[column].to_numpy(float))
-        rows_out.append(pd.DataFrame({"horizon": f"{horizon}h", "split": label, "variant": variant, "issue_time": t, "station_id": at["station_id"].to_numpy(),
-                                      "live_path": mine, "stored": at[column].to_numpy(float), "abs_diff": diff}))
+        rows_out.append(
+            pd.DataFrame(
+                {
+                    "horizon": f"{horizon}h",
+                    "split": label,
+                    "variant": variant,
+                    "issue_time": t,
+                    "station_id": at["station_id"].to_numpy(),
+                    "live_path": mine,
+                    "stored": at[column].to_numpy(float),
+                    "abs_diff": diff,
+                }
+            )
+        )
     return pd.concat(rows_out, ignore_index=True)
 
 
@@ -113,28 +149,48 @@ def run(n_times: int = 40, seed: int = 0, horizons: tuple = (24, 1, 6)) -> pd.Da
         for label, path, column in STORED[horizon]:
             for variant in ("live path", "rolling from training start"):
                 parts.append(compare(horizon, label, path, column, readings, aqi, models, n_times, seed, variant))
-                print(f"{horizon}h {label} [{variant}]: {len(parts[-1])} rows, max |diff| {parts[-1]['abs_diff'].max():.3g}", flush=True)
+                print(
+                    f"{horizon}h {label} [{variant}]: {len(parts[-1])} rows, max |diff| {parts[-1]['abs_diff'].max():.3g}",
+                    flush=True,
+                )
     return pd.concat(parts, ignore_index=True)
 
 
 def write_report(detail: pd.DataFrame, out_dir: Path) -> pd.DataFrame:
-    summary = (detail.groupby(["horizon", "split", "variant"]).agg(issue_hours=("issue_time", "nunique"), rows=("abs_diff", "size"),
-                                                         max_abs_diff=("abs_diff", "max"), mean_abs_diff=("abs_diff", "mean"),
-                                                         rows_over_tolerance=("abs_diff", lambda d: int((d > TOLERANCE).sum()))).reset_index())
+    summary = (
+        detail.groupby(["horizon", "split", "variant"])
+        .agg(
+            issue_hours=("issue_time", "nunique"),
+            rows=("abs_diff", "size"),
+            max_abs_diff=("abs_diff", "max"),
+            mean_abs_diff=("abs_diff", "mean"),
+            rows_over_tolerance=("abs_diff", lambda d: int((d > TOLERANCE).sum())),
+        )
+        .reset_index()
+    )
     out_dir.mkdir(parents=True, exist_ok=True)
     summary.to_csv(out_dir / "parity_report.csv", index=False)
-    lines = ["# Forecast-path parity with the stored backtest predictions", "",
-             f"Tolerance: {TOLERANCE:g} (absolute, AQI units). Generated by `python -m src.live.parity`; numbers come from `parity_report.csv`.", "",
-             "Sampled issue hours (random, plus first/last/day-edge hours) are pushed through the production functions "
-             "(`to_inputs` -> `build_frames` -> `models.predict`) from history reshaped like the database tables, and compared "
-             "with the stored predictions. Predictions only: no error against actuals is computed, so nothing here re-scores the test window.", "",
-             "`live path` = what the hourly job does (a ~17-day history window). `rolling from training start` = the same code with the rolling "
-             "windows started where training's started (2024-01-01), a diagnostic: pandas' rolling mean/std are online algorithms, so their "
-             "last digits (about 1e-10) depend on where the window began, and on a few rows that flips a LightGBM split sitting exactly on a "
-             "threshold. Where the two variants differ, the model, the features and the code path are the same and only that noise remains.", "",
-             "| Horizon | Stored set | Features | Issue hours | Rows | Max abs diff | Mean abs diff | Rows over tolerance |", "| :--- | :--- | :--- | ---: | ---: | ---: | ---: | ---: |"]
-    lines += [f"| {r.horizon} | {r.split} | {r.variant} | {r.issue_hours} | {r.rows} | {r.max_abs_diff:.3g} | {r.mean_abs_diff:.3g} | {r.rows_over_tolerance} |"
-              for r in summary.itertuples()]
+    lines = [
+        "# Forecast-path parity with the stored backtest predictions",
+        "",
+        f"Tolerance: {TOLERANCE:g} (absolute, AQI units). Generated by `python -m src.live.parity`; numbers come from `parity_report.csv`.",
+        "",
+        "Sampled issue hours (random, plus first/last/day-edge hours) are pushed through the production functions "
+        "(`to_inputs` -> `build_frames` -> `models.predict`) from history reshaped like the database tables, and compared "
+        "with the stored predictions. Predictions only: no error against actuals is computed, so nothing here re-scores the test window.",
+        "",
+        "`live path` = what the hourly job does (a ~17-day history window). `rolling from training start` = the same code with the rolling "
+        "windows started where training's started (2024-01-01), a diagnostic: pandas' rolling mean/std are online algorithms, so their "
+        "last digits (about 1e-10) depend on where the window began, and on a few rows that flips a LightGBM split sitting exactly on a "
+        "threshold. Where the two variants differ, the model, the features and the code path are the same and only that noise remains.",
+        "",
+        "| Horizon | Stored set | Features | Issue hours | Rows | Max abs diff | Mean abs diff | Rows over tolerance |",
+        "| :--- | :--- | :--- | ---: | ---: | ---: | ---: | ---: |",
+    ]
+    lines += [
+        f"| {r.horizon} | {r.split} | {r.variant} | {r.issue_hours} | {r.rows} | {r.max_abs_diff:.3g} | {r.mean_abs_diff:.3g} | {r.rows_over_tolerance} |"
+        for r in summary.itertuples()
+    ]
     (out_dir / "parity_report.md").write_text("\n".join(lines) + "\n")
     return summary
 
@@ -147,5 +203,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
     result = write_report(run(args.times, args.seed, tuple(args.horizons)), REPO_ROOT / "docs" / "TIER_3")
     print(result.to_string(index=False))
-    sys.exit(0 if (result[result["variant"] != "live path"]["rows_over_tolerance"] == 0).all() and
-              (result[result["horizon"] == "24h"]["rows_over_tolerance"] == 0).all() else 1)
+    sys.exit(
+        0
+        if (result[result["variant"] != "live path"]["rows_over_tolerance"] == 0).all()
+        and (result[result["horizon"] == "24h"]["rows_over_tolerance"] == 0).all()
+        else 1
+    )

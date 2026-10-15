@@ -109,29 +109,36 @@ def run_health_and_coverage_audit():
             st_name = st["station_name"]
 
             # CAAQMS coverage
-            cur.execute("""
+            cur.execute(
+                """
                 SELECT
                     MIN(timestamp) as min_ts,
                     MAX(timestamp) as max_ts,
                     COUNT(timestamp) as obs_count
                 FROM caaqms_hourly
                 WHERE station_id = %s;
-            """, (st_id,))
+            """,
+                (st_id,),
+            )
             c_cov = cur.fetchone()
 
             # AQI coverage
-            cur.execute("""
+            cur.execute(
+                """
                 SELECT
                     MIN(timestamp) as min_ts,
                     MAX(timestamp) as max_ts,
                     COUNT(timestamp) as obs_count
                 FROM aqi_hourly
                 WHERE station_id = %s;
-            """, (st_id,))
+            """,
+                (st_id,),
+            )
             a_cov = cur.fetchone()
 
             # Find continuous gaps in CAAQMS timestamps
-            cur.execute("""
+            cur.execute(
+                """
                 WITH ordered_ts AS (
                     SELECT timestamp,
                            LAG(timestamp) OVER (ORDER BY timestamp) as prev_ts
@@ -145,7 +152,9 @@ def run_health_and_coverage_audit():
                 FROM ordered_ts
                 WHERE EXTRACT(EPOCH FROM (timestamp - prev_ts))/3600 > 1
                 ORDER BY missing_hours DESC;
-            """, (st_id,))
+            """,
+                (st_id,),
+            )
             gaps = cur.fetchall()
 
             c_min = c_cov["min_ts"]
@@ -171,23 +180,25 @@ def run_health_and_coverage_audit():
                 a_expected = 0
                 a_missing_hrs = 0
 
-            coverage_rows.append({
-                "station_id": st_id,
-                "station_name": st_name,
-                "operator": st["operator"],
-                "caaqms_start": str(c_min),
-                "caaqms_end": str(c_max),
-                "caaqms_observed": c_obs,
-                "caaqms_expected": c_expected,
-                "caaqms_missing_hours": c_missing_hrs,
-                "caaqms_gap_count": n_gaps,
-                "caaqms_max_gap_hours": max_gap_hrs,
-                "aqi_start": str(a_min),
-                "aqi_end": str(a_max),
-                "aqi_observed": a_obs,
-                "aqi_expected": a_expected,
-                "aqi_missing_hours": a_missing_hrs,
-            })
+            coverage_rows.append(
+                {
+                    "station_id": st_id,
+                    "station_name": st_name,
+                    "operator": st["operator"],
+                    "caaqms_start": str(c_min),
+                    "caaqms_end": str(c_max),
+                    "caaqms_observed": c_obs,
+                    "caaqms_expected": c_expected,
+                    "caaqms_missing_hours": c_missing_hrs,
+                    "caaqms_gap_count": n_gaps,
+                    "caaqms_max_gap_hours": max_gap_hrs,
+                    "aqi_start": str(a_min),
+                    "aqi_end": str(a_max),
+                    "aqi_observed": a_obs,
+                    "aqi_expected": a_expected,
+                    "aqi_missing_hours": a_missing_hrs,
+                }
+            )
 
         df_coverage = pd.DataFrame(coverage_rows)
         df_coverage.to_csv(reports_dir / "coverage_summary.csv", index=False)
@@ -197,10 +208,26 @@ def run_health_and_coverage_audit():
         print("\nComputing variable-level and station-level missingness...")
 
         caaqms_vars = [
-            "pm25", "pm10", "no", "no2", "nox", "nh3", "so2", "co", "o3",
-            "benzene", "toluene", "xylene", "temperature", "humidity",
-            "wind_speed", "wind_direction", "rainfall", "solar_radiation",
-            "barometric_pressure", "vertical_wind_speed"
+            "pm25",
+            "pm10",
+            "no",
+            "no2",
+            "nox",
+            "nh3",
+            "so2",
+            "co",
+            "o3",
+            "benzene",
+            "toluene",
+            "xylene",
+            "temperature",
+            "humidity",
+            "wind_speed",
+            "wind_direction",
+            "rainfall",
+            "solar_radiation",
+            "barometric_pressure",
+            "vertical_wind_speed",
         ]
 
         # Build SQL to get null counts overall and per station
@@ -213,25 +240,29 @@ def run_health_and_coverage_audit():
         for var in caaqms_vars:
             miss_cnt = overall_missing_raw[f"missing_{var}"]
             miss_pct = (miss_cnt / tot_c_rows) * 100.0 if tot_c_rows > 0 else 0.0
-            missing_summary_list.append({
-                "variable": var,
-                "total_observations": tot_c_rows,
-                "valid_count": tot_c_rows - miss_cnt,
-                "missing_count": miss_cnt,
-                "missing_pct": round(miss_pct, 2)
-            })
+            missing_summary_list.append(
+                {
+                    "variable": var,
+                    "total_observations": tot_c_rows,
+                    "valid_count": tot_c_rows - miss_cnt,
+                    "missing_count": miss_cnt,
+                    "missing_pct": round(miss_pct, 2),
+                }
+            )
 
         # Add AQI missingness
         cur.execute("SELECT COUNT(*) - COUNT(aqi_value) AS missing_aqi, COUNT(*) as total_rows FROM aqi_hourly;")
         aqi_miss_raw = cur.fetchone()
         tot_a_rows = aqi_miss_raw["total_rows"]
-        missing_summary_list.append({
-            "variable": "aqi_value",
-            "total_observations": tot_a_rows,
-            "valid_count": tot_a_rows - aqi_miss_raw["missing_aqi"],
-            "missing_count": aqi_miss_raw["missing_aqi"],
-            "missing_pct": round((aqi_miss_raw["missing_aqi"] / tot_a_rows) * 100.0, 2) if tot_a_rows > 0 else 0.0
-        })
+        missing_summary_list.append(
+            {
+                "variable": "aqi_value",
+                "total_observations": tot_a_rows,
+                "valid_count": tot_a_rows - aqi_miss_raw["missing_aqi"],
+                "missing_count": aqi_miss_raw["missing_aqi"],
+                "missing_pct": round((aqi_miss_raw["missing_aqi"] / tot_a_rows) * 100.0, 2) if tot_a_rows > 0 else 0.0,
+            }
+        )
 
         df_missing_vars = pd.DataFrame(missing_summary_list)
         df_missing_vars.to_csv(reports_dir / "missingness_summary.csv", index=False)
@@ -243,18 +274,25 @@ def run_health_and_coverage_audit():
             st_id = st["station_id"]
             st_name = st["station_name"]
             sum_cols = ", ".join([f"COUNT(*) - COUNT({col}) AS missing_{col}" for col in caaqms_vars])
-            cur.execute(f"SELECT {sum_cols}, COUNT(*) as total_rows FROM caaqms_hourly WHERE station_id = %s;", (st_id,))
+            cur.execute(
+                f"SELECT {sum_cols}, COUNT(*) as total_rows FROM caaqms_hourly WHERE station_id = %s;", (st_id,)
+            )
             res = cur.fetchone()
             st_tot = res["total_rows"]
 
-            cur.execute("SELECT COUNT(*) - COUNT(aqi_value) AS missing_aqi, COUNT(*) as total_rows FROM aqi_hourly WHERE station_id = %s;", (st_id,))
+            cur.execute(
+                "SELECT COUNT(*) - COUNT(aqi_value) AS missing_aqi, COUNT(*) as total_rows FROM aqi_hourly WHERE station_id = %s;",
+                (st_id,),
+            )
             a_res = cur.fetchone()
 
             row_dict = {"station_name": st_name, "total_caaqms_rows": st_tot}
             for col in caaqms_vars:
                 pct = (res[f"missing_{col}"] / st_tot * 100.0) if st_tot > 0 else 0.0
                 row_dict[f"{col}_missing_pct"] = round(pct, 1)
-            row_dict["aqi_missing_pct"] = round((a_res["missing_aqi"] / a_res["total_rows"] * 100.0), 1) if a_res["total_rows"] > 0 else 0.0
+            row_dict["aqi_missing_pct"] = (
+                round((a_res["missing_aqi"] / a_res["total_rows"] * 100.0), 1) if a_res["total_rows"] > 0 else 0.0
+            )
             station_missingness.append(row_dict)
 
         df_st_missing = pd.DataFrame(station_missingness)
@@ -308,11 +346,7 @@ def run_health_and_coverage_audit():
         qc_summary_rows = []
         for k, v in sorted(qc_reasons.items(), key=lambda x: x[1], reverse=True):
             var_name, reason = k.split(": ", 1)
-            qc_summary_rows.append({
-                "variable": var_name,
-                "reason": reason,
-                "flag_count": v
-            })
+            qc_summary_rows.append({"variable": var_name, "reason": reason, "flag_count": v})
         df_qc = pd.DataFrame(qc_summary_rows)
         df_qc.to_csv(reports_dir / "qc_summary.csv", index=False)
         print(f"  Saved {reports_dir / 'qc_summary.csv'}")
@@ -385,8 +419,8 @@ def run_health_and_coverage_audit():
 ## 5. Quality Control (QC) Flags Summary
 
 - **Total Rows with QC Flag Modifications:**
-  - `caaqms_hourly`: **{caaqms_qc_rows:,}** ({(caaqms_qc_rows/n_caaqms*100):.2f}% of dataset)
-  - `aqi_hourly`: **{aqi_qc_rows:,}** ({(aqi_qc_rows/n_aqi*100):.2f}% of dataset)
+  - `caaqms_hourly`: **{caaqms_qc_rows:,}** ({(caaqms_qc_rows / n_caaqms * 100):.2f}% of dataset)
+  - `aqi_hourly`: **{aqi_qc_rows:,}** ({(aqi_qc_rows / n_aqi * 100):.2f}% of dataset)
 
 ### Top Flagged Variables & Reasons:
 """
@@ -402,6 +436,7 @@ def run_health_and_coverage_audit():
         f.write(md_content)
     print(f"  Saved {reports_dir / 'data_health.md'}")
     print("=== DATA HEALTH & COVERAGE AUDIT COMPLETED ===")
+
 
 if __name__ == "__main__":
     run_health_and_coverage_audit()

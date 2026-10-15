@@ -10,21 +10,24 @@ from pathlib import Path
 
 cells = []
 
+
 def add_md(source):
-    cells.append({
-        'cell_type': 'markdown',
-        'metadata': {},
-        'source': [line + '\n' for line in source.strip().split('\n')]
-    })
+    cells.append(
+        {"cell_type": "markdown", "metadata": {}, "source": [line + "\n" for line in source.strip().split("\n")]}
+    )
+
 
 def add_code(source):
-    cells.append({
-        'cell_type': 'code',
-        'execution_count': None,
-        'metadata': {},
-        'outputs': [],
-        'source': [line + '\n' for line in source.strip().split('\n')]
-    })
+    cells.append(
+        {
+            "cell_type": "code",
+            "execution_count": None,
+            "metadata": {},
+            "outputs": [],
+            "source": [line + "\n" for line in source.strip().split("\n")],
+        }
+    )
+
 
 # ==============================================================================
 # Cell 1: Header, Objective & Hardware Context
@@ -855,27 +858,19 @@ add_md(r"""## Section 16: Phase 6 Summary & Phase 7 Transition Checklist
 - [x] Test prediction dataframes exported for downstream CPCB band risk classification""")
 
 notebook_dict = {
-    'cells': cells,
-    'metadata': {
-        'accelerator': 'GPU',
-        'colab': {
-            'provenance': [],
-            'toc_visible': True
-        },
-        'kernelspec': {
-            'display_name': 'Python 3',
-            'name': 'python3'
-        },
-        'language_info': {
-            'name': 'python'
-        }
+    "cells": cells,
+    "metadata": {
+        "accelerator": "GPU",
+        "colab": {"provenance": [], "toc_visible": True},
+        "kernelspec": {"display_name": "Python 3", "name": "python3"},
+        "language_info": {"name": "python"},
     },
-    'nbformat': 4,
-    'nbformat_minor': 2
+    "nbformat": 4,
+    "nbformat_minor": 2,
 }
 
-output_path = Path('notebooks/phase_6_colab_training.ipynb')
-with open(output_path, 'w') as f:
+output_path = Path("notebooks/phase_6_colab_training.ipynb")
+with open(output_path, "w") as f:
     json.dump(notebook_dict, f, indent=2)
 
 print(f"Successfully generated {output_path} with {len(cells)} cells.")

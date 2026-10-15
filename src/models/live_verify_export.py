@@ -5,6 +5,7 @@
 Reads manifests written by ``live_retrain`` (models/live/manifest.json) and ``live_overrides.export`` (models/live/pm25/,
 models/live/quantile/). Exits non-zero on any mismatch, missing file, or non-finite prediction. Never modifies anything.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -41,11 +42,15 @@ def check(models_dir: Path) -> list[str]:
             booster = joblib.load(models_dir / f"{version}.joblib")
             pred = booster.predict(val_plain[features])
             if booster.num_trees() != entry["best_iteration"]:
-                problems.append(f"{version}: {booster.num_trees()} trees, manifest says best_iteration {entry['best_iteration']}")
+                problems.append(
+                    f"{version}: {booster.num_trees()} trees, manifest says best_iteration {entry['best_iteration']}"
+                )
         else:
             folder = models_dir / version
             parts = {n: joblib.load(folder / f"{n}.joblib") for n in ("model", "imputer", "scaler")}
-            pred = 0.5 * val_plain["aqi_curr"].to_numpy(float) + 0.5 * parts["model"].predict(parts["scaler"].transform(parts["imputer"].transform(val_plain[features])))
+            pred = 0.5 * val_plain["aqi_curr"].to_numpy(float) + 0.5 * parts["model"].predict(
+                parts["scaler"].transform(parts["imputer"].transform(val_plain[features]))
+            )
         if not np.isfinite(pred).all() or len(pred) == 0:
             problems.append(f"{version}: non-finite or empty predictions")
         print(f"ok {version}: {len(entry['files'])} files re-hashed, {len(pred)} validation rows predicted")
@@ -65,7 +70,10 @@ def check(models_dir: Path) -> list[str]:
             if "model" in payload:
                 pred = payload["model"].predict(val_masked[columns])
             else:
-                pred = np.vstack([m.predict(val_masked[columns]) for m in payload["quantile_models"].values()] + [payload["classifier"].predict_proba(val_masked[columns])[:, 1]])
+                pred = np.vstack(
+                    [m.predict(val_masked[columns]) for m in payload["quantile_models"].values()]
+                    + [payload["classifier"].predict_proba(val_masked[columns])[:, 1]]
+                )
             if not np.isfinite(pred).all():
                 problems.append(f"{name}: non-finite predictions")
             print(f"ok {name}: hash matches, {len(columns)} columns, predictions finite")

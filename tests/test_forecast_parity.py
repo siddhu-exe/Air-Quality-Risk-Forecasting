@@ -1,10 +1,13 @@
 """Parity of the live forecast path with the stored backtest predictions (needs the git-ignored training files)."""
+
 import pytest
 
 from src.live import models as model_mod
 from src.live import parity
 
-pytestmark = pytest.mark.skipif(not parity.inputs_available(), reason="raw CSVs / features_extended.parquet are not in this checkout")
+pytestmark = pytest.mark.skipif(
+    not parity.inputs_available(), reason="raw CSVs / features_extended.parquet are not in this checkout"
+)
 
 
 @pytest.fixture(scope="module")
@@ -30,5 +33,7 @@ def test_lightgbm_models_reproduce_the_stored_predictions_when_the_rolling_start
     models = model_mod.load(horizons=(horizon,))
     readings, aqi = history
     label, path, column = parity.STORED[horizon][0]
-    detail = parity.compare(horizon, label, path, column, readings, aqi, models, 4, seed=3, variant="rolling from training start")
+    detail = parity.compare(
+        horizon, label, path, column, readings, aqi, models, 4, seed=3, variant="rolling from training start"
+    )
     assert len(detail) > 10 and detail["abs_diff"].max() <= parity.TOLERANCE

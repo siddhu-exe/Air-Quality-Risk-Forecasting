@@ -5,6 +5,7 @@ Pins down two invariants the whole pipeline depends on:
   2. engineered features look only BACKWARD (a spike at time T cannot change any
      non-target feature for rows with timestamp < T).
 """
+
 import pathlib
 import sys
 
@@ -22,11 +23,13 @@ SPIKE = 99999.0
 def _toy(hours=72, start="2025-06-01 00:00"):
     idx = pd.date_range(pd.Timestamp(start, tz=TZ), periods=hours, freq="h")
     aqi = pd.DataFrame({"timestamp": idx, "aqi_value": np.arange(hours, dtype=float)})
-    caaqms = pd.DataFrame({
-        "timestamp": idx,
-        "pm25": np.arange(hours, dtype=float) * 2.0,
-        "pm10": np.arange(hours, dtype=float) * 3.0,
-    })
+    caaqms = pd.DataFrame(
+        {
+            "timestamp": idx,
+            "pm25": np.arange(hours, dtype=float) * 2.0,
+            "pm10": np.arange(hours, dtype=float) * 3.0,
+        }
+    )
     return idx, aqi, caaqms
 
 
@@ -76,9 +79,7 @@ def test_future_spike_does_not_leak_into_earlier_features():
     spiked = _features(aqi_spiked, caaqms_spiked)
 
     feature_cols = [
-        c for c in base.columns
-        if not c.startswith("target_")
-        and c not in ("station_id", "station_name", "aqi_source")
+        c for c in base.columns if not c.startswith("target_") and c not in ("station_id", "station_name", "aqi_source")
     ]
     before = base.index < spike_time
     assert before.sum() >= 24

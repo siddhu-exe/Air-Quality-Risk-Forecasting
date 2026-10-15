@@ -139,17 +139,13 @@ def load_raw_caaqms(years, raw_dir: Path = DEFAULT_RAW_DIR) -> pd.DataFrame:
                 if missing:
                     raise ValueError(f"{csv_path} is missing columns {missing}")
                 frames.append(
-                    frame[["Timestamp"] + POLLUTANTS].assign(
-                        station_name=station, station_id=STATION_IDS[station]
-                    )
+                    frame[["Timestamp"] + POLLUTANTS].assign(station_name=station, station_id=STATION_IDS[station])
                 )
     if not frames:
         raise FileNotFoundError(f"No raw CAAQMS CSVs found for years {years} under {raw_dir}")
     raw = pd.concat(frames, ignore_index=True)
     raw["Timestamp"] = pd.to_datetime(raw["Timestamp"])
-    raw = raw.sort_values(["station_name", "Timestamp"]).drop_duplicates(
-        ["station_name", "Timestamp"], keep="last"
-    )
+    raw = raw.sort_values(["station_name", "Timestamp"]).drop_duplicates(["station_name", "Timestamp"], keep="last")
     return raw.reset_index(drop=True)
 
 
@@ -170,29 +166,19 @@ def compute_aqi(raw: pd.DataFrame, method: str = "rolling_subindex_mean") -> pd.
         if method == "concentration_mean":
             rolling = {}
             for pollutant in POLLUTANTS:
-                window, min_periods = (
-                    (8, 6) if pollutant in EIGHT_HOUR_POLLUTANTS else (24, MIN_VALID_HOURS)
-                )
-                rolling[pollutant] = (
-                    series[pollutant].rolling(window, min_periods=min_periods).mean().to_numpy()
-                )
-            sub = pd.DataFrame(
-                {p: sub_index(p, rolling[p]) for p in POLLUTANTS}, index=series.index
-            )
+                window, min_periods = (8, 6) if pollutant in EIGHT_HOUR_POLLUTANTS else (24, MIN_VALID_HOURS)
+                rolling[pollutant] = series[pollutant].rolling(window, min_periods=min_periods).mean().to_numpy()
+            sub = pd.DataFrame({p: sub_index(p, rolling[p]) for p in POLLUTANTS}, index=series.index)
             hourly_aqi = sub.max(axis=1)
             valid = _validity_mask(sub)
             aqi = hourly_aqi.where(valid)
         elif method == "rolling_subindex_mean":
-            sub = pd.DataFrame(
-                {p: sub_index(p, series[p]) for p in POLLUTANTS}, index=series.index
-            )
+            sub = pd.DataFrame({p: sub_index(p, series[p]) for p in POLLUTANTS}, index=series.index)
             for pollutant in EIGHT_HOUR_POLLUTANTS:
                 smoothed = series[pollutant].rolling(8, min_periods=6).mean().to_numpy()
                 sub[pollutant] = sub_index(pollutant, smoothed)
             hourly_aqi = sub.max(axis=1).where(_validity_mask(sub))
-            aqi = hourly_aqi.rolling(
-                ROLLING_WINDOW_HOURS, min_periods=MIN_VALID_HOURS
-            ).mean()
+            aqi = hourly_aqi.rolling(ROLLING_WINDOW_HOURS, min_periods=MIN_VALID_HOURS).mean()
         else:
             raise ValueError(f"Unknown method: {method}")
 
@@ -218,8 +204,18 @@ def _validity_mask(sub_indices: pd.DataFrame) -> pd.Series:
 def load_official_aqi(years, raw_dir: Path = DEFAULT_RAW_DIR) -> pd.DataFrame:
     """Load the official station-level AQI xlsx files into long form."""
     month_names = [
-        "January", "February", "March", "April", "May", "June",
-        "July", "August", "September", "October", "November", "December",
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December",
     ]
     month_map = {name: i for i, name in enumerate(month_names, 1)}
     frames = []
@@ -272,9 +268,7 @@ def validate(recomputed: pd.DataFrame, official: pd.DataFrame) -> tuple[pd.DataF
 
 
 def _write_validation_report(merged: pd.DataFrame, summary: dict, path: Path, method: str) -> None:
-    per_station = (
-        merged.groupby("station_name")["abs_error"].mean().round(2).sort_index().to_dict()
-    )
+    per_station = merged.groupby("station_name")["abs_error"].mean().round(2).sort_index().to_dict()
     per_month = (
         merged.assign(month=pd.to_datetime(merged["timestamp"]).dt.month)
         .groupby("month")["abs_error"]
@@ -349,7 +343,9 @@ def _write_validation_report(merged: pd.DataFrame, summary: dict, path: Path, me
 def main() -> None:
     parser = argparse.ArgumentParser(description="Recompute CPCB AQI from raw CAAQMS CSVs")
     parser.add_argument("--years", nargs="+", type=int, default=[2023, 2024, 2025])
-    parser.add_argument("--method", default="rolling_subindex_mean", choices=["rolling_subindex_mean", "concentration_mean"])
+    parser.add_argument(
+        "--method", default="rolling_subindex_mean", choices=["rolling_subindex_mean", "concentration_mean"]
+    )
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
     parser.add_argument("--validate", action="store_true", help="Validate against official AQI xlsx")
     parser.add_argument("--raw-dir", type=Path, default=DEFAULT_RAW_DIR)
@@ -372,8 +368,10 @@ def main() -> None:
         DEFAULT_VALIDATION_CSV.parent.mkdir(parents=True, exist_ok=True)
         merged.to_csv(DEFAULT_VALIDATION_CSV, index=False)
         _write_validation_report(merged, summary, DEFAULT_VALIDATION_MD, args.method)
-        print(f"Validation: MAE={summary['mae']:.3f} bias={summary['bias']:+.2f} "
-              f"within5={summary['share_within_5']*100:.1f}% -> {DEFAULT_VALIDATION_MD}")
+        print(
+            f"Validation: MAE={summary['mae']:.3f} bias={summary['bias']:+.2f} "
+            f"within5={summary['share_within_5'] * 100:.1f}% -> {DEFAULT_VALIDATION_MD}"
+        )
 
 
 if __name__ == "__main__":

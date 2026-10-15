@@ -20,6 +20,7 @@ New models go to ``models/live/`` with new versions; nothing under ``models/`` o
 Environment: LIVE_FEATURES_PATH / LIVE_MASKED_FEATURES_PATH (matrices), LIVE_MODEL_DIR, LIVE_OUT_DIR, LIVE_RETRAIN_ALLOW_RESCORE=1
 to score test again (otherwise a second run is refused).
 """
+
 from __future__ import annotations
 
 import argparse
@@ -41,13 +42,15 @@ from src.models.splits import assign_split, training_rows
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 FEATURES_PATH = Path(os.environ.get("LIVE_FEATURES_PATH", REPO_ROOT / "data" / "processed" / "features_live.parquet"))
-MASKED_PATH = Path(os.environ.get("LIVE_MASKED_FEATURES_PATH", REPO_ROOT / "data" / "processed" / "features_live_masked.parquet"))
+MASKED_PATH = Path(
+    os.environ.get("LIVE_MASKED_FEATURES_PATH", REPO_ROOT / "data" / "processed" / "features_live_masked.parquet")
+)
 MODEL_DIR = Path(os.environ.get("LIVE_MODEL_DIR", REPO_ROOT / "models" / "live"))
 OUT_DIR = Path(os.environ.get("LIVE_OUT_DIR", REPO_ROOT / "reports" / "modeling" / "live_retrain"))
 VERSIONS = {1: "aqi-1h-lgb-live-v1", 6: "aqi-6h-lgb-live-v1", 24: "aqi-24h-hybrid-live-v1"}
 ALPHA, BLEND_PERSISTENCE = 1000.0, 0.5
 EARLY_STOPPING_ROUNDS = 50
-SMOKE = os.environ.get("LIVE_RETRAIN_SMOKE") == "1"      # code-path check only: 30 rounds, 20 resamples, never for results
+SMOKE = os.environ.get("LIVE_RETRAIN_SMOKE") == "1"  # code-path check only: 30 rounds, 20 resamples, never for results
 N_BOOT, SEED = (20 if SMOKE else 1000), 42
 KEYS = ["station_id", "timestamp"]
 
@@ -76,7 +79,11 @@ def frozen_spec() -> dict:
     frozen.verify()
     loaded = frozen.load(horizons=(1, 6, 24))
     params = {h: {k: v for k, v in b.params.items() if k != "num_iterations"} for h, b in loaded.boosters.items()}
-    return {"loaded": loaded, "features": {1: loaded.features[1], 6: loaded.features[6], 24: list(loaded.features_24h)}, "params": params}
+    return {
+        "loaded": loaded,
+        "features": {1: loaded.features[1], 6: loaded.features[6], 24: list(loaded.features_24h)},
+        "params": params,
+    }
 
 
 def rows_for(frame: pd.DataFrame, horizon: int) -> dict:
@@ -90,8 +97,14 @@ def fit_lgb(train: pd.DataFrame, val: pd.DataFrame, features: list[str], target:
 
     dtrain = lgb.Dataset(train[features], label=train[target])
     dval = lgb.Dataset(val[features], label=val[target], reference=dtrain)
-    booster = lgb.train(dict(params), dtrain, num_boost_round=30 if SMOKE else 2000, valid_sets=[dval], valid_names=["val"],
-                        callbacks=[lgb.early_stopping(EARLY_STOPPING_ROUNDS, verbose=False)])
+    booster = lgb.train(
+        dict(params),
+        dtrain,
+        num_boost_round=30 if SMOKE else 2000,
+        valid_sets=[dval],
+        valid_names=["val"],
+        callbacks=[lgb.early_stopping(EARLY_STOPPING_ROUNDS, verbose=False)],
+    )
     return booster
 
 
@@ -116,8 +129,14 @@ def score(part: pd.DataFrame, prediction: np.ndarray, target: str) -> dict:
     days = pd.to_datetime(part["timestamp"]).dt.date.values
     ci = block_bootstrap(y, prediction, persistence, days, N_BOOT, SEED)
     mae, base = float(np.abs(prediction - y).mean()), float(np.abs(persistence - y).mean())
-    return {"n": len(part), "model_mae": mae, "persistence_mae": base, "skill_mae": 1 - mae / base,
-            "skill_ci_lo": float(ci["skill_mae_ci_lo"]), "skill_ci_hi": float(ci["skill_mae_ci_hi"])}
+    return {
+        "n": len(part),
+        "model_mae": mae,
+        "persistence_mae": base,
+        "skill_mae": 1 - mae / base,
+        "skill_ci_lo": float(ci["skill_mae_ci_lo"]),
+        "skill_ci_hi": float(ci["skill_mae_ci_hi"]),
+    }
 
 
 def frozen_predict(spec: dict, horizon: int, part: pd.DataFrame) -> np.ndarray:
@@ -130,7 +149,9 @@ def frozen_predict(spec: dict, horizon: int, part: pd.DataFrame) -> np.ndarray:
 def main(horizons: list[int]) -> int:
     marker = OUT_DIR / "test_scored.json"
     if marker.exists() and os.environ.get("LIVE_RETRAIN_ALLOW_RESCORE") != "1":
-        raise SystemExit(f"{marker} exists: the test window was already scored once. Set LIVE_RETRAIN_ALLOW_RESCORE=1 only if you mean it.")
+        raise SystemExit(
+            f"{marker} exists: the test window was already scored once. Set LIVE_RETRAIN_ALLOW_RESCORE=1 only if you mean it."
+        )
     spec = frozen_spec()
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     MODEL_DIR.mkdir(parents=True, exist_ok=True)
@@ -157,7 +178,10 @@ def main(horizons: list[int]) -> int:
             model = lgb.Booster(model_str=fitted.model_to_string(num_iteration=best))
             model.best_iteration = best
             predict = lambda part, m=model, f=features: m.predict(part[f])  # noqa: E731
-            artifact, detail = MODEL_DIR / f"{version}.joblib", {"best_iteration": best, "n_trees": int(model.num_trees()), "params": spec["params"][horizon]}
+            artifact, detail = (
+                MODEL_DIR / f"{version}.joblib",
+                {"best_iteration": best, "n_trees": int(model.num_trees()), "params": spec["params"][horizon]},
+            )
             joblib.dump(model, artifact)
             model.save_model(str(MODEL_DIR / f"{version}.txt"))
             files = [artifact, MODEL_DIR / f"{version}.txt"]
@@ -166,26 +190,59 @@ def main(horizons: list[int]) -> int:
             predict = lambda part, p=parts, f=features: predict_hybrid(p, part, f)  # noqa: E731
             folder = MODEL_DIR / version
             folder.mkdir(exist_ok=True)
-            for name, obj in {"model": parts["ridge"], "imputer": parts["imputer"], "scaler": parts["scaler"], "features": features}.items():
+            for name, obj in {
+                "model": parts["ridge"],
+                "imputer": parts["imputer"],
+                "scaler": parts["scaler"],
+                "features": features,
+            }.items():
                 joblib.dump(obj, folder / f"{name}.joblib")
             files, detail = sorted(folder.glob("*.joblib")), {"alpha": ALPHA, "blend_persistence": BLEND_PERSISTENCE}
         for split in ("val", "test"):
             for view, data in (("unmasked", sets), ("live-masked", sets_masked)):
                 part = data[split]
                 pred = predict(part)
-                records.append({"horizon": f"{horizon}h", "split": split, "inputs": view, "model": version, **score(part, pred, target)})
+                records.append(
+                    {
+                        "horizon": f"{horizon}h",
+                        "split": split,
+                        "inputs": view,
+                        "model": version,
+                        **score(part, pred, target),
+                    }
+                )
                 if view == "unmasked":
                     predictions[(horizon, split)] = part[[*KEYS, "aqi_curr", target]].assign(prediction=pred)
             part = sets[split]
             reference = frozen_predict(spec, horizon, part)
-            records.append({"horizon": f"{horizon}h", "split": split, "inputs": "unmasked", "model": frozen.VERSIONS[horizon] + " (frozen, reference)",
-                            **score(part, reference, target)})
+            records.append(
+                {
+                    "horizon": f"{horizon}h",
+                    "split": split,
+                    "inputs": "unmasked",
+                    "model": frozen.VERSIONS[horizon] + " (frozen, reference)",
+                    **score(part, reference, target),
+                }
+            )
             predictions[(horizon, split)] = predictions[(horizon, split)].assign(frozen_prediction=reference)
         manifest_models[version] = {
-            "horizon_hours": horizon, "files": {f.relative_to(MODEL_DIR).as_posix(): sha256(f) for f in files},
-            "n_train": int(len(sets["train"])), "n_val": int(len(sets["val"])), "n_features": len(features), "features": features, **detail,
+            "horizon_hours": horizon,
+            "files": {f.relative_to(MODEL_DIR).as_posix(): sha256(f) for f in files},
+            "n_train": int(len(sets["train"])),
+            "n_val": int(len(sets["val"])),
+            "n_features": len(features),
+            "features": features,
+            **detail,
         }
-        print(f"fitted {version}: " + "; ".join(f"{r['split']}/{r['inputs']} skill {r['skill_mae']:+.3f}" for r in records if r["model"] == version and r["horizon"] == f"{horizon}h"), flush=True)
+        print(
+            f"fitted {version}: "
+            + "; ".join(
+                f"{r['split']}/{r['inputs']} skill {r['skill_mae']:+.3f}"
+                for r in records
+                if r["model"] == version and r["horizon"] == f"{horizon}h"
+            ),
+            flush=True,
+        )
 
     table = pd.DataFrame(records)
     table.to_csv(OUT_DIR / "live_retrain_metrics.csv", index=False)
@@ -195,32 +252,63 @@ def main(horizons: list[int]) -> int:
     import sklearn
 
     manifest = {
-        "created": pd.Timestamp.now(tz="UTC").isoformat(), "aqi_definition": "recomputed (compute_aqi rolling_subindex_mean on QC'd pollutants)",
-        "train_window": "2024-01-01 .. 2025-08-31 minus 24h embargo", "validation": "2025-09-01 .. 2025-10-31 (iteration count only)",
-        "test": "2025-11-01 .. 2025-12-31, scored once", "frozen_hashes": {k: v for k, v in frozen.verify().items()},
+        "created": pd.Timestamp.now(tz="UTC").isoformat(),
+        "aqi_definition": "recomputed (compute_aqi rolling_subindex_mean on QC'd pollutants)",
+        "train_window": "2024-01-01 .. 2025-08-31 minus 24h embargo",
+        "validation": "2025-09-01 .. 2025-10-31 (iteration count only)",
+        "test": "2025-11-01 .. 2025-12-31, scored once",
+        "frozen_hashes": {k: v for k, v in frozen.verify().items()},
         "matrices": {"plain": sha256(FEATURES_PATH), "masked": sha256(MASKED_PATH)},
-        "libraries": {"python": platform.python_version(), "lightgbm": lightgbm.__version__, "scikit-learn": sklearn.__version__,
-                      "pandas": pd.__version__, "numpy": np.__version__},
+        "libraries": {
+            "python": platform.python_version(),
+            "lightgbm": lightgbm.__version__,
+            "scikit-learn": sklearn.__version__,
+            "pandas": pd.__version__,
+            "numpy": np.__version__,
+        },
         "models": manifest_models,
     }
     (MODEL_DIR / "manifest.json").write_text(json.dumps(manifest, indent=2))
     marker.write_text(json.dumps({"scored": pd.Timestamp.now(tz="UTC").isoformat(), "horizons": horizons}))
     write_report(table)
-    print(table[["horizon", "split", "inputs", "model", "n", "model_mae", "persistence_mae", "skill_mae", "skill_ci_lo", "skill_ci_hi"]].round(3).to_string(index=False))
+    print(
+        table[
+            [
+                "horizon",
+                "split",
+                "inputs",
+                "model",
+                "n",
+                "model_mae",
+                "persistence_mae",
+                "skill_mae",
+                "skill_ci_lo",
+                "skill_ci_hi",
+            ]
+        ]
+        .round(3)
+        .to_string(index=False)
+    )
     return 0
 
 
 def write_report(table: pd.DataFrame) -> None:
     lines = [
-        "# Live-consistent retrain: recomputed AQI as input features and target", "",
+        "# Live-consistent retrain: recomputed AQI as input features and target",
+        "",
         "Generated by `src/models/live_retrain.py`; numbers come from `live_retrain_metrics.csv`. Skill = 1 - MAE_model / MAE_persistence,",
         "persistence on the same recomputed AQI. CIs: 95% day-block bootstrap (1,000 resamples). Validation selected only the LightGBM iteration",
         "count; the test window was scored once. `live-masked` = the same fitted model on inputs without NOx/NO/solar and ITO weather (no refit).",
-        "The frozen rows score the frozen models on the same recomputed rows (reference).", "",
-        "| Horizon | Split | Inputs | Model | Rows | MAE | Persistence MAE | Skill | Skill 95% CI |", "| :--- | :--- | :--- | :--- | ---: | ---: | ---: | ---: | :---: |",
+        "The frozen rows score the frozen models on the same recomputed rows (reference).",
+        "",
+        "| Horizon | Split | Inputs | Model | Rows | MAE | Persistence MAE | Skill | Skill 95% CI |",
+        "| :--- | :--- | :--- | :--- | ---: | ---: | ---: | ---: | :---: |",
     ]
-    lines += [f"| {r.horizon} | {r.split} | {r.inputs} | {r.model} | {r.n:,} | {r.model_mae:.3f} | {r.persistence_mae:.3f} | {r.skill_mae:+.3f} | "
-              f"[{r.skill_ci_lo:+.3f}, {r.skill_ci_hi:+.3f}] |" for r in table.itertuples()]
+    lines += [
+        f"| {r.horizon} | {r.split} | {r.inputs} | {r.model} | {r.n:,} | {r.model_mae:.3f} | {r.persistence_mae:.3f} | {r.skill_mae:+.3f} | "
+        f"[{r.skill_ci_lo:+.3f}, {r.skill_ci_hi:+.3f}] |"
+        for r in table.itertuples()
+    ]
     (OUT_DIR / "live_retrain_metrics.md").write_text("\n".join(lines) + "\n")
 
 

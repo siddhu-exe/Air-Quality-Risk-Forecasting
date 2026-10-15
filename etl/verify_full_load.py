@@ -55,7 +55,7 @@ def run_validations():
             GROUP BY s.station_name ORDER BY s.station_name
         """)
         for r in cur.fetchall():
-            if r['aqi_count'] > 0:
+            if r["aqi_count"] > 0:
                 print(f"  {r['station_name'][:25]:<25}: {r['aqi_count']:>7} AQI")
 
         # C. Time Coverage
@@ -72,11 +72,11 @@ def run_validations():
         for r in cur.fetchall():
             expected = 0
             missing = 0
-            if r['min_ts'] and r['max_ts']:
-                delta = r['max_ts'] - r['min_ts']
+            if r["min_ts"] and r["max_ts"]:
+                delta = r["max_ts"] - r["min_ts"]
                 # Delta is a timedelta. Get total seconds / 3600 + 1 for expected hours
                 expected = int(delta.total_seconds() / 3600) + 1
-                missing = expected - r['obs_count']
+                missing = expected - r["obs_count"]
 
             print(f"\n{r['station_name']}")
             print(f"  Range:    {r['min_ts']} to {r['max_ts']}")
@@ -84,13 +84,18 @@ def run_validations():
 
         # D. Duplicate Checks
         print("\n--- 6.D Duplicate Integrity Check ---")
-        cur.execute("SELECT station_id, timestamp, COUNT(*) as c FROM caaqms_hourly GROUP BY station_id, timestamp HAVING COUNT(*) > 1")
+        cur.execute(
+            "SELECT station_id, timestamp, COUNT(*) as c FROM caaqms_hourly GROUP BY station_id, timestamp HAVING COUNT(*) > 1"
+        )
         caaqms_dups = cur.fetchall()
         print(f"CAAQMS Duplicates: {len(caaqms_dups)}")
 
-        cur.execute("SELECT station_id, timestamp, COUNT(*) as c FROM aqi_hourly GROUP BY station_id, timestamp HAVING COUNT(*) > 1")
+        cur.execute(
+            "SELECT station_id, timestamp, COUNT(*) as c FROM aqi_hourly GROUP BY station_id, timestamp HAVING COUNT(*) > 1"
+        )
         aqi_dups = cur.fetchall()
         print(f"AQI Duplicates:    {len(aqi_dups)}")
+
 
 if __name__ == "__main__":
     run_validations()

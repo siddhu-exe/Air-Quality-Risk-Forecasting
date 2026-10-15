@@ -10,8 +10,9 @@ def process_caaqms_csv(file_path: Path) -> tuple[pd.DataFrame | None, dict]:
     stats = {"status": "ok", "error": None, "raw_rows": 0, "processed_rows": 0, "dropped_invalid_ts": 0}
     try:
         # Load raw data
-        df = pd.read_csv(file_path, na_values=["NA", "na", "N/A", "n/a", "--", ""],
-                         keep_default_na=True, low_memory=False)
+        df = pd.read_csv(
+            file_path, na_values=["NA", "na", "N/A", "n/a", "--", ""], keep_default_na=True, low_memory=False
+        )
         stats["raw_rows"] = len(df)
 
         # Standarize Columns

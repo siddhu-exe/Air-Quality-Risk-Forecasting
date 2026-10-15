@@ -62,7 +62,9 @@ def main():
     print(f"  source_files:  {pre_files}")
     print(f"  caaqms_hourly: {pre_caaqms}")
     print(f"  aqi_hourly:    {pre_aqi}")
-    print("  Load uses ON CONFLICT DO UPDATE for idempotency. Existing Jan 2025 data will remain intact (overwritten with same values).")
+    print(
+        "  Load uses ON CONFLICT DO UPDATE for idempotency. Existing Jan 2025 data will remain intact (overwritten with same values)."
+    )
 
     stats_report = []
 
@@ -84,7 +86,7 @@ def main():
             "input_rows": 0,
             "retained_rows": 0,
             "inserted_rows": 0,
-            "error_msg": None
+            "error_msg": None,
         }
 
         try:
@@ -112,8 +114,7 @@ def main():
             max_ts = df["ts"].max() if not df.empty else None
 
             source_file_id = get_or_create_source_file(
-                conn, station_id, filename, str(path), file_record["type"],
-                ext[1:].upper(), min_ts, max_ts, retained
+                conn, station_id, filename, str(path), file_record["type"], ext[1:].upper(), min_ts, max_ts, retained
             )
 
             # 3. Facts Push
@@ -158,6 +159,7 @@ def main():
 
     print("\n=== FULL PRODUCTION ETL LOAD COMPLETED SUCCESSFULLY ===")
     print(f"Processed {len(stats_report)} files.")
+
 
 if __name__ == "__main__":
     main()

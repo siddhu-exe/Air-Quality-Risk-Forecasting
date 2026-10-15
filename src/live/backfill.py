@@ -15,6 +15,7 @@ other source are never overwritten.
     python -m src.live.backfill --dry-run          # builds everything, prints a summary, touches no database
     python -m src.live.backfill                    # loads (needs DATABASE_URL, the job_writer role)
 """
+
 from __future__ import annotations
 
 import argparse
@@ -43,7 +44,10 @@ CSV_START, CSV_END = pd.Timestamp("2026-01-01 00:00"), pd.Timestamp("2026-08-31 
 OPENAQ_START = pd.Timestamp("2026-09-01 00:00")
 CSV_TO_COLUMN = {
     **POLLUTANT_COLUMNS,  # PM2.5, PM10, NO2, NH3, SO2, CO, Ozone
-    "NOx (ppb)": "nox", "AT (°C)": "temperature", "RH (%)": "humidity", "WS (m/s)": "wind_speed",
+    "NOx (ppb)": "nox",
+    "AT (°C)": "temperature",
+    "RH (%)": "humidity",
+    "WS (m/s)": "wind_speed",
     "SR (W/mt2)": "solar_radiation",
 }
 
@@ -51,7 +55,9 @@ CSV_TO_COLUMN = {
 _finish = finish_hourly  # kept for existing callers/tests
 
 
-def csv_history(raw_dir: Path = DEFAULT_RAW_DIR, start: pd.Timestamp = CSV_START, end: pd.Timestamp = CSV_END) -> pd.DataFrame:
+def csv_history(
+    raw_dir: Path = DEFAULT_RAW_DIR, start: pd.Timestamp = CSV_START, end: pd.Timestamp = CSV_END
+) -> pd.DataFrame:
     parts = []
     for folder in sorted(os.listdir(raw_dir)):
         station = _station_for_folder(folder)
@@ -65,8 +71,9 @@ def csv_history(raw_dir: Path = DEFAULT_RAW_DIR, start: pd.Timestamp = CSV_START
     return pd.concat(parts) if parts else pd.DataFrame()
 
 
-def openaq_history(start: pd.Timestamp = OPENAQ_START, end: pd.Timestamp | None = None,
-                   cache: Path | None = None) -> pd.DataFrame:
+def openaq_history(
+    start: pd.Timestamp = OPENAQ_START, end: pd.Timestamp | None = None, cache: Path | None = None
+) -> pd.DataFrame:
     end = end if end is not None else pd.Timestamp("2026-10-07 23:00")
     hours = pd.date_range(start, end, freq="h")
     raw_all: dict = {}
@@ -79,7 +86,10 @@ def openaq_history(start: pd.Timestamp = OPENAQ_START, end: pd.Timestamp | None 
             raw_all[station] = {}
             for param, (sensor_id, _label) in openaq.live_sensors(location_id, station).items():
                 raw_all[station][param] = openaq.fetch_15min(sensor_id, str(start), str(end + pd.Timedelta(minutes=59)))
-                print(f"fetched {station:16s} {param:17s} sensor {sensor_id}: {len(raw_all[station][param])} slots", flush=True)
+                print(
+                    f"fetched {station:16s} {param:17s} sensor {sensor_id}: {len(raw_all[station][param])} slots",
+                    flush=True,
+                )
         frame = openaq.hourly_frame(raw_all[station], hours)
         extra = openaq.UNVERIFIED_FLAG if station in openaq.ALIGNMENT_UNVERIFIED_2026 else None
         parts.append(_finish(frame, station, OPENAQ_SOURCE, extra))
@@ -100,12 +110,20 @@ def aqi_history(readings: pd.DataFrame) -> pd.DataFrame:
 def summarize(readings: pd.DataFrame, aqi: pd.DataFrame) -> pd.DataFrame:
     rows = []
     for (station, source), g in readings.groupby(["station_name", "source"]):
-        rows.append({
-            "station": station, "source": source, "rows": len(g), "first": g.index.min(), "last": g.index.max(),
-            "pm25_missing_%": round(100 * g.pm25.isna().mean(), 1), "nox_missing_%": round(100 * g.nox.isna().mean(), 1),
-            "weather_missing_%": round(100 * g.temperature.isna().mean(), 1), "solar_missing_%": round(100 * g.solar_radiation.isna().mean(), 1),
-            "qc_flagged_cells": int(sum(len([k for k in f if not k.startswith("_")]) for f in g.qc_flags)),
-        })
+        rows.append(
+            {
+                "station": station,
+                "source": source,
+                "rows": len(g),
+                "first": g.index.min(),
+                "last": g.index.max(),
+                "pm25_missing_%": round(100 * g.pm25.isna().mean(), 1),
+                "nox_missing_%": round(100 * g.nox.isna().mean(), 1),
+                "weather_missing_%": round(100 * g.temperature.isna().mean(), 1),
+                "solar_missing_%": round(100 * g.solar_radiation.isna().mean(), 1),
+                "qc_flagged_cells": int(sum(len([k for k in f if not k.startswith("_")]) for f in g.qc_flags)),
+            }
+        )
     table = pd.DataFrame(rows).sort_values(["station", "first"]).reset_index(drop=True)
     table["aqi_rows"] = table.station.map(aqi.groupby("station_name").size())
     return table
@@ -137,8 +155,14 @@ def reading_tuples(readings: pd.DataFrame):
 
     ts = _localize(readings.index)
     for position, (_, row) in enumerate(readings.iterrows()):
-        yield (int(row.station_id), ts[position].to_pydatetime(), *[_clean(float(row[c])) for c in VALUE_COLUMNS],
-               row.weather_source, Json(row.qc_flags), row.source)
+        yield (
+            int(row.station_id),
+            ts[position].to_pydatetime(),
+            *[_clean(float(row[c])) for c in VALUE_COLUMNS],
+            row.weather_source,
+            Json(row.qc_flags),
+            row.source,
+        )
 
 
 def aqi_tuples(aqi: pd.DataFrame):
@@ -153,13 +177,19 @@ def load(readings: pd.DataFrame, aqi: pd.DataFrame, details: dict) -> None:
     from src.live.db import connect
 
     with connect() as conn, conn.cursor() as cur:
-        cur.execute("insert into aq.job_runs (job, github_run) values ('backfill', %s) returning id", (os.environ.get("GITHUB_RUN_ID"),))
+        cur.execute(
+            "insert into aq.job_runs (job, github_run) values ('backfill', %s) returning id",
+            (os.environ.get("GITHUB_RUN_ID"),),
+        )
         run_id = cur.fetchone()[0]
         try:
             execute_values(cur, UPSERT_READINGS, list(reading_tuples(readings)), page_size=1000)
             execute_values(cur, UPSERT_AQI, list(aqi_tuples(aqi)), page_size=2000)
         except Exception as exc:  # record the failure, then re-raise (message only, no connection details)
-            cur.execute("update aq.job_runs set status='failed', finished_at=clock_timestamp(), error=%s where id=%s", (type(exc).__name__, run_id))
+            cur.execute(
+                "update aq.job_runs set status='failed', finished_at=clock_timestamp(), error=%s where id=%s",
+                (type(exc).__name__, run_id),
+            )
             conn.commit()
             raise
         cur.execute(
@@ -173,7 +203,9 @@ def main() -> None:
     parser.add_argument("--dry-run", action="store_true", help="build and summarise; do not touch the database")
     parser.add_argument("--no-csv", action="store_true")
     parser.add_argument("--no-openaq", action="store_true")
-    parser.add_argument("--openaq-end", default="2026-10-07 23:00", help="last hour label to build from OpenAQ (local time)")
+    parser.add_argument(
+        "--openaq-end", default="2026-10-07 23:00", help="last hour label to build from OpenAQ (local time)"
+    )
     parser.add_argument("--cache", type=Path, default=None, help="pickle file for OpenAQ downloads (reused if present)")
     args = parser.parse_args()
 

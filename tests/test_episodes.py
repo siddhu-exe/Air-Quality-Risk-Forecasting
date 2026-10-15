@@ -4,6 +4,7 @@ These build toy frames with a known episode and known forecasts and assert the
 expected hit/miss status and lead time, so the metric's time alignment is pinned
 down by a test instead of by comments.
 """
+
 import pathlib
 import sys
 

@@ -10,6 +10,7 @@ in the last ``h`` hours before a window starts is observed *inside* that window.
 ``purge_train_tail`` removes those rows (an embargo) so no training label
 overlaps the evaluation window.
 """
+
 from __future__ import annotations
 
 import pandas as pd
@@ -27,9 +28,23 @@ META_COLUMNS = {"station_id", "station_name", "timestamp", "split", "aqi_source"
 # gradient-boosting scripts treat "with/without calendar" as a validation-selected
 # choice rather than silently including them.
 CALENDAR_FEATURES = {
-    "hour", "day_of_week", "month", "day_of_year", "is_weekend",
-    "sin_hour", "cos_hour", "sin_dow", "cos_dow", "sin_month", "cos_month",
-    "sin_doy", "cos_doy", "is_winter", "is_summer", "is_monsoon", "is_post_monsoon",
+    "hour",
+    "day_of_week",
+    "month",
+    "day_of_year",
+    "is_weekend",
+    "sin_hour",
+    "cos_hour",
+    "sin_dow",
+    "cos_dow",
+    "sin_month",
+    "cos_month",
+    "sin_doy",
+    "cos_doy",
+    "is_winter",
+    "is_summer",
+    "is_monsoon",
+    "is_post_monsoon",
 }
 
 
@@ -68,7 +83,7 @@ def model_feature_columns(frame: pd.DataFrame, drop_calendar: bool = True) -> li
     """Numeric, non-target, non-meta columns (optionally without calendar features)."""
     skip = set(META_COLUMNS) | (CALENDAR_FEATURES if drop_calendar else set())
     return [
-        c for c in frame.columns
-        if c not in skip and not c.startswith("target_")
-        and pd.api.types.is_numeric_dtype(frame[c])
+        c
+        for c in frame.columns
+        if c not in skip and not c.startswith("target_") and pd.api.types.is_numeric_dtype(frame[c])
     ]

@@ -7,6 +7,7 @@ so the 1h/6h part runs on Colab. Nothing is trained.
     python scripts/generate_d1_audit_notebook.py
 Writes notebooks/d1_feature_audit_colab.ipynb and tier3_d1_audit_bundle.zip (repo root).
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -19,9 +20,12 @@ NOTEBOOK = ROOT / "notebooks" / "d1_feature_audit_colab.ipynb"
 BUNDLE = ROOT / "tier3_d1_audit_bundle.zip"
 
 FROZEN = [
-    "models/lgb_model_1h_v1.joblib", "models/lgb_model_6h_v1.joblib",
-    "models/24h/final/24h_final_model.joblib", "models/24h/final/scaler_final_24h.joblib",
-    "models/24h/final/imputer_final_24h.joblib", "models/24h/final/feature_names_final.joblib",
+    "models/lgb_model_1h_v1.joblib",
+    "models/lgb_model_6h_v1.joblib",
+    "models/24h/final/24h_final_model.joblib",
+    "models/24h/final/scaler_final_24h.joblib",
+    "models/24h/final/imputer_final_24h.joblib",
+    "models/24h/final/feature_names_final.joblib",
 ]
 DATA = ["data/processed/features_extended.parquet", "data/processed/exogenous_weather.parquet"]
 SOURCE_DIRS = ["src", "etl"]
@@ -43,7 +47,13 @@ def md(text: str) -> dict:
 
 
 def code(text: str) -> dict:
-    return {"cell_type": "code", "metadata": {}, "execution_count": None, "outputs": [], "source": text.strip("\n").splitlines(keepends=True)}
+    return {
+        "cell_type": "code",
+        "metadata": {},
+        "execution_count": None,
+        "outputs": [],
+        "source": text.strip("\n").splitlines(keepends=True),
+    }
 
 
 def build_notebook() -> dict:
@@ -116,8 +126,15 @@ except ImportError:
     print('results zip written locally')
 """),
     ]
-    return {"cells": cells, "metadata": {"kernelspec": {"display_name": "Python 3", "language": "python", "name": "python3"},
-                                         "language_info": {"name": "python"}}, "nbformat": 4, "nbformat_minor": 5}
+    return {
+        "cells": cells,
+        "metadata": {
+            "kernelspec": {"display_name": "Python 3", "language": "python", "name": "python3"},
+            "language_info": {"name": "python"},
+        },
+        "nbformat": 4,
+        "nbformat_minor": 5,
+    }
 
 
 def main() -> None:
@@ -127,7 +144,9 @@ def main() -> None:
     with zipfile.ZipFile(BUNDLE, "w", zipfile.ZIP_DEFLATED) as zf:
         for path in files:
             zf.write(path, path.relative_to(ROOT).as_posix())
-    print(f"wrote {NOTEBOOK.relative_to(ROOT)} and {BUNDLE.name} ({BUNDLE.stat().st_size / 1e6:.1f} MB, {len(files)} files)")
+    print(
+        f"wrote {NOTEBOOK.relative_to(ROOT)} and {BUNDLE.name} ({BUNDLE.stat().st_size / 1e6:.1f} MB, {len(files)} files)"
+    )
 
 
 if __name__ == "__main__":

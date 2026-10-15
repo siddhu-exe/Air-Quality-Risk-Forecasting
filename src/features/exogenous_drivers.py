@@ -31,6 +31,7 @@ Outputs
     data/processed/exogenous_fires.parquet        (only with --fires)
     data/processed/exogenous_cache/*.parquet      (per station-year weather chunks)
 """
+
 from __future__ import annotations
 
 import argparse
@@ -90,9 +91,16 @@ def _error_reason(response: requests.Response) -> str:
         return response.text[:200]
 
 
-def _get_with_retry(url: str, params: dict | None = None, *, label: str = "request",
-                    max_attempts: int = 6, base_wait: float = 5.0, timeout: int = 120,
-                    sleep=time.sleep) -> requests.Response:
+def _get_with_retry(
+    url: str,
+    params: dict | None = None,
+    *,
+    label: str = "request",
+    max_attempts: int = 6,
+    base_wait: float = 5.0,
+    timeout: int = 120,
+    sleep=time.sleep,
+) -> requests.Response:
     """GET with retry/backoff on network errors, 429 and 5xx; fail fast on other 4xx."""
     last = None
     for attempt in range(1, max_attempts + 1):
@@ -112,7 +120,8 @@ def _get_with_retry(url: str, params: dict | None = None, *, label: str = "reque
             if "hourly" in low or "daily" in low:
                 raise RateLimitExhausted(
                     f"{label}: {reason} Finished chunks are cached; rerun this cell later "
-                    "(hourly quotas reset within the hour, daily ones at midnight UTC).")
+                    "(hourly quotas reset within the hour, daily ones at midnight UTC)."
+                )
             retry_after = response.headers.get("Retry-After", "")
             if retry_after.isdigit():
                 wait = float(retry_after)
@@ -197,6 +206,7 @@ def _firms_window(map_key: str, start: pd.Timestamp, days: int) -> pd.DataFrame:
     url = f"{FIRMS_URL}/{map_key}/{FIRMS_SOURCE}/{area}/{days}/{start.date()}"
     response = _get_with_retry(url, label=f"FIRMS {start.date()}")
     from io import StringIO
+
     text = response.text
     if "acq_date" not in text:
         return pd.DataFrame(columns=["acq_date", "count"])
@@ -204,8 +214,7 @@ def _firms_window(map_key: str, start: pd.Timestamp, days: int) -> pd.DataFrame:
     return fires
 
 
-def fetch_firms_daily_fires(start_date: str, end_date: str, map_key: str,
-                            window_days: int = 5) -> pd.DataFrame:
+def fetch_firms_daily_fires(start_date: str, end_date: str, map_key: str, window_days: int = 5) -> pd.DataFrame:
     """Daily VIIRS active-fire counts in the Punjab/Haryana box (chunked requests)."""
     start = pd.Timestamp(start_date)
     end = pd.Timestamp(end_date)
@@ -215,7 +224,9 @@ def fetch_firms_daily_fires(start_date: str, end_date: str, map_key: str,
         try:
             chunk = _firms_window(map_key, cursor, window_days)
         except requests.HTTPError as exc:  # surfaced with context for the user
-            raise RuntimeError(f"FIRMS request failed for {cursor.date()}: {str(exc).replace(map_key, '***')}") from None
+            raise RuntimeError(
+                f"FIRMS request failed for {cursor.date()}: {str(exc).replace(map_key, '***')}"
+            ) from None
         if len(chunk):
             frames.append(chunk[["acq_date"]])
         cursor += pd.Timedelta(days=window_days)
@@ -240,19 +251,28 @@ def fetch_firms_daily_fires(start_date: str, end_date: str, map_key: str,
     return full
 
 
-def attach_exogenous(features_path: Path, weather: pd.DataFrame, fires: pd.DataFrame | None,
-                     output_path: Path) -> pd.DataFrame:
+def attach_exogenous(
+    features_path: Path, weather: pd.DataFrame, fires: pd.DataFrame | None, output_path: Path
+) -> pd.DataFrame:
     """Merge weather (causal + oracle t+24) and fires onto the feature matrix."""
     frame = pd.read_parquet(features_path)
     frame["timestamp"] = pd.to_datetime(frame["timestamp"]).dt.tz_localize(None)
     weather = weather.rename(columns={"timestamp": "timestamp"})
     weather["timestamp"] = pd.to_datetime(weather["timestamp"])
 
-    base_vars = ["temperature_2m", "relative_humidity_2m", "precipitation",
-                 "wind_u", "wind_v", "boundary_layer_height", "shortwave_radiation"]
+    base_vars = [
+        "temperature_2m",
+        "relative_humidity_2m",
+        "precipitation",
+        "wind_u",
+        "wind_v",
+        "boundary_layer_height",
+        "shortwave_radiation",
+    ]
     frame = frame.merge(
         weather[["station_name", "timestamp"] + base_vars],
-        on=["station_name", "timestamp"], how="left",
+        on=["station_name", "timestamp"],
+        how="left",
     )
 
     # Causal lags/rolls of the same-hour weather, and an "oracle" value at t+24.
