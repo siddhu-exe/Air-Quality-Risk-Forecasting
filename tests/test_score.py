@@ -143,7 +143,7 @@ def test_issue_is_opened_once_and_then_refreshed(monkeypatch):
 def test_sql_is_insert_only_and_scores_only_matured_forecasts_with_an_actual():
     for text in (score.SELECT_MATURED, score.INSERT_SCORES, score.UPSERT_SKILL, score.SELECT_SCORES):
         assert "delete" not in text.lower() and "truncate" not in text.lower()
-    assert "on conflict (forecast_id) do nothing" in score.INSERT_SCORES
+    assert "on conflict (forecast_id) do nothing" in score.INSERT_SCORES and "returning 1" in score.INSERT_SCORES
     assert (
         "target_time + interval '1 hour' <= %s" in score.SELECT_MATURED
         and "s.forecast_id is null" in score.SELECT_MATURED

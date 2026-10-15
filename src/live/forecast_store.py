@@ -26,6 +26,7 @@ on conflict (model_version) do update set sha256 = excluded.sha256, file = exclu
 INSERT_FORECASTS = """
 insert into aq.forecasts (issue_time, target_time, station_id, horizon, target, model_version, y_hat, y_persistence, y_window_update, run_type) values %s
 on conflict (issue_time, station_id, horizon, target) do nothing
+returning 1
 """
 
 
@@ -85,6 +86,5 @@ class ForecastStore(Store):
             )
             for r in rows.itertuples()
         ]
-        if values:
-            execute_values(self._cur, INSERT_FORECASTS, values, page_size=500)
-        return self._cur.rowcount if values else 0
+        # fetch=True returns one row per inserted forecast across all pages (cursor.rowcount only reflects the last page)
+        return len(execute_values(self._cur, INSERT_FORECASTS, values, page_size=500, fetch=True)) if values else 0

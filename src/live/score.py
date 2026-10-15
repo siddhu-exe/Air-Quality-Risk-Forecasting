@@ -56,6 +56,7 @@ insert into aq.forecast_scores (forecast_id, station_id, horizon, target, target
                                 abs_err_persistence, abs_err_window_update, in_interval, severe_actual)
 values %s
 on conflict (forecast_id) do nothing
+returning 1
 """
 SELECT_SCORES = """
 select s.forecast_id, s.station_id, s.horizon, s.target, s.target_time, s.actual, s.abs_err, s.abs_err_persistence,
@@ -289,9 +290,7 @@ class ScoreStore(Store):
             )
             for r in scores.itertuples()
         ]
-        if values:
-            execute_values(self._cur, INSERT_SCORES, values, page_size=500)
-        return self._cur.rowcount if values else 0
+        return len(execute_values(self._cur, INSERT_SCORES, values, page_size=500, fetch=True)) if values else 0
 
     def scores_since(self, run_type: str, since: pd.Timestamp) -> pd.DataFrame:
         self._cur.execute(SELECT_SCORES, (run_type, since.to_pydatetime()))

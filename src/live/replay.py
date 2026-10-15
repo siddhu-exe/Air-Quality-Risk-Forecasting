@@ -63,12 +63,23 @@ def read_actuals(store: ForecastStore, since: pd.Timestamp, until: pd.Timestamp)
     return out
 
 
+def load_history(hours: list[pd.Timestamp]) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Read the whole replay window once and close the connection before any computing: a pooled connection that sits
+    idle through a 15-minute replay is dropped by the pooler, and closing a dead socket hangs."""
+    with ForecastStore("DATABASE_URL_READONLY") as store:
+        since, until = hours[0] - pd.Timedelta(hours=HISTORY_HOURS), hours[-1]
+        return store.read_history(sorted(STATION_IDS.values()), since, until)
+
+
 def replay(
-    store: ForecastStore, hours: list[pd.Timestamp], models: serving.Serving, gate: dict, weather_fill: str = "none"
+    readings: pd.DataFrame,
+    aqi: pd.DataFrame,
+    hours: list[pd.Timestamp],
+    models: serving.Serving,
+    gate: dict,
+    weather_fill: str = "none",
 ) -> tuple[pd.DataFrame, dict]:
     """Forecast every hour in ``hours`` from history read once. Returns (forecast rows, summary of skips)."""
-    since, until = hours[0] - pd.Timedelta(hours=HISTORY_HOURS), hours[-1]
-    readings, aqi = store.read_history(sorted(STATION_IDS.values()), since, until)
     caaqms, aqi_df = forecast.to_inputs(readings, aqi, weather_fill)
     frames, skipped_stations, skipped_products, empty_hours = [], {}, {}, 0
     started = time.time()
@@ -183,8 +194,9 @@ def main(argv: list[str] | None = None) -> int:
     hashes = serving.verify(models.specs)
     hours = issue_hours(args.start, args.end)[: args.limit_hours]
     gate = forecast.load_gate()
-    with ForecastStore("DATABASE_URL_READONLY") as reader:
-        forecasts, summary = replay(reader, hours, models, gate, load_config().weather_fill)
+    readings, aqi = load_history(hours)
+    forecasts, summary = replay(readings, aqi, hours, models, gate, load_config().weather_fill)
+    with ForecastStore("DATABASE_URL_READONLY") as reader:  # a fresh, short-lived connection
         actuals = read_actuals(reader, hours[0], hours[-1] + pd.Timedelta(hours=25))
     scored = score_replay(forecasts, actuals)
     table, cover = product_skill(scored), coverage(forecasts, scored, hours)
