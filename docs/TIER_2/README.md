@@ -1,6 +1,6 @@
 # Tier 2 — Make the model genuinely better
 
-Tier 2 in `docs/IMPROVEMENT_PLAN.md` turns an honest-but-weak pipeline into one
+Tier 2 in `docs/history/IMPROVEMENT_PLAN.md` turns an honest-but-weak pipeline into one
 that can actually beat persistence where it matters. Unlike Tier 1 (one
 consolidated log), each task below has its own document.
 

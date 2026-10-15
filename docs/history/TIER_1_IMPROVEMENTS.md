@@ -1,6 +1,6 @@
 # Tier 1 Improvements — Honest Results & Correct Evaluation
 
-One log for all Tier 1 work from `docs/IMPROVEMENT_PLAN.md`. Each entry records the defect
+One log for all Tier 1 work from `docs/history/IMPROVEMENT_PLAN.md`. Each entry records the defect
 fixed, the files touched, the technical method, the numbers (before/after) and any caveats.
 
 Status: **Tier 1 complete** — T1.1 through T1.6 done (T1.6 repo-hygiene step needs one manual `git` command; see below).
@@ -307,7 +307,7 @@ $ ./venv/bin/python -m pytest -q
 | `reports/classification/PHASE_7_FINAL_AUDIT.md` | Removed "100% COMPLIANCE", "Zero Critical Miss Guarantee", "cryptographic", "mathematically rigorous". Critical-miss and Very Poor+ recall are now labelled descriptive and paired with the note that precision is reported separately. |
 | `reports/modeling/PHASE_6_FINAL_AUDIT.md` | "100% COMPLIANCE" → "PASSED"; "cryptographic" → SHA-256 checksums. |
 | `reports/phase7_classification/leakage_audit.md`, `reports/modeling/PHASE_6B_24H_REPORT.md`, `docs/technical_timeline.md`, `reports/classification/metrics/generate_report.py` | Reworded remaining "guarantee/guaranteeing" claims in plain language. |
-| `docs/IMPROVEMENT_PLAN.md`, `docs/WHAT_TO_FIX.md` | Reworded so the banned hype terms no longer appear literally. |
+| `docs/history/IMPROVEMENT_PLAN.md`, `docs/WHAT_TO_FIX.md` | Reworded so the banned hype terms no longer appear literally. |
 
 ### Repo hygiene
 18 files were tracked despite `.gitignore` excluding them (`git ls-files backups .quirq .xo`). They were

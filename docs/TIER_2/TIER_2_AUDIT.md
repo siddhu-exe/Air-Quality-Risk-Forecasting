@@ -1,6 +1,6 @@
 # Tier 2 audit report
 
-Audit of Tier 2 against `docs/IMPROVEMENT_PLAN.md` and `docs/TIER_1_IMPROVEMENTS.md`.
+Audit of Tier 2 against `docs/history/IMPROVEMENT_PLAN.md` and `docs/history/TIER_1_IMPROVEMENTS.md`.
 The plan's rules: select on validation only and score test once; every quoted number
 comes from a script output; always show persistence and skill; keep artifact paths.
 
@@ -156,4 +156,4 @@ Rewritten: `train_pm25_forecast.py`, `train_quantile_forecast.py`, `ablation_exo
 `notebooks/tier_2_colab.ipynb`, T2.3–T2.5 docs. Edited: `retrain_24h_extended.py`,
 `rolling_origin_backtest.py`, `build_metrics_table.py`, `compute_cpcb_aqi.py`,
 `build_features.py`, `pytest.ini`, T2.1/T2.2 docs, Tier 2 `README.md`, `README.md`,
-`CLAUDE.md`, `docs/IMPROVEMENT_PLAN.md`.
+`CLAUDE.md`, `docs/history/IMPROVEMENT_PLAN.md`.

@@ -8,7 +8,7 @@ Why
 ---
 The forecasting models could only train on 2025 because ``aqi_hourly`` holds
 just that year, so the trees never saw a winter peak (defect D7 in
-``docs/IMPROVEMENT_PLAN.md``). The raw station telemetry in ``Og Data`` does
+``docs/history/IMPROVEMENT_PLAN.md``). The raw station telemetry in ``Og Data`` does
 cover 2023-2024, so we recompute AQI with the CPCB method and use it as the
 training target for those years.
 

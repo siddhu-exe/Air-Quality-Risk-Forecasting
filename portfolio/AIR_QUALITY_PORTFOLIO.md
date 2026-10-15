@@ -53,8 +53,8 @@
 | # | Visual Identifier | Recommended Filename | Existing Repo Asset Path | Status |
 | :-: | :--- | :--- | :--- | :-: |
 | **01** | Hero / Streamlit Dashboard | `01_dashboard_hero.png` | `dashboard/app.py` *(Capture from running app)* | Needs Generation |
-| **02** | End-to-End System Architecture | `02_system_architecture.png` | `docs/Database/Blank diagram.png` *(or diagrammatic render)* | Needs Generation / Edit |
-| **03** | PostgreSQL Database Schema (ERD) | `03_postgres_erd_schema.png` | `docs/Database/Blank diagram.png` | Already Exists |
+| **02** | End-to-End System Architecture | `02_system_architecture.png` | `docs/Database/erd.png` *(or diagrammatic render)* | Needs Generation / Edit |
+| **03** | PostgreSQL Database Schema (ERD) | `03_postgres_erd_schema.png` | `docs/Database/erd.png` | Already Exists |
 | **04** | Multi-Horizon Forecasting Benchmarks | `04_forecasting_performance.png` | `data/Artifacts/1h/diagram/01_target_distribution_timeseries.png` / `baselines.csv` | Needs Generation / Edit |
 | **05** | Severe Crisis Episode Tracking | `05_severe_episode_tracking.png` | `data/Artifacts/1h/diagram/06_episode_tracking.png` | Already Exists |
 | **06** | Cost-Sensitive Threshold Optimization | `06_cost_sensitive_threshold.png` | `reports/classification/figures/02_expected_cost_vs_threshold.png` | Already Exists |
@@ -89,7 +89,7 @@
 - **Recommended Layout:** Horizontal vector block diagram with crisp stage boundaries and data contract indicators.
 - **Recommended Aspect Ratio:** `16:9` or `21:9` (`2400 × 1200 px`)
 - **Portfolio Section:** Section 4 (System Architecture & Pipeline)
-- **Existing Source:** Described in `docs/llm_context.md` and `docs/technical_timeline.md`.
+- **Existing Source:** Described in `docs/ARCHITECTURE.md`.
 - **Asset Status:** **Needs Generation** (Clean diagrammatic vector graphic or rendered architecture slide).
 
 ---
@@ -104,8 +104,8 @@
 - **Recommended Layout:** Entity-Relationship diagram layout with clean entity boxes and Crow's Foot relationship arrows.
 - **Recommended Aspect Ratio:** `16:9` (`2905 × 1621 px`)
 - **Portfolio Section:** Section 5 (Data Engineering & Database Architecture)
-- **Existing Source:** `docs/Database/Blank diagram.png` (Vector source: `docs/Database/Blank diagram.svg`)
-- **Asset Status:** **Already Exists** (`docs/Database/Blank diagram.png`).
+- **Existing Source:** `docs/Database/erd.png` (Vector source: `docs/Database/erd.svg`)
+- **Asset Status:** **Already Exists** (`docs/Database/erd.png`).
 
 ---
 
@@ -122,7 +122,7 @@
 - **Recommended Layout:** Multi-panel metric grid or benchmark comparison card.
 - **Recommended Aspect Ratio:** `16:9` (`1920 × 1080 px`)
 - **Portfolio Section:** Section 6 (Multi-Horizon Forecasting Models)
-- **Existing Source:** Data verified in `reports/modeling/baselines.csv` and `docs/phase_6c_findings.md`.
+- **Existing Source:** Data verified in `reports/modeling/baselines.csv` and `reports/modeling/PHASE_6C_24H_FINAL_REPORT.md`.
 - **Asset Status:** **Needs Generation / Composite** (Render from benchmark tables or use diagnostic charts in `data/Artifacts/`).
 
 ---
@@ -765,7 +765,7 @@ When presenting this project in a portfolio or technical interview, structure th
 - **GitHub Repository:** [https://github.com/siddhu-exe/Air-Quality-Risk-Forecasting](https://github.com/siddhu-exe/Air-Quality-Risk-Forecasting)  
   *(Alternative link: `https://github.com/Siddharth23052005/Air-quality-risk-forecasting`)*
 - **Kaggle Public Dataset:** [https://www.kaggle.com/datasets/siddharthdongardive/delhi-air-quality-monitoring-dataset-2023-2026](https://www.kaggle.com/datasets/siddharthdongardive/delhi-air-quality-monitoring-dataset-2023-2026)
-- **Live Demo:** not deployed yet (planned; see `docs/IMPROVEMENT_PLAN.md`, Tier 4). Add the URL here once it exists.
+- **Live Demo:** not deployed yet (planned; see `docs/history/IMPROVEMENT_PLAN.md`, Tier 4). Add the URL here once it exists.
 
 ---
 
@@ -779,7 +779,7 @@ When presenting this project in a portfolio or technical interview, structure th
   - *Source / Location:* High-resolution vector architecture diagram covering Ingestion, Causal Features, Modeling, Risk Staging, and Causal Econometrics.
 - [x] **03 — PostgreSQL Database Schema** (`portfolio/03_postgres_erd_schema.png`)  
   - *Status:* **Complete**  
-  - *Source / Location:* Copied from `docs/Database/Blank diagram.png` (`2905 × 1621 px`).
+  - *Source / Location:* Copied from `docs/Database/erd.png` (`2905 × 1621 px`).
 - [x] **04 — Forecasting Results Benchmark** (`portfolio/04_forecasting_performance.png`)  
   - *Status:* **Complete**  
   - *Source / Location:* High-resolution multi-horizon benchmark performance card (1h, 6h, 24h horizons, MAE/RMSE/R² comparison, and GBDT extrapolation failure case study).
