@@ -314,7 +314,8 @@ def assemble(
     rows: pd.DataFrame, issue: pd.Timestamp, models: serving.Serving, rule_values: dict[str, float] | None = None
 ) -> pd.DataFrame:
     """Every enabled product for feature ``rows`` (one per station, all at ``issue``), shaped like ``aq.forecasts``.
-    The rule covers only stations whose hourly AQI passed ``rule_value``."""
+    The rule covers only stations whose hourly AQI passed ``rule_value``; a product whose
+    forecast or persistence value is not finite for a station (for example PM2.5 missing at the issue hour) is dropped for that station."""
     out = []
     for spec in models.specs:
         if spec.kind == "rule":
@@ -337,7 +338,9 @@ def assemble(
                 }
             )
         )
-    return pd.concat(out, ignore_index=True)
+    forecasts = pd.concat(out, ignore_index=True)
+    finite = np.isfinite(forecasts[["y_hat", "y_persistence"]].to_numpy(float)).all(axis=1)
+    return forecasts[finite].reset_index(drop=True)  # e.g. no current PM2.5: no PM2.5 forecast, never a NaN row
 
 
 def summarize(verdicts: list[StationVerdict]) -> dict:

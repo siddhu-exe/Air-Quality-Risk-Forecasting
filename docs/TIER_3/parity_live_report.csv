@@ -1,0 +1,14 @@
+product,reference,variant,issue_hours,rows,compared,max_abs_diff,rows_over_tolerance
+aqi_1h,baseline evaluation (window_update_baseline),live path,169,175,175,1.1368683772161603e-13,0
+aqi_24h,retrain predictions (test),live path,31,216,216,4.661160346586257e-12,0
+aqi_24h,retrain predictions (test),rolling from training start,31,216,216,4.661160346586257e-12,0
+aqi_24h,retrain predictions (val),live path,31,205,205,5.8548721426632255e-12,0
+aqi_24h,retrain predictions (val),rolling from training start,31,205,205,5.8548721426632255e-12,0
+aqi_6h,retrain predictions (test),live path,31,217,217,0.0,0
+aqi_6h,retrain predictions (test),rolling from training start,31,217,217,0.0,0
+aqi_6h,retrain predictions (val),live path,31,211,211,0.0,0
+aqi_6h,retrain predictions (val),rolling from training start,31,211,211,0.0,0
+pm25_1h,training matrix row,live path,25,170,161,0.0,0
+pm25_1h,training matrix row,rolling from training start,25,170,161,0.0,0
+pm25_6h,training matrix row,live path,25,170,170,0.0,0
+pm25_6h,training matrix row,rolling from training start,25,170,170,0.0,0

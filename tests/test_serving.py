@@ -238,3 +238,19 @@ def test_the_real_models_load_and_forecast_finite_values_from_a_sparse_row():
                 frame[name] = np.nan
         out = serving.predict(models, key, frame)
         assert out.shape == (1,) and np.isfinite(out).all(), key
+
+
+def test_a_product_without_a_finite_value_is_dropped_for_that_station_only():
+    models = serving.Serving(
+        [serving.SPECS["pm25_6h"], serving.SPECS["aqi_6h"]],
+        {
+            "aqi_6h": Constant(150.0, ["f"]),
+            "pm25_6h": {"model": Constant(30.0), "columns": ["f"], "target_form": "residual"},
+        },
+        {"aqi_6h": ["f"], "pm25_6h": ["f"]},
+    )
+    frame = rows()
+    frame.loc[1, "pm25_curr"] = np.nan  # Alipur has no current PM2.5
+    out = forecast.assemble(frame, ISSUE, models)
+    assert out.groupby("target").station_name.apply(list).to_dict() == {"aqi": ["ITO", "Alipur"], "pm25": ["ITO"]}
+    assert np.isfinite(out[["y_hat", "y_persistence"]].to_numpy(float)).all()
