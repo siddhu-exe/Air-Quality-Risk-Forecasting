@@ -4,7 +4,7 @@
 [ingest]
 source = "openaq"          # "openaq" | "data_gov_in"
 fallback = ""              # optional second source, used only if the primary fails or returns nothing fresh
-lookback_hours = 6         # most recent hours (re)fetched each run; upserts make overlap harmless
+lookback_hours = 72        # hours (re)fetched each run (the maximum): a source that lags by up to 3 days is caught up by the next run; upserts make overlap harmless
 stale_after_hours = 3      # a station whose newest reading is older than this is stale; a run with no fresh station fails
 weather_display = "open-meteo"  # store Open-Meteo values in empty solar/ITO weather cells (weather_source/qc_flags say so), for display
 weather_fill = "none"      # what the forecast models see: "none" masks every filled cell. The D1 audit showed filling HURT the 1h/6h models
