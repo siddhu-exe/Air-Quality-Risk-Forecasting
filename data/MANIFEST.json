@@ -1,0 +1,26 @@
+{
+  "release": "data-v1",
+  "base_url": "https://github.com/siddhu-exe/Air-Quality-Risk-Forecasting/releases/download/data-v1/",
+  "files": {
+    "data/processed/features_2025.parquet": {
+      "asset": "features_2025.parquet",
+      "sha256": "197cc96a3a041238c2d1b5ecbeaf8760efd8ea59a3ba5d104e82945489caff59",
+      "bytes": 13877443
+    },
+    "data/processed/ml/air_quality_ml_1h_v1.parquet": {
+      "asset": "air_quality_ml_1h_v1.parquet",
+      "sha256": "201f59fc183a169d01b2511fb9af8de7e484d6888bb760558e78e39b4cb1e3f3",
+      "bytes": 13631513
+    },
+    "data/processed/ml/air_quality_ml_6h_v1.parquet": {
+      "asset": "air_quality_ml_6h_v1.parquet",
+      "sha256": "17931c9c23b478a8517260c77c6c3b6882004def987d3d81df48819f930d69e5",
+      "bytes": 13545069
+    },
+    "data/processed/ml/air_quality_ml_24h_v1.parquet": {
+      "asset": "air_quality_ml_24h_v1.parquet",
+      "sha256": "5fd6026a52b3ea09cf6e7f0f78707523a96ebf7562e5ea4560fc91ed38747951",
+      "bytes": 13271995
+    }
+  }
+}

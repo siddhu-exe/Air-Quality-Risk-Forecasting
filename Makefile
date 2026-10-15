@@ -1,9 +1,12 @@
 PY ?= ./venv/bin/python
 
-.PHONY: help test lint format type-check run-api run-frontend check hooks
+.PHONY: help data test lint format type-check run-api run-frontend check hooks
 
 help:
 	@grep -E '^[a-z-]+:.*##' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-14s %s\n", $$1, $$2}'
+
+data: ## download and verify the large datasets (see data/MANIFEST.json)
+	$(PY) scripts/fetch_data.py
 
 test: ## Python tests, then frontend tests
 	$(PY) -m pytest

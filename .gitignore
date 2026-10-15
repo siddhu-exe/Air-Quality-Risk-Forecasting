@@ -76,3 +76,7 @@ data/processed/features_live*.parquet
 
 # Colab result zips
 tier3_*results*.zip
+
+# Large datasets: published as a GitHub Release asset, fetched by `make data` (data/MANIFEST.json)
+data/processed/features_2025.parquet
+data/processed/ml/*.parquet
