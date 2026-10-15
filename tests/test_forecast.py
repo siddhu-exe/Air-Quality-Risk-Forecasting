@@ -5,7 +5,8 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from src.live import forecast, forecast_store, models as model_mod
+from src.live import forecast, forecast_store
+from src.live import models as model_mod
 from src.live.forecast import KST
 
 ISSUE = pd.Timestamp("2026-10-07 12:00", tz=KST)

@@ -17,7 +17,8 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from src.live import forecast, models as model_mod
+from src.live import forecast
+from src.live import models as model_mod
 from src.models.phase_6c_refinement import construct_causal_long_horizon_features
 from src.models.splits import KST, VAL_END, VAL_START
 

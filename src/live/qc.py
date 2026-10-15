@@ -12,9 +12,8 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-from src.features.compute_cpcb_aqi import STATION_IDS
-
 from etl.schemas import PHYSICAL_BOUNDS, SENTINEL_VALUES
+from src.features.compute_cpcb_aqi import STATION_IDS
 
 VALUE_COLUMNS = [
     "pm25", "pm10", "no2", "nox", "nh3", "so2", "co", "o3",

@@ -1,7 +1,6 @@
 """Scenario logic of the D1 feature-availability audit. Synthetic data; no models, no network."""
 import numpy as np
 import pandas as pd
-import pytest
 
 from src.evaluation import feature_availability_audit as audit
 

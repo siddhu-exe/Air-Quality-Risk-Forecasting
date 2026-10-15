@@ -5,9 +5,10 @@ across stations, years, and months from PostgreSQL air_quality_db.
 """
 
 import os
+from pathlib import Path
+
 import pandas as pd
 import psycopg2
-from pathlib import Path
 
 # DB Connection settings
 DB_PARAMS = {

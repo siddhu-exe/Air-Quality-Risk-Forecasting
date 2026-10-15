@@ -27,7 +27,11 @@ import numpy as np
 import pandas as pd
 
 from src.features.compute_cpcb_aqi import (
-    DEFAULT_RAW_DIR, POLLUTANT_COLUMNS, POLLUTANTS, STATION_IDS, _station_for_folder, compute_aqi,
+    DEFAULT_RAW_DIR,
+    POLLUTANT_COLUMNS,
+    POLLUTANTS,
+    _station_for_folder,
+    compute_aqi,
 )
 from src.live import openaq
 from src.live.qc import VALUE_COLUMNS, finish_hourly

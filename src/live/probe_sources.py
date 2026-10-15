@@ -16,7 +16,7 @@ import os
 import socket
 import sys
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import requests
 
@@ -114,7 +114,7 @@ def probe_openaq(key: str) -> None:
         resp = requests.get(OPENAQ_LOCATION, headers={"X-API-Key": key}, timeout=TIMEOUT)
         resp.raise_for_status()
         last = datetime.fromisoformat(resp.json()["results"][0]["datetimeLast"]["utc"].replace("Z", "+00:00"))
-        age = (datetime.now(timezone.utc) - last).total_seconds() / 3600
+        age = (datetime.now(UTC) - last).total_seconds() / 3600
         emit(f"- R K Puram newest value: {last:%Y-%m-%d %H:%M} UTC, {age:.1f} hours old")
     except (requests.RequestException, KeyError, ValueError, IndexError) as exc:
         emit(f"- request failed: {type(exc).__name__}", [key])
@@ -122,7 +122,7 @@ def probe_openaq(key: str) -> None:
 
 def main() -> int:
     keys = [os.environ.get("DATA_GOV_IN_API_KEY", "").strip(), os.environ.get("OPENAQ_API_KEY", "").strip()]
-    emit(f"# Source probe {datetime.now(timezone.utc):%Y-%m-%d %H:%M} UTC")
+    emit(f"# Source probe {datetime.now(UTC):%Y-%m-%d %H:%M} UTC")
     emit(f"- runner egress country: {egress_country()}")
     probe_data_gov_in(keys[0])
     probe_openaq(keys[1])

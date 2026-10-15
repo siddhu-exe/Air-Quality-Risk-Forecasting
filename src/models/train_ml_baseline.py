@@ -7,11 +7,11 @@ Computes feature importances and executes feature ablation experiments.
 
 import sys
 import time
-import numpy as np
-import pandas as pd
 from pathlib import Path
-from sklearn.linear_model import Ridge
+
+import pandas as pd
 from sklearn.ensemble import HistGradientBoostingRegressor
+from sklearn.linear_model import Ridge
 from sklearn.preprocessing import StandardScaler
 from xgboost import XGBRegressor
 
@@ -88,9 +88,9 @@ def train_and_eval_models():
     print("=======================================================")
 
     for h_label, target_col in horizons:
-        print(f"\n#######################################################")
+        print("\n#######################################################")
         print(f"            HORIZON: {h_label.upper()} ({target_col})")
-        print(f"#######################################################")
+        print("#######################################################")
 
         # Create valid horizon masks (dropping rows where target is NaN)
         valid_target = df[target_col].notna()

@@ -6,10 +6,11 @@ from PostgreSQL air_quality_db across 7 Delhi CAAQMS stations.
 
 import os
 import sys
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 import psycopg2
-from pathlib import Path
 
 # Allow `python src/features/build_features.py` (script dir, not repo root, is on sys.path).
 _PROJECT_ROOT = Path(__file__).resolve().parents[2]

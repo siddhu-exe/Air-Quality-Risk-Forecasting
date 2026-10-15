@@ -8,9 +8,9 @@ from __future__ import annotations
 
 import os
 import socket
+from collections.abc import Iterator
 from contextlib import contextmanager
 from urllib.parse import urlsplit
-from typing import Iterator
 
 import psycopg2
 
@@ -83,7 +83,7 @@ def get_url(var: str = WRITER_VAR) -> str:
 
 
 @contextmanager
-def connect(var: str = WRITER_VAR) -> Iterator["psycopg2.extensions.connection"]:
+def connect(var: str = WRITER_VAR) -> Iterator[psycopg2.extensions.connection]:
     """Open a pooler connection, commit on success, roll back on error, always close."""
     url = get_url(var)
     extra = {}

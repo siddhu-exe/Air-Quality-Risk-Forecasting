@@ -2,11 +2,10 @@
 from __future__ import annotations
 
 import pandas as pd
+import requests
 
 from src.live import openaq
 from src.live.sources.base import SOURCE_COLUMNS, LiveSource, SourceUnavailable
-
-import requests
 
 
 class OpenAQSource(LiveSource):

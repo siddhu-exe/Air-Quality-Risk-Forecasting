@@ -19,7 +19,8 @@ import numpy as np
 import pandas as pd
 
 from src.features.build_features import load_caaqms_offline
-from src.live import forecast, models as model_mod
+from src.live import forecast
+from src.live import models as model_mod
 from src.live.forecast import KST
 
 REPO_ROOT = Path(__file__).resolve().parents[2]

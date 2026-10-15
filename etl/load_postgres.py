@@ -9,11 +9,7 @@
 
 from __future__ import annotations
 
-import json
-import os
-import re
 from pathlib import Path
-from typing import Optional
 
 import pandas as pd
 import psycopg2
@@ -342,9 +338,9 @@ def run_small_load(
     6. Commit
     7. Return stats dict for reporting
     """
-    from transform_caaqms import process_caaqms_csv
-    from transform_aqi import process_aqi_xlsx
     from schemas import clean_station_name
+    from transform_aqi import process_aqi_xlsx
+    from transform_caaqms import process_caaqms_csv
 
     DATA_ROOT = PROJECT_DIR / "Og Data" / "Delhi data"
     station_dir = DATA_ROOT / station_folder

@@ -12,17 +12,17 @@ Generates:
 """
 
 from __future__ import annotations
+
 import sys
 from pathlib import Path
-import psycopg2
-from psycopg2.extras import RealDictCursor
+
 import pandas as pd
-import numpy as np
 
 PROJECT_DIR = Path(__file__).resolve().parent.parent.parent
 sys.path.append(str(PROJECT_DIR / "etl"))
 
-from load_postgres import load_env, get_connection
+from load_postgres import get_connection, load_env
+
 
 def run_temporal_and_station_analysis():
     env = load_env()

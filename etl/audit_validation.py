@@ -1,19 +1,18 @@
 import os
 from pathlib import Path
+
 import pandas as pd
-import numpy as np
 
 # Use the existing ETL modules
 try:
-    from schemas import CSV_COLUMN_MAPPING, CAAQMS_DB_COLUMNS, SENTINEL_VALUES, PHYSICAL_BOUNDS, clean_station_name
-    from transform_caaqms import process_caaqms_csv
     from discover import discover_files
+    from schemas import CAAQMS_DB_COLUMNS, CSV_COLUMN_MAPPING, PHYSICAL_BOUNDS, SENTINEL_VALUES, clean_station_name
+    from transform_caaqms import process_caaqms_csv
 except ImportError:
     import sys
     sys.path.append(os.path.join(os.path.dirname(__file__), 'etl'))
-    from schemas import CSV_COLUMN_MAPPING, CAAQMS_DB_COLUMNS, SENTINEL_VALUES, PHYSICAL_BOUNDS, clean_station_name
-    from transform_caaqms import process_caaqms_csv
     from discover import discover_files
+    from schemas import CAAQMS_DB_COLUMNS, CSV_COLUMN_MAPPING, PHYSICAL_BOUNDS, SENTINEL_VALUES
 
 DATA_ROOT = Path(__file__).resolve().parent.parent / "Og Data" / "Delhi data"
 

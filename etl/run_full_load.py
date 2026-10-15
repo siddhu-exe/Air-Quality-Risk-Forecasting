@@ -8,23 +8,26 @@ Halts immediately on any failure to preserve data integrity.
 
 from __future__ import annotations
 
-import sys
 import json
-import traceback
+import sys
 from pathlib import Path
 
 # Add ETL dir to path
 PROJECT_DIR = Path(__file__).resolve().parent.parent
 sys.path.append(str(PROJECT_DIR / "etl"))
 
-from load_postgres import (
-    load_env, get_connection, get_or_create_station, get_or_create_source_file,
-    insert_caaqms_batch, insert_aqi_batch
-)
-from transform_caaqms import process_caaqms_csv
-from transform_aqi import process_aqi_xlsx
 from discover import discover_files
+from load_postgres import (
+    get_connection,
+    get_or_create_source_file,
+    get_or_create_station,
+    insert_aqi_batch,
+    insert_caaqms_batch,
+    load_env,
+)
 from schemas import clean_station_name
+from transform_aqi import process_aqi_xlsx
+from transform_caaqms import process_caaqms_csv
 
 
 def main():
@@ -54,7 +57,7 @@ def main():
         cur.execute("SELECT COUNT(*) FROM aqi_hourly")
         pre_aqi = cur.fetchone()[0]
 
-    print(f"\n[PRE-LOAD AUDIT]")
+    print("\n[PRE-LOAD AUDIT]")
     print(f"  stations:      {pre_stations}")
     print(f"  source_files:  {pre_files}")
     print(f"  caaqms_hourly: {pre_caaqms}")

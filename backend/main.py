@@ -1,8 +1,8 @@
 import os
+
 import pandas as pd
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
-from typing import List, Optional
 
 # --- Initialization ---
 app = FastAPI(title="VayuRisk AI API", version="1.0.0")
@@ -71,7 +71,7 @@ async def get_stations():
     return stations
 
 @app.get("/api/forecasts")
-async def get_forecasts(horizon: str = Query("1h", regex="^(1h|6h|24h)$"), station: Optional[str] = "ALL"):
+async def get_forecasts(horizon: str = Query("1h", regex="^(1h|6h|24h)$"), station: str | None = "ALL"):
     """
     Get multi-step forecasts for a specific horizon (1h, 6h, or 24h).
     """

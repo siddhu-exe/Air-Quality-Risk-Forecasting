@@ -8,7 +8,15 @@ import requests
 
 from src.live import config as cfgmod
 from src.live import openaq
-from src.live.sources import REGISTRY, DataGovInSource, LiveSource, OpenAQSource, SourceNotVerified, SourceUnavailable, get_source
+from src.live.sources import (
+    REGISTRY,
+    DataGovInSource,
+    LiveSource,
+    OpenAQSource,
+    SourceNotVerified,
+    SourceUnavailable,
+    get_source,
+)
 from src.live.sources import data_gov_in as dgi
 from src.live.sources.base import SOURCE_COLUMNS
 

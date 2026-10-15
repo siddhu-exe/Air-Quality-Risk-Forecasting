@@ -1,8 +1,13 @@
-import os
-import pandas as pd
 import numpy as np
-import itertools
-from sklearn.metrics import confusion_matrix, f1_score, precision_score, recall_score, roc_auc_score, average_precision_score
+import pandas as pd
+from sklearn.metrics import (
+    average_precision_score,
+    confusion_matrix,
+    f1_score,
+    precision_score,
+    recall_score,
+    roc_auc_score,
+)
 
 # ==============================================================================
 # 1. Deterministic Binning Functions
@@ -219,62 +224,62 @@ def episode_detection_report(df: pd.DataFrame, horizon: str, actual_col: str,
 def analyze_horizon(df: pd.DataFrame, horizon: str, actual_col: str, pred_col: str):
     """Run all classification & evaluation logic for a single horizon."""
     print(f"=== Analyzing {horizon} Horizon ===")
-    
+
     # ----------------------------------------------------
     # Multi-class CPCB Evaluation
     # ----------------------------------------------------
     df = df.copy().dropna(subset=[actual_col, pred_col])
-    
+
     y_true_cpcb = cpcb_classify(df[actual_col].values)
     y_pred_cpcb = cpcb_classify(df[pred_col].values)
-    
+
     df['category_actual'] = y_true_cpcb
     df['category_predicted'] = y_pred_cpcb
     df['category_name_actual'] = [CPCB_LABELS[i] for i in y_true_cpcb]
     df['category_name_predicted'] = [CPCB_LABELS[i] for i in y_pred_cpcb]
-    
+
     df['is_correct'] = y_true_cpcb == y_pred_cpcb
     df['ordinal_error'] = y_pred_cpcb - y_true_cpcb
     df['abs_ordinal_error'] = np.abs(df['ordinal_error'])
-    
+
     df['severe_actual'] = df[actual_col] >= 401
     df['severe_predicted'] = df[pred_col] >= 401
-    
+
     df['vpoor_plus_actual'] = df[actual_col] >= 301
     df['vpoor_plus_predicted'] = df[pred_col] >= 301
-    
+
     # GRAP logic
     df['grap_stage_actual'] = grap_stage_from_aqi(df[actual_col].values)
     df['grap_stage_forecast'] = grap_stage_from_aqi(df[pred_col].values)
     df['stage_iii_alert'] = df[pred_col] >= 401
     df['stage_iv_alert'] = df[pred_col] > 450
     df['any_grap_alert'] = df[pred_col] >= 201
-    
+
     # Export row-level classified data
     df.to_parquet(f"reports/classification/{horizon}/classified_predictions.parquet", index=False)
-    
+
     # Metrics computation
     # Macro F1, Weighted F1
     macro_f1 = f1_score(y_true_cpcb, y_pred_cpcb, average='macro')
     weighted_f1 = f1_score(y_true_cpcb, y_pred_cpcb, average='weighted')
-    
+
     macro_prec = precision_score(y_true_cpcb, y_pred_cpcb, average='macro', zero_division=0)
     macro_rec = recall_score(y_true_cpcb, y_pred_cpcb, average='macro', zero_division=0)
-    
+
     w_kappa = compute_weighted_kappa(y_true_cpcb, y_pred_cpcb)
     ord_mae = compute_ordinal_mae(y_true_cpcb, y_pred_cpcb)
-    
+
     # Class-specific (Severe is 5)
     labels = np.unique(np.concatenate([y_true_cpcb, y_pred_cpcb]))
     severe_mask = (y_true_cpcb == 5)
-    
+
     if 5 in labels:
         severe_f1 = f1_score(y_true_cpcb, y_pred_cpcb, labels=[5], average='macro')
         severe_rec = recall_score(y_true_cpcb, y_pred_cpcb, labels=[5], average='macro', zero_division=0)
         severe_prec = precision_score(y_true_cpcb, y_pred_cpcb, labels=[5], average='macro', zero_division=0)
     else:
         severe_f1, severe_rec, severe_prec = np.nan, np.nan, np.nan
-        
+
     vpoor_plus_rec = recall_score(y_true_cpcb >= 4, y_pred_cpcb >= 4, zero_division=0)
     vpoor_plus_prec = precision_score(y_true_cpcb >= 4, y_pred_cpcb >= 4, zero_division=0)
     vpoor_plus_f1 = f1_score(y_true_cpcb >= 4, y_pred_cpcb >= 4, zero_division=0)
@@ -286,7 +291,7 @@ def analyze_horizon(df: pd.DataFrame, horizon: str, actual_col: str, pred_col: s
     vp_tp = int(np.sum((y_true_cpcb >= 4) & (y_pred_cpcb >= 4)))
     vp_fp = int(np.sum((y_true_cpcb < 4) & (y_pred_cpcb >= 4)))
     vp_fn = int(np.sum((y_true_cpcb >= 4) & (y_pred_cpcb < 4)))
-    
+
     # Critical Miss Rate (Actual Severe predicted as <= Moderate (<=2))
     total_actual_severe = np.sum(severe_mask)
     if total_actual_severe > 0:
@@ -294,7 +299,7 @@ def analyze_horizon(df: pd.DataFrame, horizon: str, actual_col: str, pred_col: s
         critical_miss_rate = critical_misses / total_actual_severe
     else:
         critical_miss_rate = np.nan
-        
+
     metrics = {
         'horizon': horizon,
         'macro_f1': macro_f1,
@@ -317,40 +322,40 @@ def analyze_horizon(df: pd.DataFrame, horizon: str, actual_col: str, pred_col: s
         'vpoor_plus_fn': vp_fn,
         'critical_miss_rate': critical_miss_rate
     }
-    
+
     # Confusion matrix
     cm = confusion_matrix(y_true_cpcb, y_pred_cpcb, labels=np.arange(6))
     cm_df = pd.DataFrame(cm, index=[f"True_{L}" for L in CPCB_LABELS], columns=[f"Pred_{L}" for L in CPCB_LABELS])
     cm_df.to_csv(f"reports/classification/metrics/confusion_matrix_{horizon}.csv")
-    
+
     return metrics, df
 
 def process_all():
     print("Loading 1h predictions...")
     p1 = pd.read_parquet('data/Artifacts/1h/predictions_1h_test.parquet')
-    
+
     print("Loading 6h predictions...")
     p6 = pd.read_parquet('data/Artifacts/6h/predictions_6h_test.parquet')
-    
+
     print("Loading 24h predictions...")
     p24 = pd.read_parquet('reports/modeling/24h/final/final_predictions.parquet')
-    
+
     metrics_list = []
-    
+
     m1, df1 = analyze_horizon(p1, '1h', 'y_true', 'y_pred')
     metrics_list.append(m1)
-    
+
     m6, df6 = analyze_horizon(p6, '6h', 'y_true', 'y_pred')
     metrics_list.append(m6)
-    
+
     m24, df24 = analyze_horizon(p24, '24h', 'target_aqi_24h', 'prediction_hybrid_6c_winning')
     metrics_list.append(m24)
-    
+
     metrics_df = pd.DataFrame(metrics_list)
     metrics_df.to_csv('reports/classification/metrics/multiclass_metrics_comparison.csv', index=False)
     print("\nMetrics comparison saved to reports/classification/metrics/multiclass_metrics_comparison.csv")
     print(metrics_df[['horizon', 'macro_f1', 'severe_recall', 'ordinal_mae']])
-    
+
     # ----------------------------------------------------
     # Episode hit-rate & lead-time (explicit time alignment)
     # ----------------------------------------------------

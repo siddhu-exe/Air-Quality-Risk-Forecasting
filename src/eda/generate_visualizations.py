@@ -16,14 +16,16 @@ Generates the complete 11-figure EDA visualization suite in reports/eda/figures/
 """
 
 from __future__ import annotations
+
 import sys
-from pathlib import Path
-import psycopg2
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
 import warnings
+from pathlib import Path
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import seaborn as sns
+
 warnings.filterwarnings("ignore")
 
 # Set publication style
@@ -38,7 +40,7 @@ plt.rcParams["figure.autolayout"] = True
 
 PROJECT_DIR = Path(__file__).resolve().parent.parent.parent
 sys.path.append(str(PROJECT_DIR / "etl"))
-from load_postgres import load_env, get_connection
+from load_postgres import get_connection, load_env
 
 FIGURES_DIR = PROJECT_DIR / "reports" / "eda" / "figures"
 FIGURES_DIR.mkdir(parents=True, exist_ok=True)

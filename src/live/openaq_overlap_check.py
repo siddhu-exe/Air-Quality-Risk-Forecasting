@@ -22,17 +22,22 @@ from __future__ import annotations
 import os
 import pickle
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
-
 from dotenv import load_dotenv
 
 from src.features.compute_cpcb_aqi import DEFAULT_RAW_DIR, _station_for_folder
 from src.live.openaq import (
-    LOCATIONS, SLOT_START_OFFSET_MIN, UNIT_FACTOR, fetch_15min, get, live_sensors, slots_to_hourly,
+    LOCATIONS,
+    SLOT_START_OFFSET_MIN,
+    UNIT_FACTOR,
+    fetch_15min,
+    get,
+    live_sensors,
+    slots_to_hourly,
 )
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -85,7 +90,7 @@ def collect() -> tuple[dict, list]:
         samples, freshness = pickle.loads(cache.read_bytes())
         print(f"loaded {len(samples)} cached samples from {cache}")
         return samples, freshness
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     samples, freshness = {}, []
     for station, location_id in LOCATIONS.items():
         window = WINDOW_2025 if station == "Dwarka-Sector 8" else WINDOW_2026
@@ -103,7 +108,7 @@ def collect() -> tuple[dict, list]:
 
 
 def main() -> int:
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     samples, freshness = collect()
 
     # 1) scan the window start for every parameter (pooled over the six 2026 stations)

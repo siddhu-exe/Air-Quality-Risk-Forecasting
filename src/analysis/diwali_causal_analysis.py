@@ -7,16 +7,14 @@ interrupted time series, meteorological controls, and in-time placebo tests.
 """
 
 import os
-import sys
 from pathlib import Path
-import psycopg2
+
+import matplotlib.dates as mdates
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import statsmodels.api as sm
+import psycopg2
 import statsmodels.formula.api as smf
-import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
-import seaborn as sns
 
 # Set style
 plt.style.use('seaborn-v0_8-whitegrid' if 'seaborn-v0_8-whitegrid' in plt.style.available else 'default')

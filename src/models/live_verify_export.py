@@ -15,9 +15,8 @@ from pathlib import Path
 
 import joblib
 import numpy as np
-import pandas as pd
 
-from src.models.live_retrain import KEYS, MASKED_PATH, FEATURES_PATH, load_matrix
+from src.models.live_retrain import FEATURES_PATH, MASKED_PATH, load_matrix
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 

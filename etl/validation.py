@@ -1,7 +1,9 @@
-import pandas as pd
-import numpy as np
 import json
-from schemas import SENTINEL_VALUES, PHYSICAL_BOUNDS
+
+import numpy as np
+import pandas as pd
+from schemas import PHYSICAL_BOUNDS, SENTINEL_VALUES
+
 
 def validate_and_clean_df(df: pd.DataFrame, source_type: str) -> tuple[pd.DataFrame, dict]:
     stats = {

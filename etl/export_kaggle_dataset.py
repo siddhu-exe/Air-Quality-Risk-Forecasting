@@ -6,7 +6,6 @@ Strictly strips internal filesystem paths, database credentials, and internal su
 from __future__ import annotations
 
 import json
-import os
 import sys
 from pathlib import Path
 
@@ -17,9 +16,9 @@ if str(PROJECT_DIR) not in sys.path:
 KAGGLE_DIR = PROJECT_DIR / "kaggle"
 KAGGLE_DIR.mkdir(parents=True, exist_ok=True)
 
-import psycopg2
 import pandas as pd
-from etl.load_postgres import load_env, get_connection
+
+from etl.load_postgres import get_connection, load_env
 
 
 def export_stations(conn) -> pd.DataFrame:

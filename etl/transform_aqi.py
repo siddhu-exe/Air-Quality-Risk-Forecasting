@@ -1,7 +1,9 @@
-from pathlib import Path
-import pandas as pd
 import re
+from pathlib import Path
+
+import pandas as pd
 from validation import validate_and_clean_df
+
 
 def process_aqi_xlsx(file_path: Path) -> tuple[pd.DataFrame | None, dict]:
     stats = {"status": "ok", "error": None, "raw_rows": 0, "processed_rows": 0, "dropped_invalid_ts": 0}
@@ -13,10 +15,10 @@ def process_aqi_xlsx(file_path: Path) -> tuple[pd.DataFrame | None, dict]:
             stats["status"] = "error"
             stats["error"] = f"Could not extract year and month from filename {file_path.name}"
             return None, stats
-        
+
         file_year = m.group(1)
         file_month_str = m.group(2)
-        
+
         xl = pd.ExcelFile(file_path, engine="openpyxl")
         all_sheets_data = []
 
@@ -47,7 +49,7 @@ def process_aqi_xlsx(file_path: Path) -> tuple[pd.DataFrame | None, dict]:
             date_int_str = melted["Date"].astype(str)
             # Remove any trailing .0 if Date was parsed as float
             date_int_str = date_int_str.str.replace(r"\.0$", "", regex=True)
-            
+
             melted["ts_str"] = file_year + "-" + file_month_str + "-" + date_int_str + " " + melted["HourStr"].astype(str)
             melted["ts"] = pd.to_datetime(melted["ts_str"], errors="coerce")
 
@@ -55,7 +57,7 @@ def process_aqi_xlsx(file_path: Path) -> tuple[pd.DataFrame | None, dict]:
             is_valid_ts = melted["ts"].notna()
             stats["dropped_invalid_ts"] += int((~is_valid_ts).sum())
             melted = melted[is_valid_ts].copy()
-            
+
             # Extra safety: verify 1970 doesn't exist
             bad_epoch = pd.to_datetime("1970-01-01")
             is_epoch = melted["ts"] <= bad_epoch

@@ -2,7 +2,7 @@
 import numpy as np
 import pytest
 
-from src.live.epa_aqi import AQI_MAX, CONC_KNOTS, POLLUTANTS, from_aqi, roundtrip, to_aqi
+from src.live.epa_aqi import AQI_MAX, POLLUTANTS, from_aqi, roundtrip, to_aqi
 
 # (concentration ug/m3, AQI) copied from the PM2.5 conversion table on https://aqicn.org/calculator/
 WAQI_PM25_TABLE = [(0, 0), (1, 4), (5, 21), (10, 42), (12, 50), (13, 52), (20, 67), (30, 88), (35, 99), (36, 101), (40, 111),

@@ -1,7 +1,9 @@
 # etl/generate_mapping_report.py
 from pathlib import Path
+
 import pandas as pd
 from schemas import CSV_COLUMN_MAPPING
+
 
 def generate_report():
     script_dir = Path(__file__).resolve().parent

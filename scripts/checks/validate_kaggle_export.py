@@ -6,12 +6,9 @@ and cross-references against PostgreSQL source of truth.
 
 from __future__ import annotations
 
-import json
-import os
-import sys
 from pathlib import Path
+
 import pandas as pd
-import numpy as np
 
 PROJECT_DIR = Path(__file__).resolve().parents[2]
 KAGGLE_DIR = PROJECT_DIR / "kaggle"
@@ -104,7 +101,7 @@ def validate_integrity_and_ranges(dfs):
     # Check no machine paths
     for val in df_sources["filename"]:
         assert "/home/" not in str(val) and "local_pg_data" not in str(val), f"Internal path found: {val}"
-    print(f"   ✓ Source files: 105 batches, foreign keys valid, internal paths stripped")
+    print("   ✓ Source files: 105 batches, foreign keys valid, internal paths stripped")
 
     # CAAQMS
     df_caaqms = dfs["caaqms_hourly.csv"]
@@ -149,7 +146,7 @@ def validate_integrity_and_ranges(dfs):
     df_meta = dfs["column_metadata.csv"]
     assert len(df_meta) == 44
     assert set(df_meta["file"]) == {"stations.csv", "source_files.csv", "caaqms_hourly.csv", "aqi_hourly.csv"}
-    print(f"   ✓ Metadata: All 44 exported columns across 4 CSV files fully documented")
+    print("   ✓ Metadata: All 44 exported columns across 4 CSV files fully documented")
 
 
 def main():

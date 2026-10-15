@@ -27,13 +27,13 @@ Artifacts (paths consumed by dashboard/app.py and backend/main.py are unchanged)
 import os
 
 import joblib
+import matplotlib
 import numpy as np
 import pandas as pd
-import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from sklearn.metrics import precision_recall_curve, average_precision_score
+from sklearn.metrics import average_precision_score, precision_recall_curve
 
 plt.style.use("default")
 plt.rcParams["font.family"] = "DejaVu Sans"

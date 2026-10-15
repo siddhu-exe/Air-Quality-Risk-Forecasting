@@ -5,16 +5,17 @@ Final database validation script to ensure data integrity of the full ETL load.
 """
 
 from __future__ import annotations
+
 import sys
-import json
-import pandas as pd
 from pathlib import Path
+
 from psycopg2.extras import RealDictCursor
 
 PROJECT_DIR = Path(__file__).resolve().parent.parent
 sys.path.append(str(Path(__file__).resolve().parent))
 
-from load_postgres import load_env, get_connection
+from load_postgres import get_connection, load_env
+
 
 def run_validations():
     env = load_env()

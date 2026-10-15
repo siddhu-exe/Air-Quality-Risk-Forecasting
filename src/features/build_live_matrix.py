@@ -23,7 +23,11 @@ import numpy as np
 import pandas as pd
 
 from src.features.build_features import (
-    OFFLINE_END, OFFLINE_START, _stations_frame, compute_feature_frame, load_caaqms_offline,
+    OFFLINE_END,
+    OFFLINE_START,
+    _stations_frame,
+    compute_feature_frame,
+    load_caaqms_offline,
 )
 from src.features.compute_cpcb_aqi import POLLUTANTS, compute_aqi
 from src.live.qc import apply_qc

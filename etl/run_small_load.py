@@ -6,7 +6,9 @@ Runs load_postgres.py's run_small_load() function.
 """
 
 from __future__ import annotations
+
 import json
+
 from load_postgres import run_small_load
 
 if __name__ == "__main__":
@@ -36,7 +38,7 @@ if __name__ == "__main__":
         print("=======================\n")
 
     except Exception as e:
-        print(f"\n=== LOAD FAILED ===")
+        print("\n=== LOAD FAILED ===")
         print(f"Error: {e}")
         print("===================\n")
         raise

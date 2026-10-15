@@ -13,8 +13,14 @@ import pytest
 
 from src.live import openaq
 from src.live.openaq import (
-    ALIGNMENT_UNVERIFIED_2026, EXPECTED_UNIT_LABELS, PARAM_TO_COLUMN, UNIT_FACTOR, UnitLabelChanged,
-    check_unit_labels, hourly_frame, slots_to_hourly,
+    ALIGNMENT_UNVERIFIED_2026,
+    EXPECTED_UNIT_LABELS,
+    PARAM_TO_COLUMN,
+    UNIT_FACTOR,
+    UnitLabelChanged,
+    check_unit_labels,
+    hourly_frame,
+    slots_to_hourly,
 )
 
 FIXTURE = json.loads((Path(__file__).parent / "fixtures" / "openaq_rkpuram_2026-08-25.json").read_text())

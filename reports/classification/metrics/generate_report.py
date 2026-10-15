@@ -40,7 +40,7 @@ Phase 7 successfully transformed the frozen Phase 6 continuous AQI predictions i
         return "\n".join([header, sep] + body)
 
     f.write(df_to_markdown(metrics_df[['horizon', 'macro_f1', 'weighted_f1', 'weighted_kappa', 'ordinal_mae']]))
-    
+
     text = """\n\n### 2.2 Deep Dive: Severe-Class & Policy Focus
 Because standard metrics typically dilute the performance of minority extreme classes (actual Severe incidents represented ~10% of the dataset), we evaluate specific thresholds. \n
 """
@@ -74,10 +74,10 @@ The 2024 GRAP revision heavily prioritizes forecast-based, proactive mobilizatio
 
 """
     f.write(text)
-    
+
     lts = []
     hits = episodes_df[episodes_df['detection'] == 'hit']
-    
+
     for h in ['1h', '6h', '24h']:
         total_eps = len(episodes_df[episodes_df['horizon'] == h])
         hits_h = hits[hits['horizon'] == h]
@@ -86,7 +86,7 @@ The 2024 GRAP revision heavily prioritizes forecast-based, proactive mobilizatio
         actionable = len(hits_h[hits_h['lead_time_hours'] >= 6])
         act_rate = (actionable / total_eps) * 100
         lts.append({'horizon': h, 'total_episodes': total_eps, 'hits': hit_len, 'hit_rate (%)': f"{(hit_len/total_eps)*100:.1f}", 'mean_lead_time_hrs': f"{mean_lt:.1f}", 'actionable_warnings (>=6h)': f"{actionable} ({act_rate:.1f}%)"})
-        
+
     f.write(df_to_markdown(pd.DataFrame(lts)))
 
     text = """\n\n**Insights:**

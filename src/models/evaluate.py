@@ -5,7 +5,6 @@ Calculates MAE, RMSE, R2, MAPE, Extreme Episode MAE (AQI >= 300), and Directiona
 """
 
 import numpy as np
-import pandas as pd
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 
 

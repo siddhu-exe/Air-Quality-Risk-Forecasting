@@ -19,9 +19,9 @@ for p in tests:
     if stats["status"] == "error":
         print("ERROR:", stats["error"])
         continue
-        
+
     print(f"Stats: processed_rows={stats['processed_rows']}, dropped_invalid_ts={stats['dropped_invalid_ts']}")
-    
+
     if len(df) > 0:
         print("First TS:", df['ts'].min())
         print("Middle TS:", df.iloc[len(df)//2]['ts'])

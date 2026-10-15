@@ -1,6 +1,7 @@
 # etl/discover.py
 from pathlib import Path
 
+
 def discover_files(data_root: Path) -> list[dict]:
     """
     Recursively scans data_root for .csv and .xlsx files.

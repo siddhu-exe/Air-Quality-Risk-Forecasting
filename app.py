@@ -18,6 +18,6 @@ if str(DASHBOARD_PATH) not in sys.path:
 
 # Execute dashboard/app.py in this namespace
 app_file = DASHBOARD_PATH / "app.py"
-with open(app_file, "r", encoding="utf-8") as f:
+with open(app_file, encoding="utf-8") as f:
     code = compile(f.read(), str(app_file), "exec")
     exec(code, globals())

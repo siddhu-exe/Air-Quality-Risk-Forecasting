@@ -6,6 +6,7 @@ Builds notebooks/phase_6c_24h_final_refinement.ipynb with 14 self-contained sect
 import json
 import os
 
+
 def create_notebook():
     cells = []
 
@@ -37,7 +38,7 @@ It explores long-horizon causal feature engineering, validation-first feature se
 1. **Upstream Frozen Horizons:** 1-hour ($\text{MAE} = 2.29$) and 6-hour ($\text{MAE} = 11.84$) models and pipelines are **STRICTLY FROZEN**.
 2. **Validation-First Protocol:** Feature sets, alpha regularization, and blend weights are tuned strictly on the **Validation split (Sep–Oct 2025)**.
 3. **Held-Out Test Policy:** The **Test split (Nov–Dec 2025 - Peak Crisis)** is evaluated strictly once as the final unbiased benchmark.
-4. **Causal Guarantee:** All engineered features evaluate measurements available at or before timestamp $t$ ($\le t$).""")
+4. **Causal Guarantee:** All engineered features evaluate measurements available at or before timestamp $t$ ($\\le t$).""")
 
     # Section 1: Environment & Setup
     add_markdown("""## Section 1: Environment & Setup
@@ -269,7 +270,7 @@ display(df_feat_exp)""")
 
     # Section 7: Validation Alpha Regularization Sweep
     add_markdown("""## Section 7: Validation Alpha Regularization Sweep
-Sweeps Ridge $\alpha \in [10, 5000]$ on the validation set to determine optimal continuous slope regularization.""")
+Sweeps Ridge $\alpha \\in [10, 5000]$ on the validation set to determine optimal continuous slope regularization.""")
     add_code("""refined_cols = candidate_sets['Set Refined (Curated 54 Feats)']
 imp_ref = SimpleImputer(strategy='median')
 scl_ref = StandardScaler()
@@ -299,8 +300,8 @@ display(df_alpha)""")
 
     # Section 8: Validation Hybrid Blend Weight Grid Search
     add_markdown("""## Section 8: Validation Hybrid Blend Weight Grid Search
-Performs grid search over blend weight $w \in [0.0, 1.0]$ on the validation set:
-$$\widehat{\text{AQI}}_{\text{Hybrid}}(t+24\text{h}) = w \cdot \text{AQI}(t) + (1-w) \cdot \widehat{\text{AQI}}_{\text{Ridge}}(t+24\text{h})$$""")
+Performs grid search over blend weight $w \\in [0.0, 1.0]$ on the validation set:
+$$\\widehat{\text{AQI}}_{\text{Hybrid}}(t+24\text{h}) = w \\cdot \text{AQI}(t) + (1-w) \\cdot \\widehat{\text{AQI}}_{\text{Ridge}}(t+24\text{h})$$""")
     add_code("""best_ridge = Ridge(alpha=1000.0, random_state=42)
 best_ridge.fit(X_tr_ref, y_train)
 pv_best_ridge = best_ridge.predict(X_v_ref)

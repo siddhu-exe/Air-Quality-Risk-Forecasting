@@ -11,15 +11,13 @@ Outputs:
   - reports/modeling/ml_dataset_manifest.csv
 """
 
-import os
-import sys
-import json
-import hashlib
 import argparse
+import hashlib
+import json
 import subprocess
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-import numpy as np
+
 import pandas as pd
 
 # Directories
@@ -122,9 +120,9 @@ def export_horizon_dataset(
     parquet_path = output_dir / f"{dataset_name}.parquet"
     json_path = output_dir / f"{dataset_name}.json"
 
-    print(f"\n=======================================================")
+    print("\n=======================================================")
     print(f"Exporting Horizon: {horizon}h ({dataset_name})")
-    print(f"=======================================================")
+    print("=======================================================")
 
     # 1. Filter valid rows where target is present and valid
     valid_mask = base_df[target_col].notna() & (base_df[target_col] >= 0)
@@ -210,7 +208,7 @@ def export_horizon_dataset(
         "version": version,
         "horizon_hours": horizon,
         "target_column": target_col,
-        "created_at": datetime.now(timezone.utc).isoformat(),
+        "created_at": datetime.now(UTC).isoformat(),
         "git_commit": git_commit,
         "sha256_checksum": sha256_hash,
         "filesize_bytes": filesize_bytes,
