@@ -1,0 +1,8 @@
+# The API image needs only backend/app, backend/requirements.txt and three report CSVs; everything else stays out of the build context.
+*
+!backend/requirements.txt
+!backend/app/
+!reports/modeling/live_retrain/window_update_baseline.csv
+!reports/modeling/live_pm25/pm25_forecast_metrics.csv
+!reports/live/replay_*.csv
+**/__pycache__

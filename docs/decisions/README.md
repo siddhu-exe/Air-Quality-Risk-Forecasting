@@ -10,4 +10,5 @@ Short records of choices that shape the system. Format: context, decision, conse
 | [0004](0004-tier3-scope-decisions.md) | Tier 3 scope decisions D1 to D6 | Accepted |
 | [0005](0005-persistence-reference-no-24h-pm25.md) | Persistence as the reference; no 24h PM2.5 forecast | Accepted |
 | [0006](0006-live-forecast-products.md) | Live products: 1h rule, 6h/24h models, PM2.5 1h/6h | Accepted 2026-10-15 |
+| [0008](0008-api-contract.md) | API contract: status and frozen references on every forecast | Accepted 2026-10-15 |
 | [0007](0007-structural-short-horizon-forecast.md) | Structural 1h/6h forecast from PM2.5 forecasts | Proposed |

@@ -1,4 +1,6 @@
 # Development and CI: everything `make test` and `make lint` need.
 -r requirements-forecast.txt
+-r backend/requirements.txt
 pytest==9.1.1
+httpx==0.28.1
 ruff==0.17.0
