@@ -68,3 +68,11 @@ __pycache__/
 physionet.org/
 data/processed/features_live*.parquet
 .worktrees/
+
+# Tooling state
+.xo/
+.quirq/
+*/.xo/
+
+# Colab result zips
+tier3_*results*.zip
