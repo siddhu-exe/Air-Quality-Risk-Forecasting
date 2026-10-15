@@ -40,13 +40,14 @@ import pandas as pd
 from sklearn.ensemble import HistGradientBoostingRegressor
 
 from src.evaluation.build_metrics_table import block_bootstrap
+from src.models.live_overrides import export, export_dir, matrix_path, prune_columns, report_dir
 from src.models.splits import assign_split, model_feature_columns, training_rows
 from src.models.tuning import DEFAULT_CONFIG, get_profile, is_standard, out_dir, search_configs
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-FEATURES_PATH = REPO_ROOT / "data" / "processed" / "features_extended.parquet"
+FEATURES_PATH = matrix_path(REPO_ROOT / "data" / "processed" / "features_extended.parquet")
 PROFILE = get_profile()
-OUT_DIR = out_dir(REPO_ROOT / "reports" / "modeling" / "pm25")
+OUT_DIR = report_dir(out_dir(REPO_ROOT / "reports" / "modeling" / "pm25"))
 HORIZONS = [1, 6, 24]
 VARIANTS = [("level", True), ("level", False), ("residual", True), ("residual", False)]
 N_BOOT = PROFILE["n_boot"]
@@ -116,7 +117,7 @@ def main() -> None:
         # stage 1: the four variants with the default config
         fitted = {}
         for form, use_cal in VARIANTS:
-            cols = cols_with_cal if use_cal else cols_no_cal
+            cols = prune_columns(train, cols_with_cal if use_cal else cols_no_cal)
             model = fit_variant(train, target, cols, form)
             if standard:
                 index, val_mae = None, metrics(val[target].values,
@@ -155,6 +156,12 @@ def main() -> None:
                     fitted[best_key] = (model, cols, val_mae, index, cfg)
 
         model, cols, _, index, cfg = fitted[best_key]
+        if export_dir() is not None:
+            if not standard:
+                raise SystemExit("LIVE_EXPORT_DIR is only supported with T2_PROFILE=standard")
+            export(f"pm25-{horizon}h-hgb-live-v1", {"model": model, "columns": cols, "target_form": form, "horizon": horizon},
+                   {"horizon_hours": horizon, "target_form": form, "calendar": bool(use_cal), "iterations": MAX_ITER, "params": cfg,
+                    "n_features": len(cols), "matrix": str(FEATURES_PATH.name)})
         for split_name, part in (("val", val), ("test", test)):
             pred = (predict_variant(model, part, cols, form) if standard
                     else predict_staged(model, part, cols, form, index))

@@ -51,13 +51,14 @@ from sklearn.ensemble import (  # noqa: E402
     HistGradientBoostingRegressor,
 )
 
+from src.models.live_overrides import export, export_dir, matrix_path, prune_columns, report_dir  # noqa: E402
 from src.models.splits import assign_split, model_feature_columns, training_rows  # noqa: E402
 from src.models.tuning import DEFAULT_CONFIG, get_profile, out_dir, search_configs  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-FEATURES_PATH = REPO_ROOT / "data" / "processed" / "features_extended.parquet"
+FEATURES_PATH = matrix_path(REPO_ROOT / "data" / "processed" / "features_extended.parquet")
 PROFILE = get_profile()
-OUT_DIR = out_dir(REPO_ROOT / "reports" / "modeling" / "probabilistic")
+OUT_DIR = report_dir(out_dir(REPO_ROOT / "reports" / "modeling" / "probabilistic"))
 TARGET = "target_aqi_24h"
 SEVERE = 401.0
 ALPHAS = [0.1, 0.5, 0.9]
@@ -188,7 +189,7 @@ def main() -> None:
     # --- quantile models: choose calendar on summed validation pinball loss -------------
     fits = {}
     for use_cal in (True, False):
-        cols = model_feature_columns(frame, drop_calendar=not use_cal)
+        cols = prune_columns(train, model_feature_columns(frame, drop_calendar=not use_cal))
         per_alpha = {a: fit_quantile(train, val, cols, a) for a in ALPHAS}
         total = sum(v[2] for v in per_alpha.values())
         fits[use_cal] = (cols, per_alpha, total)
@@ -269,6 +270,20 @@ def main() -> None:
         if i == best_clf:
             proba = p[:, 1]
             break
+
+    if export_dir() is not None:
+        # replay the selected iteration count: with no subsampling and a fixed seed, max_iter = best + 1 gives the same model
+        quantile_models = {
+            str(a): HistGradientBoostingRegressor(loss="quantile", quantile=a, max_iter=best + 1, early_stopping=False, random_state=42,
+                                                  **best_params[str(a)]).fit(train[cols], train[TARGET])
+            for a, (_, best, _) in per_alpha.items()}
+        classifier = HistGradientBoostingClassifier(max_iter=best_clf + 1, early_stopping=False, random_state=42,
+                                                    **clf_params).fit(train[cols], y_bin_train)
+        export("aqi-24h-quantile-live-v1", {"quantile_models": quantile_models, "classifier": classifier, "columns": cols,
+                                            "conformal_pad": pad, "severe_threshold": SEVERE},
+               {"horizon_hours": 24, "alphas": ALPHAS, "calendar": bool(use_cal), "conformal_pad": pad, "severe_threshold": SEVERE,
+                "best_iterations": {str(a): v[1] + 1 for a, v in per_alpha.items()} | {"classifier": best_clf + 1},
+                "n_features": len(cols), "matrix": str(FEATURES_PATH.name)})
 
     curr = train["aqi_curr"].values
     base_rate = float(y_bin_train.mean())
