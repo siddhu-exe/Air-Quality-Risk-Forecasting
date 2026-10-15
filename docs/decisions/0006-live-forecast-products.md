@@ -12,7 +12,7 @@ short-horizon change. Evidence: `reports/modeling/live_retrain/window_update_bas
 | :--- | :--- | :--- |
 | AQI 1h | Rule-based (24h-window update), no model file | Beats plain persistence by +0.55 on test; the retrained 1h LightGBM loses to the rule (-0.47 against it). |
 | AQI 6h | Live-consistent LightGBM | +0.30 against persistence and against the rule: the skill is not the window arithmetic. |
-| AQI 24h | Live-consistent hybrid, labelled low-skill | +0.09 against persistence. |
+| AQI 24h | Live-consistent hybrid, labelled **"experimental, about as accurate as assuming no change"** | +0.09 against persistence on the 2025 test window, but -0.01 [-0.10, +0.06] in the Sep-Oct 2026 replay (`reports/live/replay_2026-09-01_2026-10-07.md`). Always shown with plain persistence beside it. |
 | PM2.5 1h, 6h | Live-consistent HistGradientBoosting, headline live forecast | Skill above zero with CIs excluding zero. |
 
 Not published, kept off in `config/live.toml` `[forecast]` (the config refuses to switch them on):
@@ -25,6 +25,7 @@ Not published, kept off in `config/live.toml` `[forecast]` (the config refuses t
 - Model health scores AQI 1h and 6h against window-update persistence as well as plain persistence. The forecast job freezes both references on every row at issue time
   (`y_persistence`, and `y_window_update` for AQI rows, NULL for PM2.5; migration 008), because readings can be revised later. The scorer reads only the stored references.
   When the current hourly AQI is missing at issue time `y_window_update` equals `y_persistence`, the fallback the baseline evaluation used.
+- Coverage is partial: in the Sep-Oct 2026 replay only 65-74% of station-hours received a forecast (current AQI missing, stale station, too little history, core features missing). The API returns, per station and product, either a forecast or an explicit `unavailable` status with the reason (stale, missing data, insufficient history, ...), and the UI shows that reason; it never shows a blank or a substitute number.
 - Replayed historical hours are stored with `run_type = 'replay'` and never mix with live rows in model health or the API.
 - The 1h product has no model hash: its registry row hashes `src/live/rules.py`, and its behaviour is pinned by `tests/test_aqi_causality.py` and `tests/test_serving.py`.
 - The 1h claim is "rule-based, better than persistence", not "model skill".
