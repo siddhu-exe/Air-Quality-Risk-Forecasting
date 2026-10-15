@@ -44,6 +44,20 @@ from src.live.rules import window_update_estimate
 KST = "Asia/Kolkata"
 RULE_HISTORY_HOURS = 48  # hourly AQI history the rule reads: the 24h window plus the 8h CO/O3 smoothing
 RULE_CONSISTENCY_TOLERANCE = 0.01
+AQI_HORIZONS = (1, 6, 24)
+FORECAST_COLUMNS = [
+    "issue_time",
+    "target_time",
+    "station_id",
+    "station_name",
+    "horizon",
+    "target",
+    "model_version",
+    "y_hat",
+    "y_persistence",
+    "y_window_update",
+    "run_type",
+]
 HISTORY_HOURS = (
     408  # hours read per station: 168 earlier AQI rows for the 24h features + 168 h lags + room for AQI gaps
 )
@@ -247,6 +261,7 @@ def forecast_rows(
     gate: dict,
     latest_readings: dict | None = None,
     stale_after_hours: float = STALE_AFTER_HOURS,
+    run_type: str = "live",
 ) -> tuple[pd.DataFrame, list[StationVerdict]]:
     """Forecast every eligible station at ``issue_time``. Returns (rows for aq.forecasts, one verdict per station)."""
     issue = _as_kst(issue_time)
@@ -256,7 +271,7 @@ def forecast_rows(
         latest_readings = (
             caaqms.dropna(subset=READING_VALUE_COLUMNS, how="all").groupby("station_name")["timestamp"].max().to_dict()
         )
-    verdicts, keep, rule_values = [], [], {}
+    verdicts, keep, references = [], [], {}
     for name, station_id in sorted(STATION_IDS.items(), key=lambda kv: kv[1]):
         history = base[base["station_name"] == name] if len(base) else base
         at_issue = (
@@ -269,78 +284,112 @@ def forecast_rows(
         verdicts.append(verdict)
         if verdict.ok:
             keep.append(at_issue.iloc[0])
-            if models.has("aqi_1h"):
-                value, why = rule_value(caaqms, name, issue, float(at_issue.iloc[0]["aqi_curr"]))
-                if value is None:
-                    verdict.notes["aqi_1h_skipped"] = why
-                else:
-                    rule_values[name] = value
+            references[name] = window_update_references(caaqms, name, issue, float(at_issue.iloc[0]["aqi_curr"]))
     if not keep:
-        return pd.DataFrame(
-            columns=[
-                "issue_time",
-                "target_time",
-                "station_id",
-                "station_name",
-                "horizon",
-                "target",
-                "model_version",
-                "y_hat",
-                "y_persistence",
-            ]
-        ), verdicts
-    return assemble(pd.DataFrame(keep).reset_index(drop=True), issue, models, rule_values), verdicts
+        return pd.DataFrame(columns=FORECAST_COLUMNS), verdicts
+    frame, dropped = assemble(pd.DataFrame(keep).reset_index(drop=True), issue, models, references, run_type)
+    by_station = {v.station: v for v in verdicts}
+    for item in dropped:
+        by_station[item["station"]].notes.setdefault("products_dropped", {})[item["product"]] = item["reason"]
+    return frame, verdicts
 
 
-def rule_value(caaqms: pd.DataFrame, station: str, issue: pd.Timestamp, aqi_curr: float) -> tuple[float | None, str]:
-    """The 1h rule at ``issue`` for one station, from its stored pollutant readings: (value, "") or (None, reason).
+@dataclass
+class WindowUpdate:
+    """Window-update persistence at 1h, 6h and 24h for one station at one issue hour (``values``), or why it is unavailable."""
+
+    values: dict[int, float] = field(default_factory=dict)
+    reason: str = ""
+
+
+def window_update_references(caaqms: pd.DataFrame, station: str, issue: pd.Timestamp, aqi_curr: float) -> WindowUpdate:
+    """Window-update persistence for the AQI horizons from the station's stored pollutant readings.
 
     Needs the current hourly AQI and 16 valid hours in the 24h window. The hourly series must also reproduce the stored
-    AQI at the issue hour, so a rule value never rests on different data than the AQI shown beside it."""
+    AQI at the issue hour, so a reference never rests on different data than the AQI shown beside it."""
     index = pd.date_range(end=issue, periods=RULE_HISTORY_HOURS, freq="h")
     own = caaqms[(caaqms["station_name"] == station) & (caaqms["timestamp"].isin(index))]
     series = own.drop_duplicates("timestamp", keep="last").set_index("timestamp")[POLLUTANTS].reindex(index)
     hourly = hourly_aqi_series(series)
-    value = window_update_estimate(hourly, 1).iloc[-1]
-    if pd.isna(value):
-        return None, "no valid current hourly AQI, or fewer than 16 valid hours in the 24h window"
+    values = {h: float(window_update_estimate(hourly, h).iloc[-1]) for h in AQI_HORIZONS}
+    if not np.isfinite(values[1]):
+        return WindowUpdate({}, "no valid current hourly AQI, or fewer than 16 valid hours in the 24h window")
     rebuilt = hourly.rolling(ROLLING_WINDOW_HOURS, min_periods=16).mean().iloc[-1]
     if pd.isna(rebuilt) or abs(rebuilt - aqi_curr) > RULE_CONSISTENCY_TOLERANCE:
-        return None, f"hourly AQI rebuilds {rebuilt:.2f}, stored AQI is {aqi_curr:.2f}"
-    return float(value), ""
+        return WindowUpdate({}, f"hourly AQI rebuilds {rebuilt:.2f}, stored AQI is {aqi_curr:.2f}")
+    return WindowUpdate(values)
+
+
+def rule_value(caaqms: pd.DataFrame, station: str, issue: pd.Timestamp, aqi_curr: float) -> tuple[float | None, str]:
+    """The 1h rule at ``issue`` for one station: (value, "") or (None, reason)."""
+    reference = window_update_references(caaqms, station, issue, aqi_curr)
+    return (reference.values[1], "") if reference.values else (None, reference.reason)
 
 
 def assemble(
-    rows: pd.DataFrame, issue: pd.Timestamp, models: serving.Serving, rule_values: dict[str, float] | None = None
-) -> pd.DataFrame:
-    """Every enabled product for feature ``rows`` (one per station, all at ``issue``), shaped like ``aq.forecasts``.
-    The rule covers only stations whose hourly AQI passed ``rule_value``; a product whose
-    forecast or persistence value is not finite for a station (for example PM2.5 missing at the issue hour) is dropped for that station."""
-    out = []
+    rows: pd.DataFrame,
+    issue: pd.Timestamp,
+    models: serving.Serving,
+    references: dict[str, WindowUpdate] | None = None,
+    run_type: str = "live",
+) -> tuple[pd.DataFrame, list[dict]]:
+    """Every enabled product for feature ``rows`` (one per station, all at ``issue``), shaped like ``aq.forecasts``,
+    plus one record per product dropped for a station (``station``, ``product``, ``reason``).
+
+    The 1h rule needs the station's window-update value. ``y_window_update`` is that value for the AQI horizons, or plain
+    persistence when the current hourly AQI is missing (as in the baseline evaluation), and NaN for PM2.5. A product whose
+    forecast or persistence value is not finite for a station (for example PM2.5 missing at the issue hour) is dropped."""
+    references = references or {}
+    out, dropped = [], []
     for spec in models.specs:
         if spec.kind == "rule":
-            part = rows[rows["station_name"].isin(rule_values or {})]
-            y_hat = part["station_name"].map(rule_values).to_numpy(float)
+            ready = rows["station_name"].map(lambda n: bool(references.get(n, WindowUpdate()).values))
+            for name in rows.loc[~ready, "station_name"]:
+                dropped.append({"station": name, "product": spec.key, "reason": _rule_reason(references.get(name))})
+            part = rows[ready]
+            y_hat = part["station_name"].map(lambda n: references[n].values[1]).to_numpy(float)
         else:
             part, y_hat = rows, serving.predict(models, spec.key, rows)
-        out.append(
-            pd.DataFrame(
-                {
-                    "issue_time": issue,
-                    "target_time": issue + pd.Timedelta(hours=spec.horizon),
-                    "station_id": part["station_id"].astype(int).to_numpy(),
-                    "station_name": part["station_name"].to_numpy(),
-                    "horizon": spec.horizon,
-                    "target": spec.target,
-                    "model_version": spec.version,
-                    "y_hat": y_hat,
-                    "y_persistence": serving.persistence(spec, part),
-                }
+        persistence = serving.persistence(spec, part)
+        if spec.target == "aqi":
+            wu = np.array(
+                [references.get(n, WindowUpdate()).values.get(spec.horizon, np.nan) for n in part["station_name"]]
             )
+            wu = np.where(np.isfinite(wu), wu, persistence)
+        else:
+            wu = np.full(len(part), np.nan)
+        frame = pd.DataFrame(
+            {
+                "issue_time": issue,
+                "target_time": issue + pd.Timedelta(hours=spec.horizon),
+                "station_id": part["station_id"].astype(int).to_numpy(),
+                "station_name": part["station_name"].to_numpy(),
+                "horizon": spec.horizon,
+                "target": spec.target,
+                "model_version": spec.version,
+                "y_hat": y_hat,
+                "y_persistence": persistence,
+                "y_window_update": wu,
+                "run_type": run_type,
+            }
         )
-    forecasts = pd.concat(out, ignore_index=True)
-    finite = np.isfinite(forecasts[["y_hat", "y_persistence"]].to_numpy(float)).all(axis=1)
-    return forecasts[finite].reset_index(drop=True)  # e.g. no current PM2.5: no PM2.5 forecast, never a NaN row
+        finite = np.isfinite(frame[["y_hat", "y_persistence"]].to_numpy(float)).all(axis=1)
+        for name, ok_hat, ok_persist in zip(
+            frame["station_name"], np.isfinite(frame["y_hat"]), np.isfinite(frame["y_persistence"]), strict=True
+        ):
+            if not (ok_hat and ok_persist):
+                why = (
+                    f"no current {spec.target} value at the issue hour"
+                    if not ok_persist
+                    else "the model returned no value"
+                )
+                dropped.append({"station": name, "product": spec.key, "reason": why})
+        out.append(frame[finite])
+    return pd.concat(out, ignore_index=True), dropped
+
+
+def _rule_reason(reference: WindowUpdate | None) -> str:
+    return reference.reason if reference is not None and reference.reason else "no window-update value"
 
 
 def summarize(verdicts: list[StationVerdict]) -> dict:
@@ -348,12 +397,18 @@ def summarize(verdicts: list[StationVerdict]) -> dict:
         "forecast": [v.station for v in verdicts if v.ok],
         "skipped": {v.station: v.reason for v in verdicts if not v.ok},
         "notes": {v.station: v.notes for v in verdicts if v.ok},
+        "skipped_products": {
+            f"{v.station}/{product}": why
+            for v in verdicts
+            for product, why in v.notes.get("products_dropped", {}).items()
+        },
     }
 
 
 def classify_run(verdicts: list[StationVerdict]) -> str:
     done = sum(v.ok for v in verdicts)
-    return "failed" if done == 0 else ("success" if done == len(verdicts) else "partial")
+    dropped = any(v.notes.get("products_dropped") for v in verdicts)
+    return "failed" if done == 0 else ("success" if done == len(verdicts) and not dropped else "partial")
 
 
 # --------------------------------------------------------------------------- the job
@@ -381,12 +436,14 @@ def run(
     weather_fill: str = "none",
     stale_after_hours: float = STALE_AFTER_HOURS,
     dry_run: bool = False,
+    run_type: str = "live",
 ) -> dict:
     """Read history, forecast, write. ``store`` needs ``newest_aqi_hour``, ``read_history`` and (unless ``dry_run``) the write methods."""
     now = _as_kst(now) if now is not None else pd.Timestamp.now(tz=KST)
-    run_id = 0 if dry_run else store.start_run("forecast")
+    run_id = 0 if dry_run else store.start_run("forecast", run_type)
     details: dict = {
         "dry_run": dry_run,
+        "run_type": run_type,
         "weather_fill": weather_fill,
         "gate": gate["max_core_missing_share"],
         "models": {spec.key: spec.version for spec in models.specs},
@@ -410,7 +467,9 @@ def run(
         )
         details["history_rows"] = {"readings": len(readings), "aqi": len(aqi)}
         caaqms, aqi_df = to_inputs(readings, aqi, weather_fill)
-        rows, verdicts = forecast_rows(caaqms, aqi_df, issue, models, gate, stale_after_hours=stale_after_hours)
+        rows, verdicts = forecast_rows(
+            caaqms, aqi_df, issue, models, gate, stale_after_hours=stale_after_hours, run_type=run_type
+        )
         details.update(summarize(verdicts))
         status = classify_run(verdicts)
         if len(rows) and not dry_run:

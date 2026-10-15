@@ -24,7 +24,7 @@ on conflict (model_version) do update set sha256 = excluded.sha256, file = exclu
 """
 #: a forecast is immutable once written for (issue_time, station, horizon, target): re-running an hour never changes what was published
 INSERT_FORECASTS = """
-insert into aq.forecasts (issue_time, target_time, station_id, horizon, target, model_version, y_hat, y_persistence) values %s
+insert into aq.forecasts (issue_time, target_time, station_id, horizon, target, model_version, y_hat, y_persistence, y_window_update, run_type) values %s
 on conflict (issue_time, station_id, horizon, target) do nothing
 """
 
@@ -80,6 +80,8 @@ class ForecastStore(Store):
                 r.model_version,
                 float(r.y_hat),
                 float(r.y_persistence),
+                None if pd.isna(r.y_window_update) else float(r.y_window_update),
+                r.run_type,
             )
             for r in rows.itertuples()
         ]

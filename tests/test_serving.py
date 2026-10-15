@@ -7,7 +7,7 @@ import pandas as pd
 import pytest
 
 from src.features.compute_cpcb_aqi import POLLUTANTS, hourly_aqi_series
-from src.live import forecast, serving
+from src.live import forecast, forecast_store, serving
 from src.live.config import ConfigError, ForecastConfig, load_forecast_config
 from src.live.forecast import KST
 from src.live.models import ModelHashMismatch
@@ -205,7 +205,9 @@ def test_assemble_writes_each_product_with_its_target_and_the_rule_only_where_it
         },
         {"aqi_6h": ["f"], "pm25_6h": ["f"]},
     )
-    out = forecast.assemble(rows(), ISSUE, models, {"ITO": 101.5})
+    out, dropped = forecast.assemble(
+        rows(), ISSUE, models, {"ITO": forecast.WindowUpdate({1: 101.5, 6: 90.0, 24: 80.0}, "")}
+    )
     key = out.set_index(["target", "horizon", "station_name"])
     assert len(out) == 1 + 2 + 2 and set(out.model_version) == {
         "aqi-1h-window-update-v1",
@@ -213,6 +215,11 @@ def test_assemble_writes_each_product_with_its_target_and_the_rule_only_where_it
         "pm25-6h-hgb-live-v1",
     }
     assert key.loc[("aqi", 1, "ITO"), "y_hat"] == 101.5 and ("aqi", 1, "Alipur") not in key.index
+    assert dropped == [{"station": "Alipur", "product": "aqi_1h", "reason": "no window-update value"}]
+    # the reference is frozen per row: window-update where known, persistence where not, nothing for PM2.5
+    assert key.loc[("aqi", 6, "ITO"), "y_window_update"] == 90.0
+    assert key.loc[("aqi", 6, "Alipur"), "y_window_update"] == 200.0
+    assert np.isnan(key.loc[("pm25", 6, "ITO"), "y_window_update"]) and (out.run_type == "live").all()
     assert key.loc[("pm25", 6, "Alipur"), "y_persistence"] == 80.0
     assert (out.target_time - out.issue_time == pd.to_timedelta(out.horizon, unit="h")).all()
 
@@ -251,6 +258,37 @@ def test_a_product_without_a_finite_value_is_dropped_for_that_station_only():
     )
     frame = rows()
     frame.loc[1, "pm25_curr"] = np.nan  # Alipur has no current PM2.5
-    out = forecast.assemble(frame, ISSUE, models)
+    out, dropped = forecast.assemble(frame, ISSUE, models)
     assert out.groupby("target").station_name.apply(list).to_dict() == {"aqi": ["ITO", "Alipur"], "pm25": ["ITO"]}
+    assert dropped == [{"station": "Alipur", "product": "pm25_6h", "reason": "no current pm25 value at the issue hour"}]
     assert np.isfinite(out[["y_hat", "y_persistence"]].to_numpy(float)).all()
+
+
+def test_dropped_products_are_recorded_and_make_the_run_partial():
+    ok = forecast.StationVerdict(
+        "ITO", True, None, {"products_dropped": {"pm25_1h": "no current pm25 value at the issue hour"}}
+    )
+    clean = forecast.StationVerdict("Bawana", True)
+    assert forecast.classify_run([clean, clean]) == "success"
+    assert forecast.classify_run([clean, ok]) == "partial"
+    assert forecast.summarize([clean, ok])["skipped_products"] == {
+        "ITO/pm25_1h": "no current pm25 value at the issue hour"
+    }
+
+
+def test_window_update_references_cover_every_aqi_horizon_and_agree_with_the_rule():
+    frame = readings()
+    aqi = stored_aqi(frame)
+    reference = forecast.window_update_references(frame, "ITO", ISSUE, aqi)
+    assert set(reference.values) == {1, 6, 24} and reference.reason == ""
+    assert reference.values[1] == forecast.rule_value(frame, "ITO", ISSUE, aqi)[0]
+    assert all(
+        v == pytest.approx(aqi) for v in reference.values.values()
+    )  # flat air: every horizon equals the current AQI
+    bad = forecast.window_update_references(frame, "ITO", ISSUE, aqi + 9)
+    assert bad.values == {} and "stored AQI" in bad.reason
+
+
+def test_the_insert_carries_the_frozen_references_and_the_run_type():
+    sql = forecast_store.INSERT_FORECASTS
+    assert "y_window_update" in sql and "run_type" in sql

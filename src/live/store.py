@@ -78,10 +78,10 @@ class Store:
         self._cur.close()
         return self._cm.__exit__(exc_type, exc, tb)
 
-    def start_run(self, job: str) -> int:
+    def start_run(self, job: str, run_type: str = "live") -> int:
         self._cur.execute(
-            "insert into aq.job_runs (job, github_run) values (%s, %s) returning id",
-            (job, os.environ.get("GITHUB_RUN_ID")),
+            "insert into aq.job_runs (job, github_run, run_type) values (%s, %s, %s) returning id",
+            (job, os.environ.get("GITHUB_RUN_ID"), run_type),
         )
         run_id = self._cur.fetchone()[0]
         self._conn.commit()  # visible even if the run later fails
@@ -124,7 +124,7 @@ class Store:
 class NullStore:
     """Dry run: nothing is read or written; history for the AQI window is empty."""
 
-    def start_run(self, job: str) -> int:
+    def start_run(self, job: str, run_type: str = "live") -> int:
         return 0
 
     def finish_run(self, run_id: int, status: str, rows: int, error: str | None, details: dict) -> None:

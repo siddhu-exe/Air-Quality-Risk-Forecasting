@@ -154,7 +154,7 @@ class FakeStore:
     def read_history(self, ids, since, until):
         return pd.DataFrame(), pd.DataFrame()
 
-    def start_run(self, job):
+    def start_run(self, job, run_type="live"):
         return 7
 
     def finish_run(self, run_id, status, rows, error, details):

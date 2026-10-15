@@ -69,7 +69,7 @@ def test_station_rows_cover_the_seven_stations():
 
 
 def test_migrations_are_numbered_and_contain_no_secrets():
-    assert [p.name[:3] for p in MIGRATIONS] == ["001", "002", "003", "004", "005", "006", "007"]
+    assert [p.name[:3] for p in MIGRATIONS] == ["001", "002", "003", "004", "005", "006", "007", "008"]
     for path in MIGRATIONS:
         sql = path.read_text()
         # no password literal may appear in a statement (comments describing the manual step are fine)
