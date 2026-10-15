@@ -1,10 +1,9 @@
 # Tier 3 plan — take the forecasts live
 
-Status: **Stage 1 done; Stage 2 prerequisites in place (source facts, conversions, tests).** Supabase project `delhi-air-quality-live` (ap-south-1, Postgres 17) now holds
-schema `aq`, migrations 001–007 (copies in `db/migrations/`), the two roles, and RLS on every table.
-Roles have no password yet (set by hand). Nothing is committed. Decisions so far: D3 = OpenAQ backfill of the
-last 10 days (`source='openaq'`) once it is shown to agree with data.gov.in on overlapping hours; data.gov.in
-for ongoing hourly ingest. All of D1–D6 are now decided (section 9).
+Status (2026-10-11): **Stages 1-3 are built, tested and on `main`; Stages 4-7 are not started.** Nothing is scheduled yet:
+`ingest.yml` and `forecast.yml` are manual (`workflow_dispatch`) because no live source is known to be fresh from a GitHub runner.
+Start from `docs/TIER_3/README.md` (resume guide: what exists, how to run it, what is blocked, what to do next). The sections below are
+the original plan, kept in line with what was built; the Progress log records the evidence.
 Everything marked **TODO(verify)** could not be confirmed from a primary source in this session
 and must be checked before the stage that depends on it. No number from a model is typed in this
 document; metric values live in `reports/metrics/headline_metrics.csv`.
@@ -26,7 +25,7 @@ document; metric values live in `reports/metrics/headline_metrics.csv`.
 
 ## 0. Read this first: four blockers found in the read-through
 
-These change what Stages 2–3 can honestly deliver. Section 9 lists the decisions I need from you.
+(Historical: written before the build. All four were resolved or carried as decided; section 9 and the Progress log say how.)
 
 ### B1. The live source cannot supply every input the frozen models were trained on
 
@@ -190,12 +189,12 @@ forecast job serves the frozen AQI models only, and PM2.5 / intervals / P(severe
 
 ```
  data.gov.in / OpenAQ ──┐
- Open-Meteo ────────────┤  GitHub Actions (cron :10, catch-up :40)
+ Open-Meteo ────────────┤  GitHub Actions (planned cron :10; manual until a source is fresh)
                         ▼
               src/live/ingest.py  ──► Supabase Postgres (pooler, DATABASE_URL)
                         │               stations, live_readings, live_aqi,
                         ▼               forecasts, forecast_scores, job_runs, model_registry
-              src/live/forecast.py  (same job, needs: ingest; joblib models from git)
+              src/live/forecast.py  (own job, run after the ingest; joblib models from git, hash-checked)
                         │
               nightly: src/live/score.py ──► forecast_scores ──► GitHub issue on degradation
                                                   ▲
@@ -206,10 +205,8 @@ forecast job serves the frozen AQI models only, and PM2.5 / intervals / P(severe
 - **Frozen artifacts.** `models/**` and `reports/modeling/24h/final/final_predictions.parquet` are
   never written. New models (decision D1/D2) go to `models/live/` with their own registry rows.
 - **One feature path.** `engineer_station_features` and the cross-station block of
-  `assemble_feature_matrix` are reused. `assemble_feature_matrix` currently also writes a parquet and
-  a manifest, so Stage 3 splits it into a pure `compute_feature_frame(...)` plus the existing I/O
-  wrapper (behaviour-preserving; checked by a regression test that the rebuilt training matrix is
-  identical). The 24h-only features come from `construct_causal_long_horizon_features` in
+  `assemble_feature_matrix` are reused. `assemble_feature_matrix` also wrote a parquet and a manifest, so it was
+  split into a pure `compute_feature_frame(...)` plus the I/O wrapper (done, behaviour-preserving, regression-tested). The 24h-only features come from `construct_causal_long_horizon_features` in
   `phase_6c_refinement.py`, imported, not copied. The live path never re-implements a feature.
 
 ## 2. Live sources (what I verified, what I did not)
@@ -301,16 +298,21 @@ month and revisit.
 `job_runs (job, started_at DESC)`. The Supabase performance advisor lists them as unused only because the
 database is still empty; recheck after real traffic.
 
-## 4. Forecast job rules
+## 4. Forecast job rules (as built: `src/live/forecast.py`)
 
-- Pull ≥ 9 days per station (168 h lags + 24 h AQI window + margin), rebuild the hourly index, build
-  features via the shared functions, per station and horizon.
-- A station is **skipped, with the reason in `job_runs.skipped`**, if: latest reading older than the
-  stale limit, current AQI missing, > X% of any required feature missing (X fixed on validation, not
-  guessed), or a required feature *group* is entirely absent (B1).
-- `model_version` comes from `models/registry.json` (Stage 7); the job re-hashes every artifact and
-  fails on mismatch.
-- `y_persistence` is written on every row; `p_severe` threshold is AQI ≥ 401.
+- Reads 408 h per station from `live_readings`/`live_aqi`, masks weather cells flagged `filled:*` when `weather_fill = "none"`, builds
+  features through `compute_feature_frame` plus the 24h model's multi-day features (row-based, as in training; see the parity finding).
+- One issue hour per run (the newest AQI hour, which must be within the stale limit of now; `--issue-time` replays a past hour).
+- A station is **skipped, with the reason in `job_runs.details["skipped"]`**, if: its latest reading is older than 3 h before the
+  issue hour; its AQI at the issue hour is missing; it has fewer than 169 AQI rows in the 336 h window; a required feature group
+  (AQI, PM2.5, PM10, NO2, SO2, CO, O3) is absent for the whole window; or the share of missing *core* features exceeds the gate in
+  `config/forecast_gate.json` (0.22 = 99th percentile over 9,853 validation rows; core = all features except NOx, station weather,
+  solar and the station one-hots, the groups the D1 audit showed may be absent). Run status: success / partial / failed (none forecast).
+- Models are the frozen 1h/6h LightGBM and 24h hybrid; every artifact is re-hashed against `config/model_hashes.json` and a mismatch
+  stops the job. `model_version`s are registered in `aq.model_registry` (`aqi-1h-lgb-v1`, `aqi-6h-lgb-v1`, `aqi-24h-hybrid-v1`);
+  `models/registry.json` (Stage 7) will replace the hash file.
+- `y_persistence` is written on every row. A forecast is immutable once written (`on conflict do nothing`). No intervals, no P(severe),
+  no PM2.5 yet: those models were never persisted (D2 export run still to do).
 
 ## 5. API (`backend/main.py`, DB only)
 
@@ -333,12 +335,14 @@ in the README and portfolio). Decision D5.
 
 ## 6. Workflows (`.github/workflows/`)
 
-| File | Trigger | Does |
-| :--- | :--- | :--- |
-| `ingest.yml` | cron `10 * * * *`, catch-up `40 * * * *`, `workflow_dispatch` | job 1 ingest + weather; job 2 forecast (`needs: ingest`) |
-| `score.yml` | nightly cron (off the hour) | score matured forecasts; open/refresh a GitHub issue if 24h AQI skill < 0 for 7 consecutive days or a job failed 3 times in a row |
-| `deploy-backend.yml` | push to main touching `backend/**`, dispatch | pytest → build image → push GHCR → `azure/login` (OIDC) → update Container App |
-| `ci.yml` | every push and PR | pytest; frontend lint + type-check |
+| File | Trigger | Does | Status |
+| :--- | :--- | :--- | :--- |
+| `probe-sources.yml` | `workflow_dispatch` | reachability, real fields/units and freshness of data.gov.in and OpenAQ from a runner | on `main`; **not run yet** |
+| `ingest.yml` | `workflow_dispatch` (cron `10 * * * *` is a TODO) | ingest + Open-Meteo display weather | built; manual until a fresh source |
+| `forecast.yml` | `workflow_dispatch`, dry run by default (cron `25 * * * *` is a TODO) | forecast job | built; manual |
+| `score.yml` | nightly cron (off the hour) | score matured forecasts; open/refresh a GitHub issue if 24h AQI skill < 0 for 7 consecutive days or a job failed 3 times in a row | Stage 4 |
+| `deploy-backend.yml` | push to main touching `backend/**`, dispatch | pytest → build image → push GHCR → `azure/login` (OIDC) → update Container App | Stage 5 |
+| `ci.yml` | every push and PR | pytest; frontend lint + type-check | Stage 7 |
 
 Known Actions behaviour: scheduled runs can be late or dropped under load; scheduled workflows in
 public repos are auto-disabled after 60 days without repository activity (TODO(verify)); a private
@@ -350,9 +354,10 @@ Recommendation: public repo, or a single hourly workflow with two jobs.
 | Name | Where | Used by |
 | :--- | :--- | :--- |
 | `DATABASE_URL` (pooler string, writer role) | GitHub secret | ingest, forecast, score |
-| `DATABASE_URL_READONLY` | Azure Container App secret | API |
-| `DATA_GOV_IN_API_KEY` | GitHub secret | ingest |
-| `OPENAQ_API_KEY` | GitHub secret (if used) | ingest/backfill |
+| `DATABASE_URL_READONLY` | Azure Container App secret; also a GitHub secret for the forecast dry run | API, `forecast.yml` dry run |
+| `DATA_GOV_IN_API_KEY` | GitHub secret | probe, ingest (fallback source) |
+| `OPENAQ_API_KEY` | GitHub secret | probe, ingest, backfill |
+| `LIVE_SOURCE`, `LIVE_FALLBACK`, `LIVE_WEATHER_FILL`, `LIVE_WEATHER_DISPLAY`, `LIVE_ALLOW_UNVERIFIED` | optional GitHub variables | override `config/live.toml` without a commit |
 | `FRONTEND_ORIGIN` | Container App env var | API CORS |
 | `VITE_API_BASE_URL` | Vercel env var | frontend |
 | `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID` | GitHub secrets (identifiers, no password) | OIDC login |
@@ -408,12 +413,12 @@ or provide a read-only pull credential; set the Container App secrets.
 
 ## 10. Stage checklist
 
-| Stage | Output | Gate |
-| :--- | :--- | :--- |
-| 1 | `db/migrations/*.sql`, read-only role, station + backfill script | you apply migrations (I create nothing in the cloud) |
-| 2 | `src/live/ingest.py`, `ingest.yml`, mocked-HTTP tests, source facts replacing the TODOs | one real run from Actions |
-| 3 | `src/live/forecast.py`, refactor of the feature builder, **parity test** | parity passes or I report why not |
-| 4 | `src/live/score.py`, `score.yml`, issue rules | tests with synthetic scores |
-| 5 | `backend/main.py`, Dockerfile, `deploy-backend.yml`, Azure resource + secret list | you create resources |
-| 6 | 4-tab frontend, Vercel config | lint + type-check pass |
-| 7 | `models/registry.json`, `ci.yml`, README, `docs/TIER_3/TIER_3_LOG.md` | hash-mismatch test |
+| Stage | Output | Gate | Status |
+| :--- | :--- | :--- | :--- |
+| 1 | `db/migrations/*.sql`, read-only role, station + backfill script | you apply migrations (I create nothing in the cloud) | **done**; backfill loaded (35,276 readings) |
+| 2 | `src/live/ingest.py`, `ingest.yml`, mocked-HTTP tests, source facts replacing the TODOs | one real run from Actions | **code done** (mocked tests); the real run waits for the probe and a fresh source |
+| 3 | `src/live/forecast.py`, refactor of the feature builder, **parity test** | parity passes or I report why not | **done**; 24h exact, 1h/6h exact with training's rolling start, small last-digit differences otherwise (reported) |
+| 4 | `src/live/score.py`, `score.yml`, issue rules | tests with synthetic scores | not started |
+| 5 | `backend/main.py`, Dockerfile, `deploy-backend.yml`, Azure resource + secret list | you create resources | not started |
+| 6 | 4-tab frontend, Vercel config | lint + type-check pass | frontend rebuilt on branch `tier3/probe-sources` (4 commits, not merged); needs `/api/v1` from Stage 5 |
+| 7 | `models/registry.json`, `ci.yml`, README, `docs/TIER_3/TIER_3_LOG.md` | hash-mismatch test | not started (hash check already exists for the forecast job) |
