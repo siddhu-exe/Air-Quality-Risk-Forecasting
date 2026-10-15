@@ -22,7 +22,9 @@ import argparse
 import json
 import os
 import pickle
+from collections.abc import Iterator
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -35,6 +37,8 @@ from src.features.compute_cpcb_aqi import (
     compute_aqi,
 )
 from src.live import openaq
+from src.live.log import configure as configure_logging
+from src.live.log import get_logger
 from src.live.qc import VALUE_COLUMNS, finish_hourly
 
 CSV_SOURCE = "local_csv_2026"
@@ -50,6 +54,8 @@ CSV_TO_COLUMN = {
     "WS (m/s)": "wind_speed",
     "SR (W/mt2)": "solar_radiation",
 }
+
+log = get_logger(__name__)
 
 
 _finish = finish_hourly  # kept for existing callers/tests
@@ -79,16 +85,15 @@ def openaq_history(
     raw_all: dict = {}
     if cache and cache.exists():
         raw_all = pickle.loads(cache.read_bytes())
-        print(f"loaded cached OpenAQ downloads from {cache}", flush=True)
+        log.info("loaded cached OpenAQ downloads from %s", cache)
     parts = []
     for station, location_id in openaq.LOCATIONS.items():
         if station not in raw_all:
             raw_all[station] = {}
             for param, (sensor_id, _label) in openaq.live_sensors(location_id, station).items():
                 raw_all[station][param] = openaq.fetch_15min(sensor_id, str(start), str(end + pd.Timedelta(minutes=59)))
-                print(
-                    f"fetched {station:16s} {param:17s} sensor {sensor_id}: {len(raw_all[station][param])} slots",
-                    flush=True,
+                log.info(
+                    "fetched %-16s %-17s sensor %s: %d slots", station, param, sensor_id, len(raw_all[station][param])
                 )
         frame = openaq.hourly_frame(raw_all[station], hours)
         extra = openaq.UNVERIFIED_FLAG if station in openaq.ALIGNMENT_UNVERIFIED_2026 else None
@@ -146,11 +151,11 @@ on conflict (station_id, ts) do update set aqi = excluded.aqi, computed_at = now
 """
 
 
-def _clean(value):
+def _clean(value: Any) -> Any:
     return None if value is None or (isinstance(value, float) and np.isnan(value)) else value
 
 
-def reading_tuples(readings: pd.DataFrame):
+def reading_tuples(readings: pd.DataFrame) -> Iterator[tuple]:
     from psycopg2.extras import Json
 
     ts = _localize(readings.index)
@@ -165,7 +170,7 @@ def reading_tuples(readings: pd.DataFrame):
         )
 
 
-def aqi_tuples(aqi: pd.DataFrame):
+def aqi_tuples(aqi: pd.DataFrame) -> Iterator[tuple]:
     ts = _localize(pd.DatetimeIndex(aqi.hour))
     for position, row in enumerate(aqi.itertuples()):
         yield int(row.station_id), ts[position].to_pydatetime(), float(row.aqi)
@@ -199,6 +204,7 @@ def load(readings: pd.DataFrame, aqi: pd.DataFrame, details: dict) -> None:
 
 
 def main() -> None:
+    configure_logging()
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--dry-run", action="store_true", help="build and summarise; do not touch the database")
     parser.add_argument("--no-csv", action="store_true")

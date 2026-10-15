@@ -19,6 +19,7 @@ TODO: confirm which reference temperature WAQI uses for Indian stations; at 25 C
 from __future__ import annotations
 
 import numpy as np
+from numpy.typing import ArrayLike
 
 AQI_KNOTS = np.array([0, 50, 100, 150, 200, 300, 400, 500], dtype=float)
 MOLAR_VOLUME_L = 24.45  # 25 C, 1 atm
@@ -46,7 +47,7 @@ _TO_EPA = {
 AQI_MAX = 500
 
 
-def to_aqi(pollutant: str, concentration) -> np.ndarray:
+def to_aqi(pollutant: str, concentration: ArrayLike) -> np.ndarray:
     """Concentration in our stored unit -> integer US-EPA AQI (NaN stays NaN), rounded half up, capped at 500."""
     values = np.asarray(concentration, dtype=float) * _TO_EPA[pollutant]
     index = np.interp(values, CONC_KNOTS[pollutant], AQI_KNOTS, left=0.0, right=float(AQI_MAX))
@@ -55,7 +56,7 @@ def to_aqi(pollutant: str, concentration) -> np.ndarray:
     return out
 
 
-def from_aqi(pollutant: str, aqi) -> np.ndarray:
+def from_aqi(pollutant: str, aqi: ArrayLike) -> np.ndarray:
     """Integer US-EPA AQI -> concentration in our stored unit (the knot-linear inverse; NaN stays NaN)."""
     values = np.minimum(np.asarray(aqi, dtype=float), AQI_MAX)
     conc = np.interp(values, AQI_KNOTS, CONC_KNOTS[pollutant])
@@ -64,6 +65,6 @@ def from_aqi(pollutant: str, aqi) -> np.ndarray:
     return conc
 
 
-def roundtrip(pollutant: str, concentration) -> np.ndarray:
+def roundtrip(pollutant: str, concentration: ArrayLike) -> np.ndarray:
     """What a consumer of WAQI's integer ``iaqi`` recovers from a true concentration."""
     return from_aqi(pollutant, to_aqi(pollutant, concentration))

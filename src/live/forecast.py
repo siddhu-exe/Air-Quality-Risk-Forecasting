@@ -24,6 +24,7 @@ import json
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -31,6 +32,8 @@ import pandas as pd
 from src.features.build_features import _stations_frame, compute_feature_frame
 from src.features.compute_cpcb_aqi import STATION_IDS
 from src.live import models as model_mod
+from src.live.log import configure as configure_logging
+from src.live.log import get_logger
 from src.live.qc import WEATHER_ALL
 
 KST = "Asia/Kolkata"
@@ -72,6 +75,8 @@ READING_VALUE_COLUMNS = [
     "wind_speed",
     "solar_radiation",
 ]
+
+log = get_logger(__name__)
 
 
 def load_gate(path: Path = GATE_PATH) -> dict:
@@ -133,12 +138,12 @@ def add_long_horizon(frame: pd.DataFrame) -> pd.DataFrame:
     return construct_causal_long_horizon_features(frame)
 
 
-def _as_kst(issue_time) -> pd.Timestamp:
+def _as_kst(issue_time: Any) -> pd.Timestamp:
     issue = pd.Timestamp(issue_time)
     return issue.tz_localize(KST) if issue.tzinfo is None else issue.tz_convert(KST)
 
 
-def build_frames(caaqms: pd.DataFrame, aqi: pd.DataFrame, issue_time) -> tuple[pd.DataFrame, pd.DataFrame]:
+def build_frames(caaqms: pd.DataFrame, aqi: pd.DataFrame, issue_time: Any) -> tuple[pd.DataFrame, pd.DataFrame]:
     """(base, featured). ``base`` = feature rows (every row with an AQI) over the window ending at the issue hour, from the
     shared training feature builder; ``featured`` = ``base`` plus the 24h model's multi-day features on the full hourly grid.
     Data after the issue hour is dropped first, so a replay of a past hour cannot see its own future."""
@@ -325,7 +330,7 @@ def library_versions() -> dict:
 
 
 def run(
-    store,
+    store: Any,
     models: model_mod.Models,
     gate: dict,
     hashes: dict,
@@ -388,6 +393,7 @@ def run(
 
 
 def main(argv: list[str] | None = None) -> int:
+    configure_logging()
     from src.live.config import load_config
     from src.live.forecast_store import ForecastStore
 
@@ -417,8 +423,14 @@ def main(argv: list[str] | None = None) -> int:
             ].to_string(index=False)
         )
     d = result["details"]
-    print(
-        f"status={result['status']} rows={result['rows']} issue={d.get('issue_time')} forecast={len(d.get('forecast', []))}/7 skipped={d.get('skipped', {})} error={result['error']}"
+    log.info(
+        "status=%s rows=%s issue=%s forecast=%s/7 skipped=%s error=%s",
+        result["status"],
+        result["rows"],
+        d.get("issue_time"),
+        len(d.get("forecast", [])),
+        d.get("skipped", {}),
+        result["error"],
     )
     return 0 if result["status"] in ("success", "partial") else 1
 

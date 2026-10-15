@@ -10,6 +10,8 @@ from __future__ import annotations
 
 import json
 import os
+from collections.abc import Iterator
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -33,11 +35,11 @@ from aq.live_readings where station_id = any(%s) and ts >= %s order by station_i
 """
 
 
-def _clean(value):
+def _clean(value: Any) -> Any:
     return None if value is None or (isinstance(value, float) and np.isnan(value)) else value
 
 
-def reading_tuples(readings: pd.DataFrame):
+def reading_tuples(readings: pd.DataFrame) -> Iterator[tuple]:
     """Rows for ``UPSERT_READINGS_*``: (station_id, tz-aware ts, values..., weather_source, qc_flags json, source)."""
     from psycopg2.extras import Json
 
@@ -53,7 +55,7 @@ def reading_tuples(readings: pd.DataFrame):
         )
 
 
-def aqi_tuples(aqi: pd.DataFrame):
+def aqi_tuples(aqi: pd.DataFrame) -> Iterator[tuple]:
     ts = pd.DatetimeIndex(aqi.hour).tz_localize("Asia/Kolkata")
     for position, row in enumerate(aqi.itertuples()):
         yield int(row.station_id), ts[position].to_pydatetime(), float(row.aqi)
@@ -62,17 +64,17 @@ def aqi_tuples(aqi: pd.DataFrame):
 class Store:
     """Real store: one connection per ``Store`` use, committed by the caller via ``close``/context manager."""
 
-    def __init__(self, var: str = "DATABASE_URL"):
+    def __init__(self, var: str = "DATABASE_URL") -> None:
         from src.live.db import connect
 
         self._cm = connect(var)
         self._conn = self._cm.__enter__()
         self._cur = self._conn.cursor()
 
-    def __enter__(self):
+    def __enter__(self) -> Store:
         return self
 
-    def __exit__(self, exc_type, exc, tb):
+    def __exit__(self, exc_type: Any, exc: Any, tb: Any) -> Any:
         self._cur.close()
         return self._cm.__exit__(exc_type, exc, tb)
 
@@ -125,20 +127,20 @@ class NullStore:
     def start_run(self, job: str) -> int:
         return 0
 
-    def finish_run(self, run_id, status, rows, error, details) -> None:
+    def finish_run(self, run_id: int, status: str, rows: int, error: str | None, details: dict) -> None:
         pass
 
     def upsert_readings(self, readings: pd.DataFrame) -> int:
         return len(readings)
 
-    def recent_pollutants(self, station_ids, since) -> pd.DataFrame:
+    def recent_pollutants(self, station_ids: Any, since: Any) -> pd.DataFrame:
         return pd.DataFrame(columns=["station_id", "pm25", "pm10", "no2", "so2", "nh3", "co", "o3", "hour"])
 
     def upsert_aqi(self, aqi: pd.DataFrame) -> int:
         return len(aqi)
 
-    def __enter__(self):
+    def __enter__(self) -> NullStore:
         return self
 
-    def __exit__(self, *exc):
+    def __exit__(self, *exc: Any) -> bool:
         return False

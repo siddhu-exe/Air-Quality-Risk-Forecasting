@@ -16,12 +16,16 @@ from __future__ import annotations
 import argparse
 import sys
 from collections import Counter
+from collections.abc import Callable
+from typing import Any
 
 import pandas as pd
 
 from src.features.compute_cpcb_aqi import POLLUTANTS, STATION_IDS, compute_aqi
 from src.live import weather as weather_mod
 from src.live.config import IngestConfig, load_config
+from src.live.log import configure as configure_logging
+from src.live.log import get_logger
 from src.live.qc import ImplausibleBatch, check_batch, finish_hourly
 from src.live.sources import SourceUnavailable, get_source
 from src.live.sources.base import LiveSource, SourceNotVerified
@@ -30,9 +34,11 @@ from src.live.store import NullStore, Store
 KST = "Asia/Kolkata"
 AQI_HISTORY_HOURS = 48  # pollutant history read back so the 24 h rolling AQI has its window
 
+log = get_logger(__name__)
+
 
 def fetch_with_fallback(
-    cfg: IngestConfig, start: pd.Timestamp, end: pd.Timestamp, factory=get_source
+    cfg: IngestConfig, start: pd.Timestamp, end: pd.Timestamp, factory: Callable[..., LiveSource] = get_source
 ) -> tuple[pd.DataFrame, LiveSource, list[str]]:
     """Primary source first; the optional fallback only if the primary fails or returns no rows. Returns notes of what happened."""
     notes: list[str] = []
@@ -56,7 +62,10 @@ def fetch_with_fallback(
 
 
 def build_rows(
-    frame: pd.DataFrame, source: LiveSource, cfg: IngestConfig, weather_fetch=weather_mod.fetch_recent
+    frame: pd.DataFrame,
+    source: LiveSource,
+    cfg: IngestConfig,
+    weather_fetch: Callable[..., pd.DataFrame] = weather_mod.fetch_recent,
 ) -> tuple[pd.DataFrame, dict]:
     """QC + weather fill per station. Returns (rows ready for the database, details)."""
     details: dict = {}
@@ -82,7 +91,7 @@ def build_rows(
     return rows, details
 
 
-def recompute_aqi(store, rows: pd.DataFrame, since: pd.Timestamp) -> pd.DataFrame:
+def recompute_aqi(store: Any, rows: pd.DataFrame, since: pd.Timestamp) -> pd.DataFrame:
     """AQI for the affected stations from stored history plus the new rows (new rows win), for hours >= ``since``."""
     ids = sorted(rows.station_id.unique())
     history = store.recent_pollutants(ids, since - pd.Timedelta(hours=AQI_HISTORY_HOURS))
@@ -116,11 +125,11 @@ def classify(rows: pd.DataFrame, now: pd.Timestamp, stale_after_hours: float) ->
 
 def run(
     cfg: IngestConfig,
-    store,
+    store: Any,
     *,
     now: pd.Timestamp | None = None,
-    factory=get_source,
-    weather_fetch=weather_mod.fetch_recent,
+    factory: Callable[..., LiveSource] = get_source,
+    weather_fetch: Callable[..., pd.DataFrame] = weather_mod.fetch_recent,
 ) -> dict:
     now = now if now is not None else pd.Timestamp.now(tz=KST)
     end = now.tz_localize(None).floor("h") - pd.Timedelta(hours=1)  # newest complete hour label
@@ -156,6 +165,7 @@ def run(
 
 
 def main(argv: list[str] | None = None) -> int:
+    configure_logging()
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--dry-run", action="store_true", help="no database; print what would be written")
     parser.add_argument("--source", help="override the configured source for this run")
@@ -170,9 +180,13 @@ def main(argv: list[str] | None = None) -> int:
     store = NullStore() if args.dry_run else Store()
     with store:
         result = run(cfg, store)
-    print(
-        f"status={result['status']} rows={result['rows']} source={result['details'].get('source_used')} "
-        f"fresh={len(result['details'].get('fresh_stations', []))}/7 error={result['error']}"
+    log.info(
+        "status=%s rows=%s source=%s fresh=%s/7 error=%s",
+        result["status"],
+        result["rows"],
+        result["details"].get("source_used"),
+        len(result["details"].get("fresh_stations", [])),
+        result["error"],
     )
     return 0 if result["status"] in ("success", "partial") else 1
 

@@ -15,25 +15,32 @@ target-version = "py311"
 extend-exclude = ["*.md", "venv", "node_modules", "frontend", "local_pg_data", "kaggle", "Og Data", "notebooks"]
 
 [tool.ruff.lint]
-select = ["E", "F", "W", "I", "B", "UP"]
+select = ["E", "F", "W", "I", "B", "UP", "ANN"]
 ignore = [
     "E501",  # line length is the formatter's job
     "E402",  # scripts put the repo root on sys.path before importing src.*
     "B905",  # zip() strictness is not worth a churn commit
     "B007",  # unused loop variable
+    "ANN401",  # Any is accepted where a duck-typed store or stub is passed
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/*" = ["B011", "E702", "E731", "F841"]
-
-# Phase-era research scripts: kept as they ran; the live pipeline (src/live, src/features, src/models/live_*) has no relaxations.
-"etl/*" = ["E701", "E702", "F841", "F401"]
-"profiling/*" = ["W191", "E101", "E701", "F841"]
-"portfolio/*" = ["F841"]
-"reports/*" = ["W291", "F841"]
-"scripts/checks/*" = ["E701", "E702", "F841"]
-"src/eda/*" = ["F841"]
-"src/analysis/*" = ["F841"]
-"src/models/phase_*" = ["B023", "F841", "E731"]
-"src/models/cost_*" = ["F841"]
-"src/models/train_ml_baseline.py" = ["F841"]
+# Phase-era research scripts keep their original shape; src/live has no relaxations, and annotations (ANN) are enforced there only.
+"tests/*" = ["B011", "E702", "E731", "F841", "ANN"]
+"etl/*" = ["E701", "E702", "F841", "F401", "ANN"]
+"profiling/*" = ["W191", "E101", "E701", "F841", "ANN"]
+"portfolio/*" = ["F841", "ANN"]
+"reports/*" = ["W291", "F841", "ANN"]
+"scripts/*" = ["ANN"]
+"scripts/checks/*" = ["E701", "E702", "F841", "ANN"]
+"dashboard/*" = ["ANN"]
+"backend/*" = ["ANN"]
+"app.py" = ["ANN"]
+"src/eda/*" = ["F841", "ANN"]
+"src/analysis/*" = ["F841", "ANN"]
+"src/evaluation/*" = ["ANN"]
+"src/features/*" = ["ANN"]
+"src/models/*" = ["ANN"]
+"src/models/phase_*" = ["B023", "F841", "E731", "ANN"]
+"src/models/cost_*" = ["F841", "ANN"]
+"src/models/train_ml_baseline.py" = ["F841", "ANN"]

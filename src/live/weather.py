@@ -12,6 +12,8 @@ approximation the D1 audit used with ERA5). Free tier, non-commercial, CC BY 4.0
 from __future__ import annotations
 
 import time
+from collections.abc import Callable
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -33,9 +35,9 @@ FILL_TAG = FILLED_PREFIX + "open-meteo"
 def fetch_recent(
     coords: dict[str, tuple[float, float]] = STATION_COORDS,
     past_days: int = 3,
-    get=_get_with_retry,
+    get: Callable[..., Any] = _get_with_retry,
     pause: float = 0.5,
-    sleep=time.sleep,
+    sleep: Callable[[float], None] = time.sleep,
 ) -> pd.DataFrame:
     """Hourly weather per station for the last ``past_days`` days. Columns: station_name, hour + the four weather columns."""
     parts = []

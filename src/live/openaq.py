@@ -21,6 +21,7 @@ from __future__ import annotations
 import os
 import time
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -100,7 +101,7 @@ def _headers() -> dict:
     return {"X-API-Key": key}
 
 
-def get(path: str, **params) -> dict:
+def get(path: str, **params: Any) -> dict:
     """GET with polite rate limiting (60 requests/minute); the key is only ever sent as a header."""
     for _ in range(4):
         response = requests.get(f"{API}{path}", headers=_headers(), params=params, timeout=60)

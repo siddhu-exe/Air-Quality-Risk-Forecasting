@@ -19,6 +19,7 @@ station and pollutant; a missed hour cannot be recovered from this source.
 from __future__ import annotations
 
 import os
+from typing import Any
 
 import pandas as pd
 import requests
@@ -83,7 +84,7 @@ class DataGovInSource(LiveSource):
     verified = False
     missing = {"all stations": ["nox", "temperature", "humidity", "wind_speed", "solar_radiation"]}
 
-    def __init__(self, api_key: str | None = None, session=requests):
+    def __init__(self, api_key: str | None = None, session: Any = requests) -> None:
         self._key = (api_key if api_key is not None else os.environ.get("DATA_GOV_IN_API_KEY", "")).strip()
         self._session = session
 

@@ -15,6 +15,7 @@ from __future__ import annotations
 import argparse
 import sys
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -73,7 +74,7 @@ def sample_times(stored: pd.DataFrame, n: int, seed: int) -> list[pd.Timestamp]:
 TRAINING_ROLL_START = pd.Timestamp("2024-01-01", tz=KST)  # where the training matrix's rolling windows started
 
 
-def _features_with_training_rolling(caaqms, aqi_df, t) -> pd.DataFrame:
+def _features_with_training_rolling(caaqms: pd.DataFrame, aqi_df: pd.DataFrame, t: Any) -> pd.DataFrame:
     """Same code as the live path, but the rolling windows start where training's did. Diagnostic only: pandas' rolling
     mean/std are online algorithms, so their last digits depend on where the window started."""
     import contextlib

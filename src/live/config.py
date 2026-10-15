@@ -32,7 +32,7 @@ class IngestConfig:
     weather_fill: str = "none"  # what the MODELS see: "none" = station/source cells only, filled cells are masked
     allow_unverified: bool = False
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         for name, value in (("source", self.source), ("fallback", self.fallback)):
             if value and value not in VALID_SOURCES:
                 raise ConfigError(
