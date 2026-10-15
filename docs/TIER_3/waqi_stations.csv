@@ -1,0 +1,8 @@
+station,waqi_uid,waqi_name,match,last_update_ist,age_min,agencies,has_weather
+Anand Vihar,2553,"Anand Vihar, Delhi, Delhi, India",exact name,2026-10-15 11:00,15,Delhi Pollution Control Commitee (Government of NCT of Delhi); CPCB - India Central Pollution Control Board,True
+Bawana,11267,"Pooth Khurd, Bawana, Delhi, Delhi, India","Pooth Khurd, Bawana; ~0.5 km",2026-10-15 11:00,15,Delhi Pollution Control Commitee (Government of NCT of Delhi),True
+Dwarka-Sector 8,10119,"National Institute of Malaria Research, Sector 8, Dwarka, Delhi, Delhi, India","NIMR, Sector 8, Dwarka; ~0.7 km",2026-10-15 11:00,15,Delhi Pollution Control Commitee (Government of NCT of Delhi),True
+ITO,10111,"Major Dhyan Chand National Stadium, Delhi, Delhi, India","NO ITO station on WAQI; nearest is Major Dhyan Chand National Stadium, ~1.9 km, a different monitor",2026-10-15 11:00,15,Delhi Pollution Control Commitee (Government of NCT of Delhi),True
+Jahangirpuri,10113,"ITI Jahangirpuri, Delhi, Delhi, India",ITI Jahangirpuri; ~0.1 km,2026-10-15 11:00,15,Delhi Pollution Control Commitee (Government of NCT of Delhi),True
+Punjabi Bagh,2555,"Punjabi Bagh, Delhi, Delhi, India",exact name,2026-10-15 11:00,15,Delhi Pollution Control Commitee (Government of NCT of Delhi); CPCB - India Central Pollution Control Board,True
+R K Puram,2556,"R.K. Puram, Delhi, Delhi, India",R.K. Puram,2026-10-15 10:00,75,Delhi Pollution Control Commitee (Government of NCT of Delhi); CPCB - India Central Pollution Control Board,True
