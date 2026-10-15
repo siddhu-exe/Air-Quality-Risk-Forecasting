@@ -60,7 +60,7 @@ python etl/pipeline.py --dry-run
 python etl/run_full_load.py
 ```
 
-Phase scripts are run directly (e.g. `python src/models/baselines.py`); there is no Makefile or task runner. Python is 3.11+ per README. Scripts that `import src.*` need the repo root on `sys.path`: run the Tier 2 scripts from the repo root as modules, e.g. `python -m src.models.train_pm25_forecast` or `python -m src.features.exogenous_drivers` (`build_features.py` also has a `sys.path` shim, so a direct run works, but it then needs the Postgres DB in `db` mode). The local `venv/` has **no LightGBM** (and PyPI may be blocked), so Tier 2 scripts use scikit-learn `HistGradientBoosting`; LightGBM training runs on Colab.
+Phase scripts are run directly (e.g. `python src/models/baselines.py`); `make help` lists the Makefile targets (test, lint, format, type-check, data, run-api, run-frontend); ruff and pytest are configured in `pyproject.toml`. Python is 3.11+ per README. Scripts that `import src.*` need the repo root on `sys.path`: run the Tier 2 scripts from the repo root as modules, e.g. `python -m src.models.train_pm25_forecast` or `python -m src.features.exogenous_drivers` (`build_features.py` also has a `sys.path` shim, so a direct run works, but it then needs the Postgres DB in `db` mode). The local `venv/` has **no LightGBM** (and PyPI may be blocked), so Tier 2 scripts use scikit-learn `HistGradientBoosting`; LightGBM training runs on Colab.
 
 ## Tests
 
