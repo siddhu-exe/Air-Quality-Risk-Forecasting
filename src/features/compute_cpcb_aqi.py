@@ -149,6 +149,20 @@ def load_raw_caaqms(years, raw_dir: Path = DEFAULT_RAW_DIR) -> pd.DataFrame:
     return raw.reset_index(drop=True)
 
 
+def hourly_aqi_series(series: pd.DataFrame) -> pd.Series:
+    """Hourly (un-averaged) AQI from one station's gap-free hourly pollutant frame.
+
+    Max sub-index per hour, with CO/O3 on their trailing 8h mean (>= 6 valid hours); NaN where fewer than
+    ``MIN_POLLUTANTS`` sub-indices exist or neither PM is present. Every value depends only on hours <= its own.
+    ``compute_aqi`` takes the trailing 24h mean of this series.
+    """
+    sub = pd.DataFrame({p: sub_index(p, series[p]) for p in POLLUTANTS}, index=series.index)
+    for pollutant in EIGHT_HOUR_POLLUTANTS:
+        smoothed = series[pollutant].rolling(8, min_periods=6).mean().to_numpy()
+        sub[pollutant] = sub_index(pollutant, smoothed)
+    return sub.max(axis=1).where(_validity_mask(sub))
+
+
 def compute_aqi(raw: pd.DataFrame, method: str = "rolling_subindex_mean") -> pd.DataFrame:
     """Compute hourly AQI per station from the long raw telemetry frame.
 
@@ -173,12 +187,7 @@ def compute_aqi(raw: pd.DataFrame, method: str = "rolling_subindex_mean") -> pd.
             valid = _validity_mask(sub)
             aqi = hourly_aqi.where(valid)
         elif method == "rolling_subindex_mean":
-            sub = pd.DataFrame({p: sub_index(p, series[p]) for p in POLLUTANTS}, index=series.index)
-            for pollutant in EIGHT_HOUR_POLLUTANTS:
-                smoothed = series[pollutant].rolling(8, min_periods=6).mean().to_numpy()
-                sub[pollutant] = sub_index(pollutant, smoothed)
-            hourly_aqi = sub.max(axis=1).where(_validity_mask(sub))
-            aqi = hourly_aqi.rolling(ROLLING_WINDOW_HOURS, min_periods=MIN_VALID_HOURS).mean()
+            aqi = hourly_aqi_series(series).rolling(ROLLING_WINDOW_HOURS, min_periods=MIN_VALID_HOURS).mean()
         else:
             raise ValueError(f"Unknown method: {method}")
 

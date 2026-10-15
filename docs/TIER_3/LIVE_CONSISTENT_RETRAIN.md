@@ -1,6 +1,6 @@
 # Live-consistent retrain
 
-Status: results in, **decision pending** on which models go live (see Recommendation). Written 2026-10-15.
+Status: results in; AQI 6h, 24h and PM2.5 1h/6h approved, **AQI 1h decision pending** after the window-update baseline (see Recommendation). Written 2026-10-15.
 
 ## Why
 
@@ -51,6 +51,36 @@ Skill = 1 - MAE_model / MAE_persistence, persistence on the same recomputed AQI,
 | 24h | test | live-masked | aqi-24h-hybrid-live-v1 | 10,044 | 33.233 | 36.520 | +0.090 | [+0.051, +0.126] |
 | 24h | test | unmasked | aqi-24h-hybrid-v1 (frozen, reference) | 10,044 | 33.602 | 36.520 | +0.080 | [+0.041, +0.114] |
 
+## Where the skill comes from: the 24h-window identity
+
+Recomputed AQI is the trailing 24h mean of an hourly AQI `H`, so `AQI(t+h) = AQI(t) + sum_(k=1..h) (H(t+k) - H(t+k-24)) / 24`, and every hour leaving the window is known at `t`. **Window-update persistence** uses that: it keeps the known hours that stay in the target's window and assumes the `h` entering hours equal the current hourly value `H(t)`; the mean is recomputed with the same minimum-valid-hours rule as `compute_aqi`. It has no fitted parameters. Rows where `H(t)` itself is missing (about 1% of rows) fall back to plain persistence. Source: `reports/modeling/live_retrain/window_update_baseline.csv`, from `python -m src.evaluation.window_update_baseline` (reads the saved retrain predictions; nothing is refit, no new selection). CIs are 95% day-block bootstrap (1,000 resamples); a skill against the window-update baseline is `1 - MAE_model / MAE_window-update`.
+
+| Horizon | Split | Rows | Persistence MAE | Window-update MAE | Model MAE | Window-update vs persistence | Model vs persistence | Model vs window-update |
+| :--- | :--- | ---: | ---: | ---: | ---: | :---: | :---: | :---: |
+| 1h | val | 9,947 | 2.240 | 1.183 | 1.535 | +0.472 [+0.415, +0.526] | +0.315 [+0.256, +0.370] | -0.297 [-0.359, -0.235] |
+| 1h | test | 10,221 | 2.330 | 1.041 | 1.528 | +0.553 [+0.510, +0.591] | +0.344 [+0.273, +0.400] | -0.467 [-0.594, -0.375] |
+| 6h | val | 9,907 | 10.668 | 10.579 | 7.691 | +0.008 [-0.147, +0.145] | +0.279 [+0.207, +0.343] | +0.273 [+0.208, +0.331] |
+| 6h | test | 10,181 | 12.153 | 12.070 | 8.402 | +0.007 [-0.114, +0.113] | +0.309 [+0.252, +0.355] | +0.304 [+0.243, +0.357] |
+| 24h | val | 9,790 | 30.493 | 46.081 | 28.839 | -0.511 [-0.738, -0.323] | +0.054 [+0.012, +0.091] | +0.374 [+0.296, +0.445] |
+| 24h | test | 10,044 | 36.520 | 54.382 | 32.993 | -0.489 [-0.690, -0.323] | +0.097 [+0.063, +0.128] | +0.393 [+0.316, +0.463] |
+
+Gain share of the retrained LightGBM models by feature family (`feature_importance_gain.csv`, from the model text dumps):
+
+| Horizon | aqi_curr | other AQI history (lags, rolling, network) | PM history | everything else |
+| :--- | ---: | ---: | ---: | ---: |
+| 1h | 0.909 | 0.090 | 0.001 | 0.000 |
+| 6h | 0.883 | 0.092 | 0.018 | 0.006 |
+
+What this says, plainly:
+
+- **1h: the model does not beat the parameter-free baseline. It is worse.** Window-update persistence has a test skill of +0.553 against persistence; the retrained model has +0.344, and against window-update the model is at -0.467 (CI [-0.594, -0.375]); validation agrees (-0.297). Most of the 1h skill against persistence is the window identity: the baseline recovers 161% of the model's MAE gain. The model cannot reproduce it because it is given the 24h mean and its short rolling statistics, but not `H(t)` or the hour leaving the window (the 1h model puts 91% of its gain on `aqi_curr` and 8% on `aqi_roll_mean_3h`, and about 0% on pollutants). The "+0.34 skill at 1h" is true against plain persistence and should not be read as forecasting skill.
+- **6h: genuine skill.** Window-update persistence is indistinguishable from persistence (+0.007, CI [-0.113, +0.113]) because six unknown hours enter the window, so the arithmetic is not the source. The model beats both: +0.303 against persistence and +0.304 [+0.243, +0.357] against window-update on test (validation +0.273).
+- **24h: the baseline is not a fair comparator.** A flat-`H` assumption for a whole day is poor (-0.489 against persistence), so the model's +0.39 against it is not meaningful; the claim stays +0.090 against plain persistence, low skill.
+
+## Causality of the recomputed path
+
+`tests/test_aqi_causality.py` checks, on synthetic telemetry, that AQI at hour `t` does not change when any raw value after `t` is altered or removed (both `compute_aqi` methods), that the 8h CO/O3 smoothing is trailing and exactly eight hours, that `AQI(t)` equals the trailing 24h mean of the hourly AQI, that the hourly AQI ignores the future, and that window-update persistence is exact when the future is flat. The retrain script also asserts that the rebuilt `AQI(t)` equals `aqi_curr` in the matrix for every scored row. Feature-side leakage is covered by `tests/test_alignment.py`.
+
 ## Calibration side check (validation only)
 
 The alternative to retraining: keep the frozen models and map recomputed AQI to the official scale with an isotonic map fitted on 2025-01..08. Source: `reports/modeling/live_audit/calibration_side_check.csv`.
@@ -97,7 +127,8 @@ Full output: `reports/modeling/live_quantile/`.
 
 ## Recommendation (for the owner's decision)
 
-- **AQI 1h and 6h: switch to the live-consistent models.** Test skill on the live-masked view is +0.339 (1h) and +0.303 (6h), CIs well above zero, and validation agrees (+0.307, +0.267). The frozen models score negative (1h) or indistinguishable from persistence (6h) on the recomputed basis.
+- **AQI 6h: switch to the live-consistent model.** Test skill on the live-masked view is +0.303, CI above zero, and it also beats window-update persistence (+0.304, CI [+0.243, +0.357]), so the skill is not the window arithmetic. The frozen model is indistinguishable from persistence on the recomputed basis.
+- **AQI 1h: the live-consistent model beats plain persistence (+0.339) but loses to window-update persistence (-0.467 against it).** The claim for the 1h model is therefore "better than persistence, worse than the window identity". Options (decision pending): serve window-update persistence at 1h (no model), or refit the 1h/6h models with `H(t)` and the leaving hours as inputs, chosen on validation (the test window has been looked at for this baseline, so a refit's test score would be a second look and must be reported as such).
 - **AQI 24h: live-consistent hybrid, labelled low-skill.** Test +0.090 live-masked (CI [+0.051, +0.126]); validation +0.051. The frozen hybrid scores +0.080 on unmasked inputs, so the gain is small; the case for switching is basis consistency, not accuracy.
 - **PM2.5 1h and 6h: publish as the headline live forecast.** Test skill +0.202 (1h) and +0.364 (6h), CIs above zero, validation agrees. PM2.5 is the measured quantity with no AQI-basis ambiguity.
 - **PM2.5 24h: do not publish.** Project rule (no 24h PM2.5 forecast) and the result agrees: test skill -0.102, CI includes zero. The model file is kept in `models/live/pm25/` but must not be wired into the forecast job.

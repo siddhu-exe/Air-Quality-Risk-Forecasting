@@ -42,6 +42,8 @@ Source: `reports/modeling/live_retrain/live_retrain_metrics.csv`, write-up in [`
 | 24h | test | live-masked | aqi-24h-hybrid-live-v1 | 10,044 | 33.233 | 36.520 | +0.090 | [+0.051, +0.126] |
 | 24h | test | unmasked | aqi-24h-hybrid-v1 (frozen, reference) | 10,044 | 33.602 | 36.520 | +0.080 | [+0.041, +0.114] |
 
+Against a stronger baseline: the live AQI is a 24h mean, so the hours leaving the window are known in advance. Window-update persistence (assume the entering hours equal the current hour) scores +0.553 against persistence at 1h on test, **above the retrained 1h model** (+0.344; model vs window-update -0.467, CI [-0.594, -0.375]). At 6h the window-update baseline is no better than persistence (+0.007) and the model beats it (+0.304, CI [+0.243, +0.357]), so the 6h skill is real. Details: [`docs/TIER_3/LIVE_CONSISTENT_RETRAIN.md`](docs/TIER_3/LIVE_CONSISTENT_RETRAIN.md).
+
 Raw PM2.5 (ug/m3, live-consistent), source `reports/modeling/live_pm25/pm25_forecast_metrics.csv`. No 24h PM2.5 forecast is published.
 
 | Horizon | Split | N | Variant | Model MAE | Persistence MAE | MAE skill | Skill 95% CI | RMSE skill |
