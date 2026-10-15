@@ -82,3 +82,52 @@ def load_config(path: Path = CONFIG_PATH, env: dict | None = None) -> IngestConf
     if "allow_unverified" in values and isinstance(values["allow_unverified"], str):
         values["allow_unverified"] = _truthy(values["allow_unverified"])
     return IngestConfig(**values)
+
+
+FORECAST_CHOICES = {
+    "aqi_1h": ("rule", "off"),
+    "aqi_6h": ("model", "off"),
+    "aqi_24h": ("model", "off"),
+    "pm25_1h": ("model", "off"),
+    "pm25_6h": ("model", "off"),
+    "pm25_24h": ("off",),
+    "interval_24h": ("off",),
+    "p_severe": ("off",),
+}
+FORECAST_REFUSED = {
+    "pm25_24h": "no 24h PM2.5 forecast is published (test skill -0.102; the database also refuses it)",
+    "interval_24h": "the conformal 80% interval covers 77.0% on test, not 80%",
+    "p_severe": "the severe-event Brier score is not distinguishable from persistence and the regimes differ",
+}
+
+
+@dataclass(frozen=True)
+class ForecastConfig:
+    """Which forecast products the job writes (``[forecast]`` in ``config/live.toml``)."""
+
+    aqi_1h: str = "rule"
+    aqi_6h: str = "model"
+    aqi_24h: str = "model"
+    pm25_1h: str = "model"
+    pm25_6h: str = "model"
+    pm25_24h: str = "off"
+    interval_24h: str = "off"
+    p_severe: str = "off"
+
+    def __post_init__(self) -> None:
+        for key, allowed in FORECAST_CHOICES.items():
+            value = getattr(self, key)
+            if value not in allowed:
+                reason = f": {FORECAST_REFUSED[key]}" if key in FORECAST_REFUSED else ""
+                raise ConfigError(f"[forecast] {key}={value!r} must be one of {allowed}{reason}")
+
+    def enabled(self) -> list[str]:
+        return [key for key in ("aqi_1h", "aqi_6h", "aqi_24h", "pm25_1h", "pm25_6h") if getattr(self, key) != "off"]
+
+
+def load_forecast_config(path: Path = CONFIG_PATH) -> ForecastConfig:
+    values = dict(tomllib.loads(path.read_text()).get("forecast", {})) if path.exists() else {}
+    unknown = set(values) - set(ForecastConfig.__dataclass_fields__)
+    if unknown:
+        raise ConfigError(f"unknown [forecast] settings: {sorted(unknown)}")
+    return ForecastConfig(**values)

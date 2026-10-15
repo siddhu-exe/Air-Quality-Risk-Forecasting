@@ -5,14 +5,18 @@ training matrix, score the frozen models, write ``aq.forecasts``.
     python -m src.live.forecast --dry-run                # read the DB, print what would be written, write nothing
     python -m src.live.forecast --issue-time "2026-10-07 12:00" --dry-run     # replay a historical hour
 
+Products (``[forecast]`` in config/live.toml, ADR 0006): AQI 1h = rule-based window-update persistence, AQI 6h/24h and
+PM2.5 1h/6h = live-consistent models trained on recomputed AQI (``src/live/serving.py``).
+
 Design rules (docs/TIER_3/PLAN.md section 4):
   * features come from ``compute_feature_frame`` (shared with training) plus the 24h model's multi-day features;
   * a station is SKIPPED, with the reason in ``job_runs.details``, never imputed: stale, no AQI at the issue hour,
     too little AQI history, a whole required feature group missing, or too many core features missing;
   * groups the D1 audit showed the models tolerate (station weather, solar, NOx) may be absent; weather cells filled from
     Open-Meteo are masked when ``weather_fill = "none"`` (the audit showed filling hurt the 1h/6h models);
-  * frozen models only, hash-verified; ``y_persistence`` (the current AQI) is written on every row;
-  * no 24h PM2.5, no intervals, no P(severe): those models were never persisted (decision D2 is still open).
+  * models hash-verified against config/live_model_hashes.json; ``y_persistence`` (the current value of the target) is
+    written on every row;
+  * no 24h PM2.5, no intervals, no P(severe): refused by the config (ADR 0006).
 """
 
 from __future__ import annotations
@@ -30,14 +34,16 @@ import numpy as np
 import pandas as pd
 
 from src.features.build_features import _stations_frame, compute_feature_frame
-from src.features.compute_cpcb_aqi import STATION_IDS
-from src.live import models as model_mod
+from src.features.compute_cpcb_aqi import POLLUTANTS, ROLLING_WINDOW_HOURS, STATION_IDS, hourly_aqi_series
+from src.live import serving
 from src.live.log import configure as configure_logging
 from src.live.log import get_logger
 from src.live.qc import WEATHER_ALL
+from src.live.rules import window_update_estimate
 
 KST = "Asia/Kolkata"
-HORIZONS = (1, 6, 24)
+RULE_HISTORY_HOURS = 48  # hourly AQI history the rule reads: the 24h window plus the 8h CO/O3 smoothing
+RULE_CONSISTENCY_TOLERANCE = 0.01
 HISTORY_HOURS = (
     408  # hours read per station: 168 earlier AQI rows for the 24h features + 168 h lags + room for AQI gaps
 )
@@ -186,7 +192,7 @@ def assess_station(
     history: pd.DataFrame,
     latest_reading: pd.Timestamp | None,
     issue: pd.Timestamp,
-    models: model_mod.Models,
+    models: serving.Serving,
     gate: dict,
     stale_after_hours: float = STALE_AFTER_HOURS,
 ) -> StationVerdict:
@@ -215,7 +221,7 @@ def assess_station(
             False,
             f"insufficient history: {len(history)} hourly AQI rows in the last {WINDOW_HOURS} h, need {MIN_HISTORY_ROWS}",
         )
-    worst = max(core_missing_share(row, names) for names in models.features.values())
+    worst = max((core_missing_share(row, names) for names in models.features.values()), default=0.0)
     if worst > gate["max_core_missing_share"]:
         return StationVerdict(
             station,
@@ -237,7 +243,7 @@ def forecast_rows(
     caaqms: pd.DataFrame,
     aqi: pd.DataFrame,
     issue_time: pd.Timestamp,
-    models: model_mod.Models,
+    models: serving.Serving,
     gate: dict,
     latest_readings: dict | None = None,
     stale_after_hours: float = STALE_AFTER_HOURS,
@@ -250,7 +256,7 @@ def forecast_rows(
         latest_readings = (
             caaqms.dropna(subset=READING_VALUE_COLUMNS, how="all").groupby("station_name")["timestamp"].max().to_dict()
         )
-    verdicts, keep = [], []
+    verdicts, keep, rule_values = [], [], {}
     for name, station_id in sorted(STATION_IDS.items(), key=lambda kv: kv[1]):
         history = base[base["station_name"] == name] if len(base) else base
         at_issue = (
@@ -263,6 +269,12 @@ def forecast_rows(
         verdicts.append(verdict)
         if verdict.ok:
             keep.append(at_issue.iloc[0])
+            if models.has("aqi_1h"):
+                value, why = rule_value(caaqms, name, issue, float(at_issue.iloc[0]["aqi_curr"]))
+                if value is None:
+                    verdict.notes["aqi_1h_skipped"] = why
+                else:
+                    rule_values[name] = value
     if not keep:
         return pd.DataFrame(
             columns=[
@@ -277,25 +289,51 @@ def forecast_rows(
                 "y_persistence",
             ]
         ), verdicts
-    return assemble(pd.DataFrame(keep).reset_index(drop=True), issue, models), verdicts
+    return assemble(pd.DataFrame(keep).reset_index(drop=True), issue, models, rule_values), verdicts
 
 
-def assemble(rows: pd.DataFrame, issue: pd.Timestamp, models: model_mod.Models) -> pd.DataFrame:
-    """Score every horizon for feature ``rows`` (one per station, all at ``issue``) and shape them like ``aq.forecasts``."""
+def rule_value(caaqms: pd.DataFrame, station: str, issue: pd.Timestamp, aqi_curr: float) -> tuple[float | None, str]:
+    """The 1h rule at ``issue`` for one station, from its stored pollutant readings: (value, "") or (None, reason).
+
+    Needs the current hourly AQI and 16 valid hours in the 24h window. The hourly series must also reproduce the stored
+    AQI at the issue hour, so a rule value never rests on different data than the AQI shown beside it."""
+    index = pd.date_range(end=issue, periods=RULE_HISTORY_HOURS, freq="h")
+    own = caaqms[(caaqms["station_name"] == station) & (caaqms["timestamp"].isin(index))]
+    series = own.drop_duplicates("timestamp", keep="last").set_index("timestamp")[POLLUTANTS].reindex(index)
+    hourly = hourly_aqi_series(series)
+    value = window_update_estimate(hourly, 1).iloc[-1]
+    if pd.isna(value):
+        return None, "no valid current hourly AQI, or fewer than 16 valid hours in the 24h window"
+    rebuilt = hourly.rolling(ROLLING_WINDOW_HOURS, min_periods=16).mean().iloc[-1]
+    if pd.isna(rebuilt) or abs(rebuilt - aqi_curr) > RULE_CONSISTENCY_TOLERANCE:
+        return None, f"hourly AQI rebuilds {rebuilt:.2f}, stored AQI is {aqi_curr:.2f}"
+    return float(value), ""
+
+
+def assemble(
+    rows: pd.DataFrame, issue: pd.Timestamp, models: serving.Serving, rule_values: dict[str, float] | None = None
+) -> pd.DataFrame:
+    """Every enabled product for feature ``rows`` (one per station, all at ``issue``), shaped like ``aq.forecasts``.
+    The rule covers only stations whose hourly AQI passed ``rule_value``."""
     out = []
-    for horizon in HORIZONS:
+    for spec in models.specs:
+        if spec.kind == "rule":
+            part = rows[rows["station_name"].isin(rule_values or {})]
+            y_hat = part["station_name"].map(rule_values).to_numpy(float)
+        else:
+            part, y_hat = rows, serving.predict(models, spec.key, rows)
         out.append(
             pd.DataFrame(
                 {
                     "issue_time": issue,
-                    "target_time": issue + pd.Timedelta(hours=horizon),
-                    "station_id": rows["station_id"].astype(int),
-                    "station_name": rows["station_name"],
-                    "horizon": horizon,
-                    "target": "aqi",
-                    "model_version": model_mod.VERSIONS[horizon],
-                    "y_hat": model_mod.predict(models, horizon, rows),
-                    "y_persistence": rows["aqi_curr"].to_numpy(float),
+                    "target_time": issue + pd.Timedelta(hours=spec.horizon),
+                    "station_id": part["station_id"].astype(int).to_numpy(),
+                    "station_name": part["station_name"].to_numpy(),
+                    "horizon": spec.horizon,
+                    "target": spec.target,
+                    "model_version": spec.version,
+                    "y_hat": y_hat,
+                    "y_persistence": serving.persistence(spec, part),
                 }
             )
         )
@@ -331,7 +369,7 @@ def library_versions() -> dict:
 
 def run(
     store: Any,
-    models: model_mod.Models,
+    models: serving.Serving,
     gate: dict,
     hashes: dict,
     *,
@@ -348,7 +386,7 @@ def run(
         "dry_run": dry_run,
         "weather_fill": weather_fill,
         "gate": gate["max_core_missing_share"],
-        "models": model_mod.VERSIONS,
+        "models": {spec.key: spec.version for spec in models.specs},
     }
     written, error, status = 0, None, "failed"
     try:
@@ -373,7 +411,7 @@ def run(
         details.update(summarize(verdicts))
         status = classify_run(verdicts)
         if len(rows) and not dry_run:
-            store.register_models(hashes, library_versions())
+            store.register_models(models.specs, hashes, library_versions())
             written = store.insert_forecasts(rows)
         elif len(rows):
             written = 0
@@ -394,7 +432,7 @@ def run(
 
 def main(argv: list[str] | None = None) -> int:
     configure_logging()
-    from src.live.config import load_config
+    from src.live.config import load_config, load_forecast_config
     from src.live.forecast_store import ForecastStore
 
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
@@ -402,8 +440,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--issue-time", help="replay this hour label (Asia/Kolkata), e.g. '2026-10-07 12:00'")
     args = parser.parse_args(argv)
     cfg = load_config()
-    hashes = model_mod.verify()  # raises ModelHashMismatch: the job must not run on a changed artifact
-    models = model_mod.load(check=False)
+    forecast_cfg = load_forecast_config()
+    specs = serving.enabled_specs(forecast_cfg)
+    hashes = serving.verify(specs)  # raises ModelHashMismatch: the job must not run on a changed artifact
+    models = serving.load(forecast_cfg, check=False)
     with ForecastStore("DATABASE_URL_READONLY" if args.dry_run else "DATABASE_URL") as store:
         result = run(
             store,

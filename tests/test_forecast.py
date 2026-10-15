@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from src.live import forecast, forecast_store
+from src.live import forecast, forecast_store, serving
 from src.live import models as model_mod
 from src.live.forecast import KST
 
@@ -21,8 +21,10 @@ def fake_models():
         + ["pm10_lag_1h", "no2_lag_1h", "so2_lag_1h", "co_lag_1h", "o3_lag_1h"]
     )
     names = core + ["nox_lag_1h", "temp_curr", "solar_rad_curr", "station_ITO"]
-    return model_mod.Models(
-        boosters={}, ridge=None, imputer=None, scaler=None, features_24h=core, features={1: names, 6: names, 24: core}
+    return serving.Serving(
+        specs=[serving.SPECS["aqi_1h"], serving.SPECS["aqi_6h"], serving.SPECS["aqi_24h"]],
+        loaded={},
+        features={"aqi_6h": names, "aqi_24h": core},
     )
 
 
@@ -30,7 +32,7 @@ def history(hours=200, station="ITO", **missing):
     """Feature-row history (rows with an AQI) ending at ISSUE, plus the row at ISSUE."""
     stamps = pd.date_range(end=ISSUE, periods=hours, freq="h")
     frame = pd.DataFrame({"timestamp": stamps, "station_name": station, "aqi_curr": 150.0})
-    for column in fake_models().features[1]:
+    for column in fake_models().features["aqi_6h"]:
         if not column.startswith("station_") and column != "aqi_curr":
             frame[column] = 1.0
     for column, value in missing.items():
@@ -124,7 +126,7 @@ def test_a_required_group_missing_everywhere_is_skipped():
 
 def test_the_validation_calibrated_gate_skips_degraded_rows():
     frame = history()
-    cols = [c for c in fake_models().features[24]]
+    cols = list(fake_models().features["aqi_24h"])
     frame.loc[frame.index[-1], cols[:4]] = np.nan  # 4 of 9 core features = 44%
     v = verdict(frame)
     assert not v.ok and "44.4%" in v.reason and "22.0%" in v.reason
@@ -158,7 +160,7 @@ class FakeStore:
     def finish_run(self, run_id, status, rows, error, details):
         self.finished.append((status, rows, error))
 
-    def register_models(self, hashes, versions):
+    def register_models(self, specs, hashes, versions):
         self.writes.append("register")
         return 3
 
@@ -239,7 +241,7 @@ def test_sql_never_deletes_and_forecasts_are_immutable():
         "do nothing" in forecast_store.INSERT_FORECASTS
         and "(issue_time, station_id, horizon, target)" in forecast_store.INSERT_FORECASTS
     )
-    assert "'aqi'" in forecast_store.UPSERT_MODEL  # no pm25 model is registered
+    assert "metrics_source = excluded.metrics_source" in forecast_store.UPSERT_MODEL
 
 
 def test_the_pinned_hashes_match_the_files_in_the_repo():

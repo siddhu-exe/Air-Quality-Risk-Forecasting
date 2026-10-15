@@ -30,6 +30,7 @@ from src.features.build_features import OFFLINE_END, OFFLINE_START, load_caaqms_
 from src.features.compute_cpcb_aqi import MIN_VALID_HOURS, POLLUTANTS, ROLLING_WINDOW_HOURS, hourly_aqi_series
 from src.live.log import configure, get_logger
 from src.live.qc import apply_qc
+from src.live.rules import window_update_estimate
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 RETRAIN_DIR = REPO_ROOT / "reports" / "modeling" / "live_retrain"
@@ -37,23 +38,6 @@ MODEL_DIR = REPO_ROOT / "models" / "live"
 N_BOOT, SEED = 1000, 42
 HORIZONS = (1, 6, 24)
 log = get_logger(__name__)
-
-
-def window_update_estimate(hourly: pd.Series, horizon: int) -> pd.Series:
-    """Window-update persistence for ``AQI(t+horizon)`` at every ``t`` of one station's gap-free hourly series.
-
-    Known part: the ``24 - horizon`` newest hours that stay in the target's window; the other ``horizon`` hours are
-    filled with the current hourly value. NaN when the current hour is missing or fewer than ``MIN_VALID_HOURS`` valid.
-    """
-    keep = ROLLING_WINDOW_HOURS - horizon
-    if keep > 0:
-        known_sum = hourly.rolling(keep, min_periods=1).sum().fillna(0.0)
-        known_n = hourly.rolling(keep, min_periods=1).count()
-    else:
-        known_sum, known_n = pd.Series(0.0, index=hourly.index), pd.Series(0.0, index=hourly.index)
-    total = known_sum + horizon * hourly
-    count = known_n + horizon
-    return (total / count).where(hourly.notna() & (count >= MIN_VALID_HOURS))
 
 
 def hourly_aqi_frame() -> pd.DataFrame:

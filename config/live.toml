@@ -10,3 +10,14 @@ weather_display = "open-meteo"  # store Open-Meteo values in empty solar/ITO wea
 weather_fill = "none"      # what the forecast models see: "none" masks every filled cell. The D1 audit showed filling HURT the 1h/6h models
                            # on validation (6h with OpenAQ: +0.258 MAE filled vs +0.066 left empty); "open-meteo" would feed them back in
 allow_unverified = false   # a source whose hour convention is not verified against real data is refused when false
+
+# What the forecast job publishes. Each key is a forecast product; "off" writes nothing. Decisions and evidence: docs/decisions/0006-live-forecast-products.md
+[forecast]
+aqi_1h = "rule"      # "rule" = window-update persistence ("rule-based (24h-window update)"). The retrained 1h LightGBM stays in models/live/ but cannot be selected: it loses to the rule
+aqi_6h = "model"     # live-consistent LightGBM
+aqi_24h = "model"    # live-consistent hybrid; low skill (+0.09 against persistence), labelled as such
+pm25_1h = "model"
+pm25_6h = "model"
+pm25_24h = "off"     # not publishable: test skill -0.102, and the project rule is no 24h PM2.5 forecast (the database refuses it too)
+interval_24h = "off" # the conformal 80% interval covers 77.0% on test
+p_severe = "off"     # Brier difference vs persistence includes zero; test and validation severe rates differ 40.8% vs 3.2%

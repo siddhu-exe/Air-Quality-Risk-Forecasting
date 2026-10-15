@@ -7,7 +7,7 @@ import json
 
 import pandas as pd
 
-from src.live import models as model_mod
+from src.live import serving
 from src.live.qc import VALUE_COLUMNS
 from src.live.store import Store
 
@@ -19,8 +19,8 @@ SELECT_AQI = "select station_id, ts, aqi from aq.live_aqi where station_id = any
 SELECT_NEWEST_AQI = "select max(ts) from aq.live_aqi"
 UPSERT_MODEL = """
 insert into aq.model_registry (model_version, model_name, horizon, target, file, sha256, training_window, metrics_source, library_versions, active)
-values (%s, %s, %s, 'aqi', %s, %s, %s, %s, %s, true)
-on conflict (model_version) do update set sha256 = excluded.sha256, file = excluded.file, library_versions = excluded.library_versions, active = true
+values (%s, %s, %s, %s, %s, %s, %s, %s, %s, true)
+on conflict (model_version) do update set sha256 = excluded.sha256, file = excluded.file, library_versions = excluded.library_versions, metrics_source = excluded.metrics_source, active = true
 """
 #: a forecast is immutable once written for (issue_time, station, horizon, target): re-running an hour never changes what was published
 INSERT_FORECASTS = """
@@ -48,22 +48,24 @@ class ForecastStore(Store):
         aqi = pd.DataFrame(self._cur.fetchall(), columns=["station_id", "ts", "aqi"])
         return readings, aqi
 
-    def register_models(self, hashes: dict[str, str], library_versions: dict) -> int:
-        for horizon, files in model_mod.ARTIFACTS.items():
+    def register_models(self, specs: list, hashes: dict[str, str], library_versions: dict) -> int:
+        """Upsert one registry row per served product (``specs``: ``serving.Spec``); the rule's row hashes its source file."""
+        for spec in specs:
             self._cur.execute(
                 UPSERT_MODEL,
                 (
-                    model_mod.VERSIONS[horizon],
-                    model_mod.NAMES[horizon],
-                    horizon,
-                    files["model"],
-                    hashes[files["model"]],
-                    model_mod.TRAINING_WINDOW,
-                    model_mod.METRICS_SOURCE,
+                    spec.version,
+                    spec.name,
+                    spec.horizon,
+                    spec.target,
+                    spec.primary_file,
+                    hashes[spec.primary_file],
+                    serving.TRAINING_WINDOW if spec.kind != "rule" else "no fitted parameters",
+                    spec.metrics_source,
                     json.dumps(library_versions),
                 ),
             )
-        return len(model_mod.ARTIFACTS)
+        return len(specs)
 
     def insert_forecasts(self, rows: pd.DataFrame) -> int:
         from psycopg2.extras import execute_values

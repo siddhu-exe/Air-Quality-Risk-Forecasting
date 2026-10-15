@@ -4,8 +4,9 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from src.evaluation.window_update_baseline import gain_importance, window_update_estimate
+from src.evaluation.window_update_baseline import gain_importance
 from src.features.compute_cpcb_aqi import POLLUTANTS, compute_aqi, hourly_aqi_series
+from src.live.rules import window_update_estimate
 
 HOURS = 240
 CUT = 150  # hours with index <= CUT must not change when later raw values are perturbed
