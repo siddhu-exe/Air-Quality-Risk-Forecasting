@@ -1,4 +1,4 @@
-import type { Evidence, Forecast, ProductKey, StationSummary } from '@/api/schemas'
+import type { Evidence, Forecast, PastForecast, ProductKey, StationSummary } from '@/api/schemas'
 import type { ChartInput } from '@/lib/chart'
 
 /** A short label for a reason the forecast job recorded; the full text stays available as the tooltip / screen-reader text. */
@@ -18,6 +18,23 @@ export function reasonLabel(reason: string): string {
 
 export function findForecast(forecasts: readonly Forecast[], product: ProductKey): Forecast | undefined {
   return forecasts.find((f) => f.product === product)
+}
+
+/** The newest forecast ever issued for a product, while there is no current one (history, never a forecast for now). */
+export function lastIssued(forecasts: readonly Forecast[], product: ProductKey): PastForecast | null {
+  return findForecast(forecasts, product)?.lastIssued ?? null
+}
+
+/** The newest issue time among the stations' last-issued forecasts, or null when none was ever issued. */
+export function newestIssue(stations: readonly { forecasts: readonly Forecast[] }[]): string | null {
+  let newest: string | null = null
+  for (const station of stations) {
+    for (const forecast of station.forecasts) {
+      const issued = forecast.lastIssued?.issuedAt ?? null
+      if (issued !== null && (newest === null || Date.parse(issued) > Date.parse(newest))) newest = issued
+    }
+  }
+  return newest
 }
 
 /** The badge that says what kind of forecast this is: a rule, an experimental model, or a model. */

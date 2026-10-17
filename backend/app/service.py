@@ -21,6 +21,7 @@ from backend.app.settings import Settings
 REPORTS_DIR = Path(__file__).resolve().parents[2] / "reports"
 HISTORY_HOURS = 72
 FORECAST_LOOKBACK_HOURS = 12  # newest forecast considered; older means the job has stopped
+PAST_FORECAST_DAYS = 30  # how far back "last issued" looks while the forecast job is stale
 LAG_DAYS = 14
 NO_FORECAST_REASON = "no forecast was issued for this product in the latest run"
 
@@ -86,11 +87,16 @@ class Service:
         current = max((r["issue_time"] for r in rows), default=None)
         run = self.repo.latest_run() or {}
         details = run.get("details") or {}
+        job_stale = current is None or (now - current) > timedelta(hours=self.settings.stale_after_hours + 1)
+        # With no current run, look further back for the newest forecast ever issued: history, labelled as such.
+        past = self.repo.latest_forecasts(now - timedelta(days=PAST_FORECAST_DAYS)) if job_stale else []
         return {
             "rows": {(r["station_id"], f"{r['target']}_{r['horizon']}h"): r for r in rows},
+            "past": {(r["station_id"], f"{r['target']}_{r['horizon']}h"): r for r in past},
             "issue": current,
+            "last_issue": max((r["issue_time"] for r in past), default=None),
             "details": details if isinstance(details, dict) else {},
-            "job_stale": current is None or (now - current) > timedelta(hours=self.settings.stale_after_hours + 1),
+            "job_stale": job_stale,
         }
 
     def _forecast(self, product: Product, station: dict, ctx: dict) -> models.Forecast:
@@ -108,13 +114,17 @@ class Service:
             )
         row = ctx["rows"].get((station["station_id"], product.key))
         if ctx["job_stale"]:
+            newest = ctx["last_issue"] or ctx["issue"]
             when = (
                 "no forecast has been issued yet"
-                if ctx["issue"] is None
-                else f"newest forecast issued {ctx['issue']:%Y-%m-%d %H:%M}"
+                if newest is None
+                else f"newest forecast issued {newest:%Y-%m-%d %H:%M}"
             )
             return models.Forecast(
-                **base, status="unavailable", reason=f"the forecast job has not run recently ({when})"
+                **base,
+                status="unavailable",
+                reason=f"the forecast job has not run recently ({when})",
+                last_issued=self._past(product, ctx["past"].get((station["station_id"], product.key))),
             )
         if row is None or row["issue_time"] != ctx["issue"]:
             return models.Forecast(**base, status="unavailable", reason=self._reason(product, station, ctx["details"]))
@@ -122,6 +132,21 @@ class Service:
         return models.Forecast(
             **base,
             status="ok",
+            issued_at=row["issue_time"],
+            valid_at=row["target_time"],
+            value=value,
+            category=cpcb.category(value) if product.target == "aqi" else None,
+            persistence=_num(row["y_persistence"]),
+            window_update=_num(row["y_window_update"]) if product.target == "aqi" else None,
+            model_version=row["model_version"],
+        )
+
+    @staticmethod
+    def _past(product: Product, row: dict | None) -> models.PastForecast | None:
+        if row is None:
+            return None
+        value = float(row["y_hat"])
+        return models.PastForecast(
             issued_at=row["issue_time"],
             valid_at=row["target_time"],
             value=value,

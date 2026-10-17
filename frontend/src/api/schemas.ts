@@ -8,6 +8,8 @@
  * What the contract promises, and the UI must keep:
  *  - A forecast is `ok` (a value, plain persistence beside it), `unavailable` (with the reason the forecast job
  *    recorded) or `withheld` (PM2.5 24h). There is never a blank or a substitute number.
+ *  - While there is no current forecast, an `unavailable` one may carry `lastIssued`: the newest forecast ever issued,
+ *    shown only as history (issued and valid times in the past), never as a forecast for now.
  *  - There is no interval and no P(severe): neither is published.
  *  - AQI 1h is a rule (`kind: 'rule'`), AQI 24h is `experimental`.
  */
@@ -42,6 +44,18 @@ export type ProductKey = z.infer<typeof ProductKeySchema>
 
 /* --------------------------------- forecasts ------------------------------- */
 
+/** The newest forecast ever issued for a product; history, not a forecast for now. */
+export const PastForecastSchema = z.object({
+  issuedAt: isoDateTime,
+  validAt: isoDateTime,
+  value: z.number().min(0),
+  category: z.string().nullable(),
+  persistence: z.number().min(0).nullable(),
+  windowUpdate: z.number().min(0).nullable(),
+  modelVersion: z.string().nullable(),
+})
+export type PastForecast = z.infer<typeof PastForecastSchema>
+
 export const ForecastSchema = z
   .object({
     product: ProductKeySchema,
@@ -63,10 +77,15 @@ export const ForecastSchema = z
     /** Window-update persistence (AQI only), frozen at issue time. */
     windowUpdate: z.number().min(0).nullable(),
     modelVersion: z.string().nullable(),
+    /** Only on an `unavailable` forecast whose job has stopped; absent in older API responses. */
+    lastIssued: PastForecastSchema.nullable().default(null),
   })
   .superRefine((f, ctx) => {
     if (f.status === 'ok' && (f.value === null || f.persistence === null || f.validAt === null)) {
       ctx.addIssue({ code: 'custom', message: 'an ok forecast needs a value, its persistence and a valid-at time' })
+    }
+    if (f.status === 'ok' && f.lastIssued !== null) {
+      ctx.addIssue({ code: 'custom', message: 'a current forecast has no last-issued block' })
     }
     if (f.status !== 'ok' && (f.value !== null || !f.reason)) {
       ctx.addIssue({ code: 'custom', message: 'a forecast without a value must carry a reason and no number' })

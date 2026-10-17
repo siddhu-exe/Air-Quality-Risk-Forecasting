@@ -69,8 +69,9 @@ describe('ErrorState and StaleBanner', () => {
 
   it('tells the reader how old the data is, and that forecasts need fresh data', () => {
     render(<StaleBanner dataAsOf="2026-10-11T08:30:00Z" />)
-    expect(screen.getByRole('status')).toHaveTextContent('14:00 IST on Sun 11 Oct')
+    expect(screen.getByRole('status')).toHaveTextContent('Latest data: 14:00 IST on Sun 11 Oct.')
     expect(screen.getByRole('status')).toHaveTextContent('forecasts are only issued from fresh data')
+    expect(screen.getByRole('status')).toHaveTextContent('from the past')
   })
 
   it('says so plainly when there are no readings at all', () => {

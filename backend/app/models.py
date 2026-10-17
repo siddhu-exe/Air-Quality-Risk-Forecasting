@@ -28,6 +28,19 @@ Target = Literal["aqi", "pm25"]
 Horizon = Literal["1h", "6h", "24h"]
 
 
+class PastForecast(Model):
+    """The newest forecast ever issued for a product, shown only while there is no current one. It is history: it was made
+    from data up to its ``issued_at`` and predicted ``valid_at``; it is never a forecast for now."""
+
+    issued_at: datetime
+    valid_at: datetime
+    value: float
+    category: str | None = None
+    persistence: float | None = None
+    window_update: float | None = None
+    model_version: str | None = None
+
+
 class Forecast(Model):
     """One product (target x horizon) for one station."""
 
@@ -48,6 +61,8 @@ class Forecast(Model):
     #: window-update persistence (AQI only), frozen at issue time
     window_update: float | None = None
     model_version: str | None = None
+    #: set only when ``status`` is ``unavailable`` because the forecast job has stopped (or never ran) and an older one exists
+    last_issued: PastForecast | None = None
 
 
 class Current(Model):

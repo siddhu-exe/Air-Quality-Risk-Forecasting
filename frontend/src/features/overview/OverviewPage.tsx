@@ -5,6 +5,8 @@ import { Page } from '@/components/ui/Page'
 import { StaleBanner } from '@/components/ui/StaleBanner'
 import { AdvicePanel } from './AdvicePanel'
 import { CityHero } from './CityHero'
+import { newestIssue } from '@/lib/forecast'
+import { LastIssuedPanel } from './LastIssuedPanel'
 import { OverviewSkeleton } from './OverviewSkeleton'
 import { StationMap } from './StationMap'
 import { StationList, StationTable } from './StationTable'
@@ -37,6 +39,8 @@ export function OverviewPage() {
         <StationTable stations={data.stations} />
         <StationList stations={data.stations} />
       </div>
+
+      {(data.stale || newestIssue(data.stations) !== null) && <LastIssuedPanel stations={data.stations} />}
 
       <TrustStrip />
       <TrustFootnote />

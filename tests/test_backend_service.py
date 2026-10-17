@@ -340,3 +340,19 @@ def test_model_health_reports_how_far_behind_the_source_is_per_day():
 def test_source_lag_is_empty_not_an_error_before_any_ingest_ran():
     lag = service(FakeRepo()).model_health().source_lag
     assert lag.daily == [] and lag.source is None
+
+
+def test_a_stopped_forecast_job_still_shows_the_last_issued_forecast_marked_as_history():
+    stale = ISSUE - timedelta(hours=9)
+    overview = service(FakeRepo(forecasts=[row(3, "aqi_6h", 300.0, issue=stale)])).overview()
+    f = forecast_of(overview, "Anand Vihar", "aqi_6h")
+    assert f.status == "unavailable" and f.value is None  # never a number for now
+    assert f.last_issued is not None and f.last_issued.value == 300.0 and f.last_issued.issued_at == stale
+    assert f"newest forecast issued {stale:%Y-%m-%d %H:%M}" in f.reason
+    assert forecast_of(overview, "ITO", "aqi_6h").last_issued is None  # nothing was ever issued for ITO
+
+
+def test_a_current_forecast_carries_no_last_issued_block():
+    overview = service(FakeRepo(forecasts=[row(3, "aqi_6h", 300.0)])).overview()
+    ok = forecast_of(overview, "Anand Vihar", "aqi_6h")
+    assert ok.status == "ok" and ok.last_issued is None

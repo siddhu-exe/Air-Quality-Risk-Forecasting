@@ -105,7 +105,13 @@ const VERSIONS: Record<ProductKey, string> = {
 export function makeForecast(
   product: ProductKey,
   status: Forecast['status'],
-  fields: { value?: number; persistence?: number; windowUpdate?: number; reason?: string } = {},
+  fields: {
+    value?: number
+    persistence?: number
+    windowUpdate?: number
+    reason?: string
+    lastIssued?: Forecast['lastIssued']
+  } = {},
 ): Forecast {
   const m = PRODUCT_META[product]
   const ok = status === 'ok'
@@ -126,6 +132,7 @@ export function makeForecast(
     persistence: ok ? (fields.persistence ?? value) : null,
     windowUpdate: ok && m.target === 'aqi' ? (fields.windowUpdate ?? fields.value ?? value) : null,
     modelVersion: ok ? VERSIONS[product] : null,
+    lastIssued: ok ? null : (fields.lastIssued ?? null),
   }
 }
 
