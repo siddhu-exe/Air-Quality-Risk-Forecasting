@@ -61,7 +61,7 @@ Open `ca-delhi-air-api`:
 2. **Application > Containers > Edit and deploy** > the container > **Environment variables** > Add:
    | Name | Source | Value |
    | :--- | :--- | :--- |
-   | `DATABASE_URL_READONLY` | Reference a secret | `database-url-readonly` |
+   | `DATABASE_URL_READONLY` | Reference a secret | `database-url-readonly` (every deploy re-binds it with `secretref:database-url-readonly`) |
    | `FRONTEND_ORIGIN` | Manual entry | the Vercel URL, e.g. `https://<project>.vercel.app` (several origins: comma-separated). Until Vercel exists use `http://localhost:5173`. Deploys overwrite it from the repository variable `FRONTEND_ORIGIN` (step 6). |
    Optional: `STALE_AFTER_HOURS` (default 3), `CACHE_SECONDS` (default 60).
 3. Save and create the revision.

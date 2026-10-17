@@ -112,6 +112,7 @@ def test_deploy_workflow_is_manual_only_and_uses_oidc_not_a_stored_password():
     )
     assert "packages: write" in code and "if: inputs.deploy" in code
     assert "vars.FRONTEND_ORIGIN" in code and '--set-env-vars "FRONTEND_ORIGIN=' in code
+    assert '"DATABASE_URL_READONLY=secretref:database-url-readonly"' in code
 
 
 def test_preflight_from_the_allowed_origin_is_answered_and_a_random_origin_is_not():
