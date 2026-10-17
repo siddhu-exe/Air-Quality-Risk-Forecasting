@@ -139,8 +139,11 @@ def test_run_status_is_failed_partial_or_success():
         forecast.classify_run([ok, ok]) == "success"
         and forecast.classify_run([ok, bad]) == "partial"
         and forecast.classify_run([bad]) == "stale"  # every station skipped as stale: nothing fresh, not a fault
-        and forecast.classify_run([forecast.StationVerdict("c", False, "insufficient history: 3 rows")]) == "failed"
-        and forecast.classify_run([bad, forecast.StationVerdict("c", False, "insufficient history")]) == "failed"
+        # insufficient history is what the first fresh hours after an outage look like: a data condition too
+        and forecast.classify_run([forecast.StationVerdict("c", False, "insufficient history: 3 rows")]) == "stale"
+        and forecast.classify_run([bad, forecast.StationVerdict("c", False, "insufficient history")]) == "stale"
+        and forecast.classify_run([bad, forecast.StationVerdict("c", False, "current AQI missing at the issue hour")])
+        == "failed"
         and forecast.classify_run([]) == "failed"
     )
     assert forecast.summarize([ok, bad])["skipped"] == {"b": "stale"}
@@ -232,16 +235,14 @@ def test_every_station_skipped_fails_and_says_why(monkeypatch):
     assert result["status"] == "stale" and "ITO: stale" in result["error"]
 
 
-def test_a_run_that_skips_everything_for_a_non_stale_reason_still_fails(monkeypatch):
-    result = patched_run(
-        monkeypatch,
-        FakeStore(ISSUE),
-        [
-            forecast.StationVerdict("ITO", False, "stale"),
-            forecast.StationVerdict("Bawana", False, "insufficient history"),
-        ],
-    )
-    assert result["status"] == "failed"
+def test_a_run_that_skips_everything_for_a_data_condition_is_stale_and_any_other_reason_fails(monkeypatch):
+    refilling = [
+        forecast.StationVerdict("ITO", False, "stale: 5.0 h"),
+        forecast.StationVerdict("Bawana", False, "insufficient history: 40 rows"),
+    ]
+    assert patched_run(monkeypatch, FakeStore(ISSUE), refilling)["status"] == "stale"
+    broken = [*refilling, forecast.StationVerdict("Dwarka", False, "required feature group 'pm25' is missing")]
+    assert patched_run(monkeypatch, FakeStore(ISSUE), broken)["status"] == "failed"
 
 
 def test_only_a_failed_run_makes_the_workflow_red(monkeypatch):

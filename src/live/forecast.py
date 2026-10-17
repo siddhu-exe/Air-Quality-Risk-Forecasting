@@ -18,9 +18,10 @@ Design rules (docs/TIER_3/PLAN.md section 4):
     written on every row;
   * no 24h PM2.5, no intervals, no P(severe): refused by the config (ADR 0006).
 
-Run status (``aq.job_runs``, mirrored in the exit code): success / partial (some stations forecast) / **stale** (nothing fresh to
-forecast from: the newest AQI hour is too old, or every station was skipped as stale) / failed (anything else: every station
-skipped for another reason, an exception, a model hash mismatch). Only ``failed`` exits non-zero, so the hourly workflow stays
+Run status (``aq.job_runs``, mirrored in the exit code): success / partial (some stations forecast) / **stale** (nothing to
+forecast from yet: the newest AQI hour is too old, or every station was skipped as stale or for insufficient history, which is
+what the first hours after an outage look like while the 336 h window refills) / failed (anything else: every station skipped
+for another reason, an exception, a model hash mismatch). Only ``failed`` exits non-zero, so the hourly workflow stays
 green while the source lags and turns red for real faults; the "3 failed runs in a row" alert ignores ``stale``.
 """
 
@@ -414,15 +415,19 @@ class NothingFresh(LookupError):
     """The newest AQI hour is older than the freshness limit: a data condition (``stale``), not a fault."""
 
 
-def _skipped_as_stale(verdict: StationVerdict) -> bool:
-    return bool(verdict.reason) and verdict.reason.startswith("stale")
+DATA_CONDITION_PREFIXES = ("stale", "insufficient history")
+
+
+def _skipped_for_data(verdict: StationVerdict) -> bool:
+    """Skipped because the data is not there (yet), as opposed to a fault in the features or the job."""
+    return bool(verdict.reason) and verdict.reason.startswith(DATA_CONDITION_PREFIXES)
 
 
 def classify_run(verdicts: list[StationVerdict]) -> str:
     done = sum(v.ok for v in verdicts)
     dropped = any(v.notes.get("products_dropped") for v in verdicts)
     if done == 0:
-        return "stale" if verdicts and all(_skipped_as_stale(v) for v in verdicts) else "failed"
+        return "stale" if verdicts and all(_skipped_for_data(v) for v in verdicts) else "failed"
     return "success" if done == len(verdicts) and not dropped else "partial"
 
 

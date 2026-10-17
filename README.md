@@ -94,6 +94,25 @@ make run-frontend                 # React dev server (sample data)
 - **Diwali effect is not identifiable** with this data; see `reports/causal/`.
 - **Scope.** 7 stations in the National Capital Territory of Delhi.
 
+## Known limitations / follow-ups
+
+- **Live source lag.** OpenAQ, the primary source, runs days behind real time (newest reading 2026-10-13 22:00 IST on 2026-10-17). Ingest and forecast record status `stale` and stay green; the forecast job starts by itself the first hour a station's data is fresh, and until then the site shows the latest data time and the last forecast issued (none yet), labelled as past.
+- **WAQI fallback gate pending.** WAQI runs in shadow mode only. It may become a PM2.5/PM10 fallback if the weekly gate passes (`waqi-gate.yml`, rules and PM-only audit in [ADR 0009](docs/decisions/0009-waqi-shadow-mode.md)); on 2026-10-17 there were no overlapping hours with OpenAQ, so it fails. Using it would also need the live models re-fitted on PM-only inputs.
+- **24h AQI is experimental.** It is about as accurate as assuming no change and is always shown next to plain persistence. AQI 1h is a rule (24h-window update), not a model, because the rule beats the 1h model ([ADR 0006](docs/decisions/0006-live-forecast-products.md)).
+- **Retention (not built).** Nothing is deleted from the database yet. Free-plan Supabase goes read-only at 500 MB; the database was 45 MB on 2026-10-17. Estimated growth once every station is forecast every hour (an upper bound, from measured bytes per row):
+
+  | Table | MB per year | If pruned: kept, steady-state MB |
+  | :--- | ---: | :--- |
+  | live_readings | 26.6 | all, 26.6 |
+  | live_aqi | 14.9 | all, 14.9 |
+  | forecasts | 108.9 | 180 days, 53.7 |
+  | forecast_scores | 48.3 | 180 days, 23.8 |
+  | shadow_readings | 21.9 | 90 days, 5.4 |
+  | job_runs | 40.5 | 30 days, 3.3 |
+
+  Without pruning the database reaches about 308 MB after a year and the cap in roughly 21 months. Pruning forecasts/scores at 180 days, job runs at 30 and shadow rows at 90 would level it near 174 MB (then about 41 MB a year). A draft design: a `SECURITY DEFINER` prune function that is the only way the job role can delete, run by a weekly workflow.
+- **Scheduled workflows stop after 60 days without repository activity.** GitHub disables cron workflows in a public repository after 60 days with no commit or other repository activity. Make a commit or run a workflow by hand at least every 60 days, otherwise the ingest/forecast crons stop and Supabase pauses the project 7 days after the last database activity. If it happens, re-enable the workflows in the Actions tab and resume the project in the Supabase dashboard.
+
 ## Repository layout
 
 ```text
