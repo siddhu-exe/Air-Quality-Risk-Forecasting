@@ -170,7 +170,7 @@ forecast job serves the frozen AQI models only, and PM2.5 / intervals / P(severe
   tagged `weather_source`/`qc_flags`), and the forecast job masks every `filled:*` cell before the models see it. OpenAQ is the
   primary source once fresh; data.gov.in is a fallback only after its fields, units and hour convention are verified. `curl
   https://api.data.gov.in/` from the development laptop (Indian network): no HTTP status; the default route timed out after 20 s
-  and IPv4 was refused at connect (`000`, exit 28 / 7). The probe workflow is on `main`; the GitHub-runner result is pending.
+  and IPv4 was refused at connect (`000`, exit 28 / 7). The probe workflow ran from a GitHub runner on 2026-10-11 (10:20 UTC, US egress): `api.data.gov.in` refused the connection and OpenAQ's newest value was 91.8 h old (ADR 0002).
 - **Stage 3 (forecast job) built, not yet scheduled.** `src/live/{models,forecast,forecast_store,parity,calibrate_gate}.py`,
   `config/{model_hashes,forecast_gate}.json`, `forecast.yml` (manual, dry run by default), `requirements-forecast.txt`.
   *Parity with the stored backtest predictions* (`docs/TIER_3/parity_report.md`): 24h hybrid reproduces them to 6e-12 (validation and
@@ -337,7 +337,7 @@ in the README and portfolio). Decision D5.
 
 | File | Trigger | Does | Status |
 | :--- | :--- | :--- | :--- |
-| `probe-sources.yml` | `workflow_dispatch` | reachability, real fields/units and freshness of data.gov.in and OpenAQ from a runner | on `main`; **not run yet** |
+| `probe-sources.yml` | `workflow_dispatch` | reachability, real fields/units and freshness of data.gov.in and OpenAQ from a runner | on `main`; run 2026-10-11 10:20 UTC (data.gov.in refused, OpenAQ newest value 91.8 h old) |
 | `ingest.yml` | `workflow_dispatch` (cron `10 * * * *` is a TODO) | ingest + Open-Meteo display weather | built; manual until a fresh source |
 | `forecast.yml` | `workflow_dispatch`, dry run by default (cron `25 * * * *` is a TODO) | forecast job | built; manual |
 | `score.yml` | nightly cron (off the hour) | score matured forecasts; open/refresh a GitHub issue if 24h AQI skill < 0 for 7 consecutive days or a job failed 3 times in a row | Stage 4 |
@@ -409,7 +409,7 @@ or provide a read-only pull credential; set the Container App secrets.
 - **Source rule:** if data.gov.in blocks GitHub's US runners, **OpenAQ becomes the primary live source**; no proxy.
   data.gov.in's API host refused connections from my sandbox (`Connection refused` on 164.100.61.198:443, while
   `www.data.gov.in` answered). That is not proof about GitHub runners, so a probe from a runner is needed
-  (needs the key as a repo secret and a pushed probe workflow). Until it runs, treat data.gov.in as unproven.
+  (needs the key as a repo secret and a pushed probe workflow). The probe ran on 2026-10-11: data.gov.in refused the connection from a runner as well, so it is unproven and unused.
 
 ## 10. Stage checklist
 

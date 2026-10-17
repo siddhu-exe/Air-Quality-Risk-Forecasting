@@ -21,7 +21,7 @@ Full text in the root `CLAUDE.md`. In short: trunk-based on `main` (a branch onl
 | WAQI | `src/live/epa_aqi.py`, `src/live/waqi_station_check.py`, `src/evaluation/waqi_roundtrip_audit.py`; `docs/TIER_3/waqi_stations.md` | candidate third source (`api.waqi.info`, per-pollutant US-EPA AQI, no NOx, no history). All 7 stations map and are fresh (ITO only via a different monitor 1.9 km away); **gas readings look implausible** (2nd-4th percentile of last October), so only PM is trustworthy until verified. No ingest code yet |
 | Live-consistent retrain | `src/features/build_live_matrix.py`, `src/models/live_retrain.py`, `notebooks/live_retrain_colab.ipynb` | **Done (2026-10-15).** Models in `models/live/` (hashes in `config/live_model_hashes.json`), results in [`LIVE_CONSISTENT_RETRAIN.md`](LIVE_CONSISTENT_RETRAIN.md); accepted per horizon, **not yet wired into `src/live/models.py` or the forecast job** |
 | WAQI fallback gate | `python -m src.live.shadow_compare --gate`, `.github/workflows/waqi-gate.yml` (weekly, posts to an issue); PM-only audit `python -m src.evaluation.waqi_roundtrip_audit --pm-only` | rules and audit results in ADR 0009; **FAIL until WAQI and OpenAQ overlap for 7 days** (none on 2026-10-17) |
-| Probe | `.github/workflows/probe-sources.yml` | **never run** |
+| Probe | `.github/workflows/probe-sources.yml` | run 2026-10-11 10:20 UTC from a GitHub runner (US egress): `api.data.gov.in` refused the connection; OpenAQ's newest value was 91.8 h old |
 
 Config in `config/`: `live.toml` (source, lookback, stale limit, `weather_display`, `weather_fill`), `model_hashes.json`, `forecast_gate.json`.
 Dev machine: set `FORCE_IPV4=1` (IPv6/NAT64 hangs). Local venv has no LightGBM: the 1h/6h tests and parity skip unless it is installed
@@ -36,7 +36,7 @@ Dev machine: set `FORCE_IPV4=1` (IPv6/NAT64 hangs). Local venv has no LightGBM: 
 
 ## Blocked on you
 
-1. **Run the probe** (Actions > `probe-sources` > Run workflow; needs `DATA_GOV_IN_API_KEY` and `OPENAQ_API_KEY` secrets). It answers: can a runner reach data.gov.in, what are its real fields, units and hour convention, and is OpenAQ fresh from a runner. Send me the log.
+1. ~~Run the probe~~ Done 2026-10-11 (ADR 0002): from a GitHub runner `api.data.gov.in` refused the connection and OpenAQ's newest value was 91.8 h old; a `curl` from an Indian network timed out.
 2. **A fresh source.** WAQI is live today (see above) but unverified for gases and has no history, so it cannot backfill the 336 h feature window by itself. OpenAQ's newest value is 2026-10-07 (0 of 7 stations fresh on 2026-10-11); data.gov.in refuses connections from the dev laptop (`curl` returns `000`). If the probe shows neither works, the written option is an Azure Container Apps Job in Central India: [`OPTION_azure_ingest_job_india.md`](OPTION_azure_ingest_job_india.md) (needs your decision; nothing is built).
 3. Secrets: `DATABASE_URL` (added), `DATABASE_URL_READONLY` (needed for the forecast dry run).
 
