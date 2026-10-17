@@ -1,6 +1,6 @@
 PY ?= ./venv/bin/python
 
-.PHONY: help data test lint format type-check run-api run-frontend check hooks
+.PHONY: help data test lint format type-check run-api run-frontend portfolio check hooks
 
 help:
 	@grep -E '^[a-z-]+:.*##' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-14s %s\n", $$1, $$2}'
@@ -23,6 +23,10 @@ format: ## apply ruff fixes and formatting
 
 type-check: ## frontend TypeScript check
 	cd frontend && npm run type-check
+
+portfolio: ## regenerate portfolio figures and dashboard screenshots (needs node + playwright, network)
+	$(PY) scripts/make_portfolio_figures.py
+	node scripts/capture_dashboard.mjs portfolio/images
 
 check: lint type-check test ## everything CI runs
 
