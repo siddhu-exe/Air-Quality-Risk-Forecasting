@@ -18,7 +18,13 @@ Skill = 1 - MAE_model / MAE_persistence, persistence always the TRUE aqi_curr (s
 95% day-block bootstrap (1,000 resamples). ``all`` = every validation row Tier 2 scored, ``strict`` = label also inside
 the window.
 
+PM-only scenarios (``pm_only_exact``, ``pm_only_roundtrip``): the gases are not used at all (WAQI's gas readings are
+implausible, ADR 0009) and the AQI is recomputed from PM2.5/PM10 only (``min_pollutants=1``, a PM sub-index is always
+required). They answer "what does dropping the gases cost?". Basis ``own`` compares each scenario with the same model on
+``control_recomputed``; ``aqi_error`` shows how far the PM-only AQI sits from the full-pollutant one.
+
     python -m src.evaluation.waqi_roundtrip_audit [--horizons 24 1 6]
+    python -m src.evaluation.waqi_roundtrip_audit --pm-only [--horizons 24]   # PM-only scenarios -> pm_only_audit.{csv,md}
 """
 
 from __future__ import annotations
@@ -42,8 +48,8 @@ from src.evaluation.feature_availability_audit import (
     reconcile_24h,
 )
 from src.features.build_features import _stations_frame, compute_feature_frame, load_caaqms_offline
+from src.features.compute_cpcb_aqi import MIN_POLLUTANTS, compute_aqi
 from src.features.compute_cpcb_aqi import POLLUTANTS as AQI_POLLUTANTS
-from src.features.compute_cpcb_aqi import compute_aqi
 from src.live.epa_aqi import POLLUTANTS as WAQI_POLLUTANTS
 from src.live.epa_aqi import roundtrip
 from src.models.splits import TEST_START, VAL_END, VAL_START
@@ -57,7 +63,12 @@ SCENARIOS = {
     "masked_exact": "no NOx/NO/NH3, no weather or solar (weather_fill none); concentrations exact",
     "waqi_roundtrip": "masked_exact + concentration -> integer US-EPA AQI -> concentration (instantaneous)",
     "waqi_epa_averaged": "waqi_roundtrip on EPA-averaged values: NowCast PM, 8h CO/O3, 1h NO2/SO2 (assumption, stress case)",
+    "pm_only_exact": "no gases, no NOx/NH3, no weather or solar; PM exact; AQI recomputed from PM2.5/PM10 only",
+    "pm_only_roundtrip": "pm_only_exact + PM2.5/PM10 through concentration -> integer US-EPA AQI -> concentration",
 }
+PM_ONLY = ("pm_only_exact", "pm_only_roundtrip")
+PM_ONLY_RUN = ["baseline", "control_recomputed", *PM_ONLY]
+GASES = ["no2", "so2", "co", "o3"]
 
 
 def nowcast(series: pd.Series, floor: float = 0.5) -> pd.Series:
@@ -92,7 +103,13 @@ def degrade(caaqms: pd.DataFrame, scenario: str) -> pd.DataFrame:
     out[DROPPED] = np.nan
     if scenario == "masked_exact":
         return out
+    if scenario in PM_ONLY:
+        out[GASES] = np.nan
+        if scenario == "pm_only_exact":
+            return out
     for pollutant in WAQI_POLLUTANTS:
+        if scenario in PM_ONLY and pollutant in GASES:
+            continue
         values = out[pollutant]
         if scenario == "waqi_epa_averaged":
             if pollutant in NOWCAST_POLLUTANTS:
@@ -103,10 +120,10 @@ def degrade(caaqms: pd.DataFrame, scenario: str) -> pd.DataFrame:
     return out
 
 
-def recompute(caaqms: pd.DataFrame) -> pd.DataFrame:
+def recompute(caaqms: pd.DataFrame, min_pollutants: int = MIN_POLLUTANTS) -> pd.DataFrame:
     raw = caaqms.drop_duplicates(["station_id", "timestamp"]).rename(columns={"timestamp": "Timestamp"})
     raw = raw[["station_id", "station_name", "Timestamp", *AQI_POLLUTANTS]].sort_values(["station_id", "Timestamp"])
-    aqi = compute_aqi(raw).dropna(subset=["aqi_value"])
+    aqi = compute_aqi(raw, min_pollutants=min_pollutants).dropna(subset=["aqi_value"])
     return aqi.assign(aqi_source="recomputed")
 
 
@@ -124,7 +141,7 @@ def build_frames(
     frames, inputs = {}, {}
     for name in names:
         degraded = degrade(raw, name)
-        aqi = stored_aqi if name == "baseline" else recompute(degraded)
+        aqi = stored_aqi if name == "baseline" else recompute(degraded, 1 if name in PM_ONLY else MIN_POLLUTANTS)
         inputs[name] = degraded
         frames[name] = compute_feature_frame(
             _stations_frame(),
@@ -143,7 +160,7 @@ def input_error(raw: pd.DataFrame, inputs: dict[str, pd.DataFrame]) -> pd.DataFr
     """How far each scenario's pollutant values sit from the true hourly concentration (validation window)."""
     window = (raw.timestamp >= VAL_START) & (raw.timestamp <= VAL_END)
     rows = []
-    for name in ("waqi_roundtrip", "waqi_epa_averaged"):
+    for name in (n for n in inputs if n in ("waqi_roundtrip", "waqi_epa_averaged", "pm_only_roundtrip")):
         deg = inputs[name]
         for pollutant in WAQI_POLLUTANTS:
             truth, got = raw.loc[window, pollutant].to_numpy(float), deg.loc[window, pollutant].to_numpy(float)
@@ -181,8 +198,10 @@ def aqi_error(frames: dict[str, pd.DataFrame]) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-def main(horizons: list[int]) -> int:
-    frames, inputs, stored, raw = build_frames(list(SCENARIOS))
+def main(horizons: list[int], pm_only: bool = False) -> int:
+    names = PM_ONLY_RUN if pm_only else [n for n in SCENARIOS if n not in PM_ONLY]
+    stem = "pm_only_audit" if pm_only else "waqi_roundtrip_audit"
+    frames, inputs, stored, raw = build_frames(names)
     for name, frame in frames.items():
         if len(frame) and frame.timestamp.max() >= TEST_START:
             raise SystemExit(f"{name}: rows at or after the test start; this audit must stay in validation")
@@ -261,10 +280,10 @@ def main(horizons: list[int]) -> int:
 
     table, in_err, aqi_err = pd.DataFrame(results), input_error(raw, inputs), aqi_error(frames)
     OUT_DIR.mkdir(parents=True, exist_ok=True)
-    table.to_csv(OUT_DIR / "waqi_roundtrip_audit.csv", index=False)
-    in_err.to_csv(OUT_DIR / "waqi_roundtrip_input_error.csv", index=False)
-    aqi_err.to_csv(OUT_DIR / "waqi_roundtrip_aqi_error.csv", index=False)
-    write_report(table, in_err, aqi_err, fid, reconciliation, max_diff)
+    table.to_csv(OUT_DIR / f"{stem}.csv", index=False)
+    in_err.to_csv(OUT_DIR / f"{stem.replace('audit', 'input_error')}.csv", index=False)
+    aqi_err.to_csv(OUT_DIR / f"{stem.replace('audit', 'aqi_error')}.csv", index=False)
+    write_report(table, in_err, aqi_err, fid, reconciliation, max_diff, stem, names)
     print(
         table[
             [
@@ -289,12 +308,13 @@ def main(horizons: list[int]) -> int:
     return 0
 
 
-def write_report(table, in_err, aqi_err, fid, reconciliation, max_diff) -> None:
+def write_report(table, in_err, aqi_err, fid, reconciliation, max_diff, stem, names) -> None:
+    title = "PM-only AQI audit" if stem == "pm_only_audit" else "WAQI back-conversion audit"
     lines = [
-        "# WAQI back-conversion audit, validation window only",
+        f"# {title}, validation window only",
         "",
         f"Window {VAL_START:%Y-%m-%d} .. {VAL_END:%Y-%m-%d}. Frozen models, nothing trained or tuned. Generated by",
-        "`src/evaluation/waqi_roundtrip_audit.py`; every number below comes from the CSVs next to this file.",
+        f"`src/evaluation/waqi_roundtrip_audit.py` (`{stem}`); every number below comes from the CSVs next to this file.",
         f"Fidelity of the rebuilt baseline features against the stored matrix: {fid['share_of_cells_equal']:.4f} of cells equal over {fid['rows']:,} rows x {fid['columns']} columns.",
         "",
         "Skill = 1 - MAE_model / MAE_persistence (persistence is the true `aqi_curr`). CIs: 95% day-block bootstrap (1,000 resamples).",
@@ -345,11 +365,13 @@ def write_report(table, in_err, aqi_err, fid, reconciliation, max_diff) -> None:
             f"| {r.row_set} | {r.n:,} | {r.model_mae:.3f} | {r.persistence_mae:.3f} | {r.skill_mae:+.4f} |"
             for r in reconciliation.itertuples()
         ]
-    lines += ["", "Scenario definitions:", ""] + [f"- `{k}`: {v}" for k, v in SCENARIOS.items()]
-    (OUT_DIR / "waqi_roundtrip_audit.md").write_text("\n".join(lines) + "\n")
+    lines += ["", "Scenario definitions:", ""] + [f"- `{k}`: {SCENARIOS[k]}" for k in names]
+    (OUT_DIR / f"{stem}.md").write_text("\n".join(lines) + "\n")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--horizons", nargs="+", type=int, default=[24, 1, 6], choices=[1, 6, 24])
-    sys.exit(main(parser.parse_args().horizons))
+    parser.add_argument("--pm-only", action="store_true", help="run the PM-only scenarios (written to pm_only_audit.*)")
+    args = parser.parse_args()
+    sys.exit(main(args.horizons, args.pm_only))

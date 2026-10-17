@@ -81,3 +81,15 @@ def test_compute_aqi_zero_when_pm_missing():
     raw["pm10"] = np.nan
     out = compute_aqi(raw)
     assert out["aqi_value"].isna().all()
+
+
+def test_the_cpcb_three_pollutant_rule_is_the_default_and_pm_only_is_an_explicit_relaxation():
+    raw = _synthetic_raw()
+    for gas in ("no2", "so2", "co", "o3", "nh3"):
+        raw[gas] = np.nan  # PM2.5 (60 -> 100) and PM10 (100 -> 100) only: two sub-indices
+    assert compute_aqi(raw)["aqi_value"].isna().all()  # CPCB: fewer than 3 pollutants -> no AQI
+    assert np.allclose(compute_aqi(raw, min_pollutants=2)["aqi_value"].dropna().unique(), [100.0])
+    raw["pm10"] = np.nan  # a PM sub-index is still required, and one is enough only when asked for
+    assert np.allclose(compute_aqi(raw, min_pollutants=1)["aqi_value"].dropna().unique(), [100.0])
+    raw["pm25"] = np.nan
+    assert compute_aqi(raw, min_pollutants=1)["aqi_value"].isna().all()

@@ -1,0 +1,7 @@
+scenario,pollutant,n,unit,mean_true,mae,mae_pct_of_mean,bias,share_missing_after
+pm_only_roundtrip,pm25,9687,ug/m3,88.44893155775783,1.085906885516672,1.2277218801762082,-0.7211727056880365,0.0
+pm_only_roundtrip,pm10,9681,ug/m3,183.32222910856316,3.229468030162174,1.7616347160221837,-2.44933374651379,0.0
+pm_only_roundtrip,no2,0,ug/m3,,,,,1.0
+pm_only_roundtrip,so2,0,ug/m3,,,,,1.0
+pm_only_roundtrip,co,0,mg/m3,,,,,1.0
+pm_only_roundtrip,o3,0,ug/m3,,,,,1.0

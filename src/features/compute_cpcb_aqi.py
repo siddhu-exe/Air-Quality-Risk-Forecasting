@@ -149,27 +149,32 @@ def load_raw_caaqms(years, raw_dir: Path = DEFAULT_RAW_DIR) -> pd.DataFrame:
     return raw.reset_index(drop=True)
 
 
-def hourly_aqi_series(series: pd.DataFrame) -> pd.Series:
+def hourly_aqi_series(series: pd.DataFrame, min_pollutants: int = MIN_POLLUTANTS) -> pd.Series:
     """Hourly (un-averaged) AQI from one station's gap-free hourly pollutant frame.
 
     Max sub-index per hour, with CO/O3 on their trailing 8h mean (>= 6 valid hours); NaN where fewer than
-    ``MIN_POLLUTANTS`` sub-indices exist or neither PM is present. Every value depends only on hours <= its own.
+    ``min_pollutants`` (CPCB: 3) sub-indices exist or neither PM is present. Every value depends only on hours <= its own.
     ``compute_aqi`` takes the trailing 24h mean of this series.
     """
     sub = pd.DataFrame({p: sub_index(p, series[p]) for p in POLLUTANTS}, index=series.index)
     for pollutant in EIGHT_HOUR_POLLUTANTS:
         smoothed = series[pollutant].rolling(8, min_periods=6).mean().to_numpy()
         sub[pollutant] = sub_index(pollutant, smoothed)
-    return sub.max(axis=1).where(_validity_mask(sub))
+    return sub.max(axis=1).where(_validity_mask(sub, min_pollutants))
 
 
-def compute_aqi(raw: pd.DataFrame, method: str = "rolling_subindex_mean") -> pd.DataFrame:
+def compute_aqi(
+    raw: pd.DataFrame, method: str = "rolling_subindex_mean", min_pollutants: int = MIN_POLLUTANTS
+) -> pd.DataFrame:
     """Compute hourly AQI per station from the long raw telemetry frame.
 
     ``method='rolling_subindex_mean'`` (default, validated against official
     2025) builds an hourly AQI from the sub-indices and then takes a 24h
     rolling mean. ``method='concentration_mean'`` takes the 24h (8h for
     CO/O3) mean of each concentration before the sub-index instead.
+
+    ``min_pollutants`` is the CPCB rule (3 sub-indices, one of them PM) unless a caller deliberately relaxes it, e.g. the
+    PM-only audit (``src/evaluation/waqi_roundtrip_audit.py``), where the gases are not available.
     """
     records = []
     for (station_id, station), group in raw.groupby(["station_id", "station_name"]):
@@ -184,10 +189,14 @@ def compute_aqi(raw: pd.DataFrame, method: str = "rolling_subindex_mean") -> pd.
                 rolling[pollutant] = series[pollutant].rolling(window, min_periods=min_periods).mean().to_numpy()
             sub = pd.DataFrame({p: sub_index(p, rolling[p]) for p in POLLUTANTS}, index=series.index)
             hourly_aqi = sub.max(axis=1)
-            valid = _validity_mask(sub)
+            valid = _validity_mask(sub, min_pollutants)
             aqi = hourly_aqi.where(valid)
         elif method == "rolling_subindex_mean":
-            aqi = hourly_aqi_series(series).rolling(ROLLING_WINDOW_HOURS, min_periods=MIN_VALID_HOURS).mean()
+            aqi = (
+                hourly_aqi_series(series, min_pollutants)
+                .rolling(ROLLING_WINDOW_HOURS, min_periods=MIN_VALID_HOURS)
+                .mean()
+            )
         else:
             raise ValueError(f"Unknown method: {method}")
 
@@ -204,8 +213,8 @@ def compute_aqi(raw: pd.DataFrame, method: str = "rolling_subindex_mean") -> pd.
     return pd.concat(records, ignore_index=True)
 
 
-def _validity_mask(sub_indices: pd.DataFrame) -> pd.Series:
-    enough = sub_indices.notna().sum(axis=1) >= MIN_POLLUTANTS
+def _validity_mask(sub_indices: pd.DataFrame, min_pollutants: int = MIN_POLLUTANTS) -> pd.Series:
+    enough = sub_indices.notna().sum(axis=1) >= min_pollutants
     has_pm = sub_indices[["pm25", "pm10"]].notna().any(axis=1)
     return enough & has_pm
 
