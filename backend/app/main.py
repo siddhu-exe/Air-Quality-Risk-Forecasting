@@ -58,12 +58,6 @@ def create_app(
     app = FastAPI(
         title="Delhi air quality forecast API", version="1.0.0", docs_url="/api/docs", openapi_url="/api/openapi.json"
     )
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=list(settings.frontend_origins),
-        allow_methods=["GET", "OPTIONS"],
-        allow_headers=["*"],
-    )
 
     def service() -> Service:
         return Service(LazyRepository(holder), settings, now)  # type: ignore[arg-type]
@@ -80,11 +74,25 @@ def create_app(
     async def not_found(_: Request, exc: NotFound) -> JSONResponse:
         return JSONResponse({"detail": f"unknown station '{exc}'"}, status_code=404)
 
-    @app.exception_handler(Exception)
-    async def unavailable(_: Request, exc: Exception) -> JSONResponse:
-        # the message names the exception type only: a driver error can echo connection details
-        log.error("request failed: %s", type(exc).__name__)
-        return JSONResponse({"detail": "the forecast service cannot reach its database right now"}, status_code=503)
+    @app.middleware("http")
+    async def unavailable(request: Request, call_next: Callable) -> Response:
+        # A catch-all `exception_handler(Exception)` runs in Starlette's outermost layer, outside CORSMiddleware, so its 503
+        # would reach the browser without Access-Control-Allow-Origin and show up as a CORS error that hides the real status.
+        # Catching here keeps the response inside the CORS layer. The message names the exception type only: a driver
+        # error can echo connection details.
+        try:
+            return await call_next(request)
+        except Exception as exc:
+            log.error("request failed: %s", type(exc).__name__)
+            return JSONResponse({"detail": "the forecast service cannot reach its database right now"}, status_code=503)
+
+    # added last = outermost: every response, errors included, passes through it
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=list(settings.frontend_origins),
+        allow_methods=["GET", "OPTIONS"],
+        allow_headers=["*"],
+    )
 
     @app.get("/api/v1/health", response_model=models.Health, response_model_by_alias=True)
     def health() -> models.Health:

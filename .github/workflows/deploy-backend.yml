@@ -86,10 +86,20 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
       - name: Roll the Container App to the new image
+        env:
+          # Origins the browser may call the API from (CORS): scheme + host, no path or trailing slash, comma-separated.
+          # Repository variable FRONTEND_ORIGIN (Settings > Secrets and variables > Actions > Variables). Set on every deploy so
+          # the running config always matches it.
+          FRONTEND_ORIGIN: ${{ vars.FRONTEND_ORIGIN }}
         run: |
+          if [ -z "$FRONTEND_ORIGIN" ]; then
+            echo "Repository variable FRONTEND_ORIGIN is not set (Settings > Secrets and variables > Actions > Variables)." >&2
+            exit 1
+          fi
           az extension add --name containerapp --upgrade --only-show-errors
           az containerapp update --name "${{ vars.AZURE_CONTAINER_APP }}" --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
-            --image "${{ env.IMAGE }}:${{ needs.image.outputs.tag }}" --only-show-errors
+            --image "${{ env.IMAGE }}:${{ needs.image.outputs.tag }}" \
+            --set-env-vars "FRONTEND_ORIGIN=${FRONTEND_ORIGIN}" --only-show-errors
           az containerapp ingress update --name "${{ vars.AZURE_CONTAINER_APP }}" --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
             --target-port 8000 --only-show-errors
       - name: Smoke test

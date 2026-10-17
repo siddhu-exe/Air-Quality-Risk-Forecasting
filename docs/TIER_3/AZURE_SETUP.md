@@ -62,7 +62,7 @@ Open `ca-delhi-air-api`:
    | Name | Source | Value |
    | :--- | :--- | :--- |
    | `DATABASE_URL_READONLY` | Reference a secret | `database-url-readonly` |
-   | `FRONTEND_ORIGIN` | Manual entry | the Vercel URL, e.g. `https://<project>.vercel.app` (several origins: comma-separated). Until Vercel exists use `http://localhost:5173`. |
+   | `FRONTEND_ORIGIN` | Manual entry | the Vercel URL, e.g. `https://<project>.vercel.app` (several origins: comma-separated). Until Vercel exists use `http://localhost:5173`. Deploys overwrite it from the repository variable `FRONTEND_ORIGIN` (step 6). |
    Optional: `STALE_AFTER_HOURS` (default 3), `CACHE_SECONDS` (default 60).
 3. Save and create the revision.
 
@@ -83,6 +83,7 @@ Repository > **Settings**:
    | :--- | :--- |
    | `AZURE_RESOURCE_GROUP` | `rg-delhi-air` |
    | `AZURE_CONTAINER_APP` | `ca-delhi-air-api` |
+   | `FRONTEND_ORIGIN` | the dashboard origin(s) allowed by CORS, e.g. `https://air-quality-risk-forecasting.vercel.app` (scheme and host, no path, no trailing slash; several: comma-separated). Every deploy writes it to the Container App's `FRONTEND_ORIGIN`, and the deploy fails if it is empty. |
 4. Not needed in GitHub for the API: the database string lives only in the Container App secret. (`forecast.yml` and the ingest/score workflows use the repository secrets `DATABASE_URL`; the forecast dry run also reads `DATABASE_URL_READONLY`, which is still to be added as a repository secret.)
 
 ## Step 7. First image and first deploy (I stop before this)

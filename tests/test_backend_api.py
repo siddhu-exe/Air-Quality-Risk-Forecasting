@@ -111,6 +111,32 @@ def test_deploy_workflow_is_manual_only_and_uses_oidc_not_a_stored_password():
         and "AZURE_CREDENTIALS" not in code
     )
     assert "packages: write" in code and "if: inputs.deploy" in code
+    assert "vars.FRONTEND_ORIGIN" in code and '--set-env-vars "FRONTEND_ORIGIN=' in code
+
+
+def test_preflight_from_the_allowed_origin_is_answered_and_a_random_origin_is_not():
+    c = client()
+    ask = {"Access-Control-Request-Method": "GET", "Access-Control-Request-Headers": "content-type"}
+    ok = c.options("/api/v1/overview", headers={"Origin": ORIGIN, **ask})
+    assert ok.status_code == 200 and ok.headers["access-control-allow-origin"] == ORIGIN
+    other = c.options("/api/v1/overview", headers={"Origin": "https://evil.example", **ask})
+    assert other.status_code == 400 and "access-control-allow-origin" not in other.headers
+
+
+def test_error_responses_carry_cors_headers_for_the_allowed_origin_only():
+    """A 503 (database unreachable) without the header reaches the browser as a CORS error that hides the real status."""
+
+    class Broken(FakeRepo):
+        def latest_forecasts(self, *args, **kwargs):
+            raise RuntimeError("connection refused")
+
+    c = client(Broken())
+    for path in ("/api/v1/overview", "/api/v1/stations/99/forecast"):
+        allowed = c.get(path, headers={"Origin": ORIGIN})
+        assert allowed.status_code in (404, 503) and allowed.headers["access-control-allow-origin"] == ORIGIN, path
+        other = c.get(path, headers={"Origin": "https://evil.example"})
+        assert "access-control-allow-origin" not in other.headers, path
+    assert c.get("/api/v1/overview", headers={"Origin": ORIGIN}).status_code == 503
 
 
 def test_backtest_needs_no_database():
