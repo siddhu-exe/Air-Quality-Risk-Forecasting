@@ -1,0 +1,103 @@
+{
+  "dataAsOf": "2026-10-15T12:00:00Z",
+  "forecasts": [
+    {
+      "category": null,
+      "experimental": false,
+      "horizon": "1h",
+      "issuedAt": null,
+      "kind": "rule",
+      "label": "Rule-based (24h-window update)",
+      "lastIssued": null,
+      "modelVersion": null,
+      "persistence": null,
+      "product": "aqi_1h",
+      "reason": "no forecast was issued for this product in the latest run",
+      "status": "unavailable",
+      "target": "aqi",
+      "validAt": null,
+      "value": null,
+      "windowUpdate": null
+    },
+    {
+      "category": "Poor",
+      "experimental": false,
+      "horizon": "6h",
+      "issuedAt": "2026-10-15T12:00:00Z",
+      "kind": "model",
+      "label": "Model",
+      "lastIssued": null,
+      "modelVersion": "aqi_6h-v1",
+      "persistence": 250.0,
+      "product": "aqi_6h",
+      "reason": null,
+      "status": "ok",
+      "target": "aqi",
+      "validAt": "2026-10-15T18:00:00Z",
+      "value": 300.0,
+      "windowUpdate": 240.0
+    },
+    {
+      "category": null,
+      "experimental": true,
+      "horizon": "24h",
+      "issuedAt": null,
+      "kind": "model",
+      "label": "Experimental: about as accurate as assuming no change",
+      "lastIssued": null,
+      "modelVersion": null,
+      "persistence": null,
+      "product": "aqi_24h",
+      "reason": "no forecast was issued for this product in the latest run",
+      "status": "unavailable",
+      "target": "aqi",
+      "validAt": null,
+      "value": null,
+      "windowUpdate": null
+    }
+  ],
+  "generatedAt": "2026-10-15T12:30:00Z",
+  "history": [
+    {
+      "t": "2026-10-15T10:00:00Z",
+      "value": 102.0
+    },
+    {
+      "t": "2026-10-15T11:00:00Z",
+      "value": 101.0
+    },
+    {
+      "t": "2026-10-15T12:00:00Z",
+      "value": 100.0
+    }
+  ],
+  "pollutants": [
+    {
+      "concentration": 120.0,
+      "key": "pm25",
+      "unit": "\u00b5g/m\u00b3"
+    },
+    {
+      "concentration": 200.0,
+      "key": "pm10",
+      "unit": "\u00b5g/m\u00b3"
+    },
+    {
+      "concentration": 1.2,
+      "key": "co",
+      "unit": "mg/m\u00b3"
+    }
+  ],
+  "stale": false,
+  "station": {
+    "id": "3",
+    "name": "Anand Vihar"
+  },
+  "target": "aqi",
+  "weather": {
+    "humidityPct": null,
+    "solarWm2": null,
+    "temperatureC": 25.0,
+    "windMs": null
+  }
+}

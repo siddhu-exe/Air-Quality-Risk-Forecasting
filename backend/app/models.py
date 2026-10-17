@@ -10,7 +10,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from pydantic.alias_generators import to_camel
 
 
@@ -149,7 +149,8 @@ class GrapStageInfo(Model):
     min: int
     max: int | None
     now_count: int
-    forecast_6h_count: int
+    # to_camel would give "forecast6HCount": a digit-led word is aliased by hand, as the frontend schema spells it
+    forecast_6h_count: int = Field(alias="forecast6hCount")
 
 
 class GrapStation(Model):
@@ -157,9 +158,9 @@ class GrapStation(Model):
     name: str
     now: float | None
     stage_now: str | None
-    forecast_6h: float | None
-    stage_6h: str | None
-    forecast_24h: float | None  # experimental; always shown with persistence
+    forecast_6h: float | None = Field(alias="forecast6h")
+    stage_6h: str | None = Field(alias="stage6h")
+    forecast_24h: float | None = Field(alias="forecast24h")  # experimental; always shown with persistence
     persistence: float | None
 
 

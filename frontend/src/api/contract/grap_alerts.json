@@ -1,0 +1,64 @@
+{
+  "dataAsOf": "2026-10-15T12:00:00Z",
+  "disclaimer": "Indicative only, not an official advisory. Stages follow the CAQM GRAP bands (to be re-verified before launch); the 24h forecast is experimental.",
+  "generatedAt": "2026-10-15T12:30:00Z",
+  "networkMeanAqiNow": 285.0,
+  "stageIndicatedNow": "I",
+  "stages": [
+    {
+      "forecast6hCount": 1,
+      "label": "Poor",
+      "max": 300,
+      "min": 201,
+      "nowCount": 1,
+      "stage": "I"
+    },
+    {
+      "forecast6hCount": 0,
+      "label": "Very Poor",
+      "max": 400,
+      "min": 301,
+      "nowCount": 1,
+      "stage": "II"
+    },
+    {
+      "forecast6hCount": 0,
+      "label": "Severe",
+      "max": 450,
+      "min": 401,
+      "nowCount": 0,
+      "stage": "III"
+    },
+    {
+      "forecast6hCount": 0,
+      "label": "Severe+",
+      "max": null,
+      "min": 451,
+      "nowCount": 0,
+      "stage": "IV"
+    }
+  ],
+  "stale": false,
+  "stations": [
+    {
+      "forecast24h": null,
+      "forecast6h": 300.0,
+      "name": "Anand Vihar",
+      "now": 250.0,
+      "persistence": null,
+      "stage6h": "I",
+      "stageNow": "I",
+      "stationId": "3"
+    },
+    {
+      "forecast24h": null,
+      "forecast6h": null,
+      "name": "ITO",
+      "now": 320.0,
+      "persistence": null,
+      "stage6h": null,
+      "stageNow": "II",
+      "stationId": "6"
+    }
+  ]
+}

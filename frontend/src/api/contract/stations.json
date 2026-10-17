@@ -1,0 +1,31 @@
+{
+  "dataAsOf": "2026-10-15T12:00:00Z",
+  "generatedAt": "2026-10-15T12:30:00Z",
+  "stale": false,
+  "stations": [
+    {
+      "aqiNow": 250.0,
+      "categoryNow": "Poor",
+      "coordsApproximate": true,
+      "id": "3",
+      "lastReadingAt": "2026-10-15T12:00:00Z",
+      "lat": 28.6,
+      "lon": 77.2,
+      "name": "Anand Vihar",
+      "pm25Now": 120.0,
+      "stale": false
+    },
+    {
+      "aqiNow": 320.0,
+      "categoryNow": "Very Poor",
+      "coordsApproximate": true,
+      "id": "6",
+      "lastReadingAt": null,
+      "lat": 28.6,
+      "lon": 77.2,
+      "name": "ITO",
+      "pm25Now": null,
+      "stale": false
+    }
+  ]
+}

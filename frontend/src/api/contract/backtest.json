@@ -1,0 +1,125 @@
+{
+  "evidence": [
+    {
+      "label": "Rule-based (24h-window update)",
+      "n": 10221,
+      "product": "aqi_1h",
+      "skillVsPersistence": 0.5530602517214803,
+      "skillVsPersistenceHi": 0.5909732535025363,
+      "skillVsPersistenceLo": 0.5099947468261742,
+      "skillVsWindowUpdate": null,
+      "skillVsWindowUpdateHi": null,
+      "skillVsWindowUpdateLo": null,
+      "window": "test 2025-11-01..2025-12-31"
+    },
+    {
+      "label": "Model",
+      "n": 10181,
+      "product": "aqi_6h",
+      "skillVsPersistence": 0.3086547389072398,
+      "skillVsPersistenceHi": 0.35531771960276126,
+      "skillVsPersistenceLo": 0.25189582138336813,
+      "skillVsWindowUpdate": 0.3038960445044435,
+      "skillVsWindowUpdateHi": 0.3571621199219048,
+      "skillVsWindowUpdateLo": 0.2427347037727111,
+      "window": "test 2025-11-01..2025-12-31"
+    },
+    {
+      "label": "Experimental: about as accurate as assuming no change",
+      "n": 10044,
+      "product": "aqi_24h",
+      "skillVsPersistence": 0.09655668186750932,
+      "skillVsPersistenceHi": 0.12774090592059348,
+      "skillVsPersistenceLo": 0.06340939219222108,
+      "skillVsWindowUpdate": null,
+      "skillVsWindowUpdateHi": null,
+      "skillVsWindowUpdateLo": null,
+      "window": "test 2025-11-01..2025-12-31"
+    },
+    {
+      "label": "Model",
+      "n": 9970,
+      "product": "pm25_1h",
+      "skillVsPersistence": 0.2017,
+      "skillVsPersistenceHi": 0.2189,
+      "skillVsPersistenceLo": 0.1826,
+      "skillVsWindowUpdate": null,
+      "skillVsWindowUpdateHi": null,
+      "skillVsWindowUpdateLo": null,
+      "window": "test 2025-11-01..2025-12-31"
+    },
+    {
+      "label": "Model",
+      "n": 9862,
+      "product": "pm25_6h",
+      "skillVsPersistence": 0.3642,
+      "skillVsPersistenceHi": 0.4072,
+      "skillVsPersistenceLo": 0.316,
+      "skillVsWindowUpdate": null,
+      "skillVsWindowUpdateHi": null,
+      "skillVsWindowUpdateLo": null,
+      "window": "test 2025-11-01..2025-12-31"
+    },
+    {
+      "label": "Rule-based (24h-window update)",
+      "n": 4236,
+      "product": "aqi_1h",
+      "skillVsPersistence": 0.5136674440599559,
+      "skillVsPersistenceHi": 0.5639254381557979,
+      "skillVsPersistenceLo": 0.45965012730439264,
+      "skillVsWindowUpdate": null,
+      "skillVsWindowUpdateHi": null,
+      "skillVsWindowUpdateLo": null,
+      "window": "replay 2026-09-01..2026-10-07"
+    },
+    {
+      "label": "Model",
+      "n": 4506,
+      "product": "aqi_6h",
+      "skillVsPersistence": 0.20550236688790746,
+      "skillVsPersistenceHi": 0.28527954713556003,
+      "skillVsPersistenceLo": 0.1243205321160116,
+      "skillVsWindowUpdate": 0.11928429889610803,
+      "skillVsWindowUpdateHi": 0.17936355194686773,
+      "skillVsWindowUpdateLo": 0.04750220554374529,
+      "window": "replay 2026-09-01..2026-10-07"
+    },
+    {
+      "label": "Experimental: about as accurate as assuming no change",
+      "n": 3971,
+      "product": "aqi_24h",
+      "skillVsPersistence": -0.014133648958975176,
+      "skillVsPersistenceHi": 0.057961060625981366,
+      "skillVsPersistenceLo": -0.10389880437371535,
+      "skillVsWindowUpdate": 0.1548701147666437,
+      "skillVsWindowUpdateHi": 0.2810263127386403,
+      "skillVsWindowUpdateLo": 0.01879653066728454,
+      "window": "replay 2026-09-01..2026-10-07"
+    },
+    {
+      "label": "Model",
+      "n": 3758,
+      "product": "pm25_1h",
+      "skillVsPersistence": 0.08431805488400113,
+      "skillVsPersistenceHi": 0.10990229573454965,
+      "skillVsPersistenceLo": 0.05343463282832711,
+      "skillVsWindowUpdate": null,
+      "skillVsWindowUpdateHi": null,
+      "skillVsWindowUpdateLo": null,
+      "window": "replay 2026-09-01..2026-10-07"
+    },
+    {
+      "label": "Model",
+      "n": 3354,
+      "product": "pm25_6h",
+      "skillVsPersistence": 0.20822084735419122,
+      "skillVsPersistenceHi": 0.2695852395453254,
+      "skillVsPersistenceLo": 0.14041491185877283,
+      "skillVsWindowUpdate": null,
+      "skillVsWindowUpdateHi": null,
+      "skillVsWindowUpdateLo": null,
+      "window": "replay 2026-09-01..2026-10-07"
+    }
+  ],
+  "note": "Skill = 1 - MAE_model / MAE_reference with 95% day-block bootstrap intervals, from the files in reports/. The test window is Nov-Dec 2025 (scored once); the replay re-forecasts Sep-Oct 2026 from stored readings."
+}

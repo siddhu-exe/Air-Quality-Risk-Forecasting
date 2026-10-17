@@ -1,0 +1,15 @@
+{
+  "dataAsOf": "2026-10-15T12:00:00Z",
+  "generatedAt": "2026-10-15T12:30:00Z",
+  "jobs": [
+    {
+      "job": "forecast",
+      "lastRunAt": "2026-10-15T12:00:00Z",
+      "status": "success"
+    }
+  ],
+  "newestForecastAt": "2026-10-15T12:00:00Z",
+  "newestReadingAt": "2026-10-15T12:00:00Z",
+  "stale": false,
+  "status": "ok"
+}

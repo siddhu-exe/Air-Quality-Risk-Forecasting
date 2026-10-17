@@ -1,0 +1,157 @@
+{
+  "dataAsOf": "2026-10-15T12:00:00Z",
+  "forecastCoverage": 0.25,
+  "freshness": [
+    {
+      "hourly": [
+        true,
+        false,
+        true,
+        false,
+        true,
+        false,
+        true,
+        false,
+        true,
+        false,
+        true,
+        false,
+        true,
+        false,
+        true,
+        false,
+        true,
+        false,
+        true,
+        false,
+        true,
+        false,
+        true,
+        false
+      ],
+      "lastReadingAt": "2026-10-15T12:00:00Z",
+      "name": "Anand Vihar",
+      "note": null,
+      "stationId": "3"
+    },
+    {
+      "hourly": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "lastReadingAt": null,
+      "name": "ITO",
+      "note": "no readings yet",
+      "stationId": "6"
+    }
+  ],
+  "generatedAt": "2026-10-15T12:30:00Z",
+  "jobs": [
+    {
+      "job": "forecast",
+      "lastRunAt": "2026-10-15T12:00:00Z",
+      "status": "success"
+    }
+  ],
+  "models": [
+    {
+      "horizon": "6h",
+      "name": "LightGBM",
+      "sha256": "abababababababababababababababababababababababababababababababab",
+      "target": "aqi",
+      "version": "aqi-6h-lgb-live-v1"
+    }
+  ],
+  "skill": [
+    {
+      "currentVsPersistence": null,
+      "currentVsWindowUpdate": null,
+      "horizon": "1h",
+      "label": "Rule-based (24h-window update)",
+      "n": null,
+      "product": "aqi_1h",
+      "skillVsPersistence": [],
+      "skillVsWindowUpdate": [],
+      "target": "aqi",
+      "windowEnd": []
+    },
+    {
+      "currentVsPersistence": null,
+      "currentVsWindowUpdate": null,
+      "horizon": "6h",
+      "label": "Model",
+      "n": null,
+      "product": "aqi_6h",
+      "skillVsPersistence": [],
+      "skillVsWindowUpdate": [],
+      "target": "aqi",
+      "windowEnd": []
+    },
+    {
+      "currentVsPersistence": null,
+      "currentVsWindowUpdate": null,
+      "horizon": "24h",
+      "label": "Experimental: about as accurate as assuming no change",
+      "n": null,
+      "product": "aqi_24h",
+      "skillVsPersistence": [],
+      "skillVsWindowUpdate": [],
+      "target": "aqi",
+      "windowEnd": []
+    },
+    {
+      "currentVsPersistence": null,
+      "currentVsWindowUpdate": null,
+      "horizon": "1h",
+      "label": "Model",
+      "n": null,
+      "product": "pm25_1h",
+      "skillVsPersistence": [],
+      "skillVsWindowUpdate": [],
+      "target": "pm25",
+      "windowEnd": []
+    },
+    {
+      "currentVsPersistence": null,
+      "currentVsWindowUpdate": null,
+      "horizon": "6h",
+      "label": "Model",
+      "n": null,
+      "product": "pm25_6h",
+      "skillVsPersistence": [],
+      "skillVsWindowUpdate": [],
+      "target": "pm25",
+      "windowEnd": []
+    }
+  ],
+  "sourceLag": {
+    "currentMaxHours": -0.5,
+    "currentMedianHours": -0.5,
+    "daily": [],
+    "newestReadingAt": "2026-10-15T12:00:00Z",
+    "source": null
+  },
+  "stale": false
+}

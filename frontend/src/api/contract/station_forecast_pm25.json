@@ -1,0 +1,103 @@
+{
+  "dataAsOf": "2026-10-15T12:00:00Z",
+  "forecasts": [
+    {
+      "category": null,
+      "experimental": false,
+      "horizon": "1h",
+      "issuedAt": null,
+      "kind": "model",
+      "label": "Model",
+      "lastIssued": null,
+      "modelVersion": null,
+      "persistence": null,
+      "product": "pm25_1h",
+      "reason": "no forecast was issued for this product in the latest run",
+      "status": "unavailable",
+      "target": "pm25",
+      "validAt": null,
+      "value": null,
+      "windowUpdate": null
+    },
+    {
+      "category": null,
+      "experimental": false,
+      "horizon": "6h",
+      "issuedAt": null,
+      "kind": "model",
+      "label": "Model",
+      "lastIssued": null,
+      "modelVersion": null,
+      "persistence": null,
+      "product": "pm25_6h",
+      "reason": "no forecast was issued for this product in the latest run",
+      "status": "unavailable",
+      "target": "pm25",
+      "validAt": null,
+      "value": null,
+      "windowUpdate": null
+    },
+    {
+      "category": null,
+      "experimental": false,
+      "horizon": "24h",
+      "issuedAt": null,
+      "kind": "model",
+      "label": "Not published",
+      "lastIssued": null,
+      "modelVersion": null,
+      "persistence": null,
+      "product": "pm25_24h",
+      "reason": "No 24h PM2.5 forecast is published: it does not beat persistence.",
+      "status": "withheld",
+      "target": "pm25",
+      "validAt": null,
+      "value": null,
+      "windowUpdate": null
+    }
+  ],
+  "generatedAt": "2026-10-15T12:30:00Z",
+  "history": [
+    {
+      "t": "2026-10-15T10:00:00Z",
+      "value": 102.0
+    },
+    {
+      "t": "2026-10-15T11:00:00Z",
+      "value": 101.0
+    },
+    {
+      "t": "2026-10-15T12:00:00Z",
+      "value": 100.0
+    }
+  ],
+  "pollutants": [
+    {
+      "concentration": 120.0,
+      "key": "pm25",
+      "unit": "\u00b5g/m\u00b3"
+    },
+    {
+      "concentration": 200.0,
+      "key": "pm10",
+      "unit": "\u00b5g/m\u00b3"
+    },
+    {
+      "concentration": 1.2,
+      "key": "co",
+      "unit": "mg/m\u00b3"
+    }
+  ],
+  "stale": false,
+  "station": {
+    "id": "3",
+    "name": "Anand Vihar"
+  },
+  "target": "pm25",
+  "weather": {
+    "humidityPct": null,
+    "solarWm2": null,
+    "temperatureC": 25.0,
+    "windMs": null
+  }
+}
