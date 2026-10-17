@@ -105,7 +105,7 @@ class Store:
     def recent_pollutants(self, station_ids: list[int], since: pd.Timestamp) -> pd.DataFrame:
         self._cur.execute(
             SELECT_RECENT_POLLUTANTS,
-            (list(station_ids), since.tz_localize("Asia/Kolkata") if since.tzinfo is None else since),
+            ([int(i) for i in station_ids], since.tz_localize("Asia/Kolkata") if since.tzinfo is None else since),
         )
         columns = ["station_id", "ts", "pm25", "pm10", "no2", "so2", "nh3", "co", "o3"]
         frame = pd.DataFrame(self._cur.fetchall(), columns=columns)

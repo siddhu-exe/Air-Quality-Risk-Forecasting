@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from src.live.sources.base import LiveSource, SourceNotVerified, SourceUnavailable
+from src.live.sources.base import LiveSource, SourceNotVerified, SourceStale, SourceUnavailable
 from src.live.sources.data_gov_in import DataGovInSource
 from src.live.sources.openaq_source import OpenAQSource
 
@@ -19,6 +19,7 @@ def get_source(name: str) -> LiveSource:
 __all__ = [
     "LiveSource",
     "SourceNotVerified",
+    "SourceStale",
     "SourceUnavailable",
     "OpenAQSource",
     "DataGovInSource",

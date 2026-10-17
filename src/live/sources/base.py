@@ -25,6 +25,10 @@ class SourceUnavailable(RuntimeError):
     """The source could not be reached or returned something unusable (message never contains a key)."""
 
 
+class SourceStale(SourceUnavailable):
+    """The source answered normally but has no readings for the requested hours: it is lagging, nothing is broken."""
+
+
 class LiveSource(ABC):
     name: ClassVar[str]  # config value
     tag: ClassVar[str]  # value stored in live_readings.source

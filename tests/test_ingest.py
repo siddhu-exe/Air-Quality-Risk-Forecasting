@@ -128,14 +128,44 @@ def test_all_stations_fresh_is_success_and_everything_is_written_and_logged():
     assert set(st.readings[0].source) == {"openaq"} and st.readings[0].qc_flags.map(dict).notna().all()
 
 
-def test_a_stale_station_makes_the_run_partial_and_a_fully_stale_feed_makes_it_failed():
+def test_a_stale_station_makes_the_run_partial_and_a_fully_stale_feed_makes_it_stale():
     fresh = synthetic(hours(), stations=STATIONS[:-1])
     old = synthetic(pd.date_range("2026-10-11 05:00", "2026-10-11 07:00", freq="h"), stations=["R K Puram"])
     result, st = run(pd.concat([fresh, old]))
     assert result["status"] == "partial" and "R K Puram" in st.last_run["details"]["stale_stations"]
     result, st = run(synthetic(pd.date_range("2026-10-11 05:00", "2026-10-11 07:00", freq="h")))
-    assert result["status"] == "failed"  # OpenAQ frozen at an old time: fail loudly, do not call it success
-    assert len(st.last_run["details"]["fresh_stations"]) == 0 if "fresh_stations" in st.last_run["details"] else True
+    assert result["status"] == "stale"  # OpenAQ frozen at an old time: recorded as stale, never called success
+    assert st.last_run["status"] == "stale"
+
+
+def test_classify_calls_a_feed_with_no_fresh_station_stale():
+    rows = synthetic([pd.Timestamp("2026-10-11 05:00")]).set_index("hour")  # 8+ h old at NOW
+    status, info = ingest.classify(rows, NOW, 3.0)
+    assert status == "stale" and info["fresh_stations"] == []
+
+
+def test_a_source_with_no_rows_for_the_window_is_stale_not_failed():
+    result, st = run(None)  # the source answers normally but has nothing: it is lagging
+    assert result["status"] == "stale" and result["rows"] == 0 and st.readings == []
+    assert st.last_run["status"] == "stale" and st.last_run["error"].startswith("SourceStale")
+
+
+def test_an_empty_primary_with_a_failing_fallback_is_a_real_failure():
+    sources = {"openaq": make_source(None), "data_gov_in": make_source(error=SourceUnavailable("boom"))}
+    result = ingest.run(
+        cfg(fallback="data_gov_in", allow_unverified=True), (st := FakeStore()), now=NOW, factory=lambda n: sources[n]()
+    )
+    assert result["status"] == "failed" and st.last_run["status"] == "failed"
+
+
+def test_an_unexpected_exception_is_recorded_as_failed_and_raised():
+    class Broken(FakeStore):
+        def upsert_readings(self, readings):
+            raise RuntimeError("database exploded")
+
+    with pytest.raises(RuntimeError):
+        run(synthetic(hours()), st=(st := Broken()))
+    assert st.last_run["status"] == "failed"
 
 
 def test_station_with_no_rows_at_all_counts_as_stale():
@@ -313,22 +343,23 @@ def test_store_sql_refreshes_only_rows_of_the_same_source_and_never_deletes():
 
 
 def test_main_exit_code_follows_the_run_status(monkeypatch):
-    for status, code in (("success", 0), ("partial", 0), ("failed", 1)):
+    for status, code in (("success", 0), ("partial", 0), ("stale", 0), ("failed", 1)):
         monkeypatch.setattr(
             ingest, "run", lambda cfg, st, status=status: {"status": status, "rows": 0, "error": None, "details": {}}
         )
         assert ingest.main(["--dry-run"]) == code
 
 
-def test_a_stale_source_that_still_delivered_rows_is_not_a_failed_workflow_run(monkeypatch):
-    monkeypatch.setattr(ingest, "run", lambda cfg, st: {"status": "failed", "rows": 42, "error": None, "details": {}})
-    assert (
-        ingest.main(["--dry-run"]) == 0
-    )  # status stays "failed" in job_runs (nothing fresh); the workflow stays green
-    monkeypatch.setattr(
-        ingest, "run", lambda cfg, st: {"status": "failed", "rows": 0, "error": "SourceUnavailable", "details": {}}
-    )
-    assert ingest.main(["--dry-run"]) == 1
+def test_aqi_recompute_hands_the_database_plain_python_station_ids():
+    asked = []
+
+    class Spy(FakeStore):
+        def recent_pollutants(self, station_ids, since):
+            asked.extend(station_ids)
+            return super().recent_pollutants(station_ids, since)
+
+    run(synthetic(hours()), st=Spy())
+    assert asked and all(type(i) is int for i in asked)  # numpy.int64 makes psycopg2 raise ProgrammingError
 
 
 def test_a_scale_error_at_one_station_is_nullified_and_flagged_but_does_not_fail_the_run():

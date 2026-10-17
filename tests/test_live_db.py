@@ -69,13 +69,15 @@ def test_station_rows_cover_the_seven_stations():
 
 
 def test_migrations_are_numbered_and_contain_no_secrets():
-    assert [p.name[:3] for p in MIGRATIONS] == ["001", "002", "003", "004", "005", "006", "007", "008", "009"]
+    assert [p.name[:3] for p in MIGRATIONS] == ["001", "002", "003", "004", "005", "006", "007", "008", "009", "010"]
     for path in MIGRATIONS:
         sql = path.read_text()
         # no password literal may appear in a statement (comments describing the manual step are fine)
         code = "\n".join(line for line in sql.splitlines() if not line.lstrip().startswith("--"))
         assert not re.search(r"password\s+'", code, re.IGNORECASE), path.name
-        assert "drop " not in code.lower() and "truncate" not in code.lower(), path.name
+        # nothing that destroys data; widening a CHECK constraint (drop constraint + add) is allowed
+        assert not re.search(r"drop\s+(table|column|schema|role|index|policy)", code, re.IGNORECASE), path.name
+        assert "truncate" not in code.lower(), path.name
 
 
 def test_every_table_gets_rls_and_grants():

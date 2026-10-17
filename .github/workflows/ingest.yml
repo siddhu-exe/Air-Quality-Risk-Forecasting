@@ -1,7 +1,8 @@
 # Live ingest, hourly at minute 10 (not :00, to avoid the top-of-the-hour queue). Source comes from config/live.toml; override without a
 # commit via the repository variable LIVE_SOURCE (Settings > Secrets and variables > Actions > Variables) or the "source" input.
-# OpenAQ is primary. While it lags behind, every run still writes whatever new hours it has (idempotent upserts) and records the lag in
-# job_runs.details; the forecast job refuses stale data on its own, so nothing is forecast until the data is fresh.
+# OpenAQ is primary. While it lags behind, every run still writes whatever new hours it has (idempotent upserts) and records status
+# 'stale' in job_runs (exit 0, the run stays green); the forecast job refuses stale data on its own, so nothing is forecast until the
+# data is fresh. Real faults (request errors, database errors, missing secrets, unit changes) still fail the run.
 # The forecast cron stays OFF until a source has been under 3 h old for 24 hours straight (see docs/TIER_3/README.md).
 name: ingest
 

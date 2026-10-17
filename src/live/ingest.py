@@ -7,8 +7,11 @@
 Run status (written to ``aq.job_runs`` and mirrored in the process exit code):
   success  every station has a reading newer than ``stale_after_hours``
   partial  some stations are fresh, some stale
-  failed   no fresh station, the source failed, or QC detected a probable unit change
-A failed run exits non-zero so the workflow goes red and the monitoring rule (3 failures in a row) can open an issue.
+  stale    the source answered but no station has a fresh reading (it is lagging); a data condition, not a broken run:
+           the exit code is 0 and the lag shows in the freshness check and on the model-health page
+  failed   the source errored or is unverified, QC detected a probable unit change, or the job itself raised
+Only a failed run exits non-zero, so the workflow goes red (and the monitoring rule, 3 failures in a row, can open an issue)
+for real faults and stays green while the source merely lags.
 """
 
 from __future__ import annotations
@@ -28,7 +31,7 @@ from src.live.log import configure as configure_logging
 from src.live.log import get_logger
 from src.live.qc import ImplausibleBatch, check_batch, finish_hourly
 from src.live.sources import SourceUnavailable, get_source
-from src.live.sources.base import LiveSource, SourceNotVerified
+from src.live.sources.base import LiveSource, SourceNotVerified, SourceStale
 from src.live.store import NullStore, Store
 
 KST = "Asia/Kolkata"
@@ -44,6 +47,7 @@ def fetch_with_fallback(
     notes: list[str] = []
     names = [cfg.source] + ([cfg.fallback] if cfg.fallback else [])
     last_error: Exception | None = None
+    errored = False
     for position, name in enumerate(names):
         source = factory(name)
         try:
@@ -51,14 +55,15 @@ def fetch_with_fallback(
             frame = source.fetch(start, end)
         except (SourceUnavailable, SourceNotVerified) as exc:
             notes.append(f"{name}: {type(exc).__name__}: {exc}")
-            last_error = exc
+            last_error, errored = exc, True
             continue
         if len(frame):
             if position:
                 notes.append(f"fallback '{name}' used")
             return frame, source, notes
         notes.append(f"{name}: no rows for {start}..{end}")
-    raise SourceUnavailable("; ".join(notes)) from last_error
+    # every source answered and none had rows: lagging, not broken. Any request error or refusal makes it a real failure.
+    raise (SourceUnavailable if errored else SourceStale)("; ".join(notes)) from last_error
 
 
 def build_rows(
@@ -93,7 +98,7 @@ def build_rows(
 
 def recompute_aqi(store: Any, rows: pd.DataFrame, since: pd.Timestamp) -> pd.DataFrame:
     """AQI for the affected stations from stored history plus the new rows (new rows win), for hours >= ``since``."""
-    ids = sorted(rows.station_id.unique())
+    ids = sorted(int(i) for i in rows.station_id.unique())  # psycopg2 cannot adapt numpy integers
     history = store.recent_pollutants(ids, since - pd.Timedelta(hours=AQI_HISTORY_HOURS))
     new = rows.reset_index()[["station_id", "hour", *POLLUTANTS]]
     both = pd.concat([history[["station_id", "hour", *POLLUTANTS]], new]).drop_duplicates(
@@ -119,7 +124,7 @@ def classify(rows: pd.DataFrame, now: pd.Timestamp, stale_after_hours: float) ->
     fresh = sorted(s for s, a in ages.items() if a <= stale_after_hours)
     stale = {s: a for s, a in ages.items() if a > stale_after_hours}
     stale.update({s: None for s in STATION_IDS if s not in ages})  # no reading at all
-    status = "failed" if not fresh else ("success" if not stale else "partial")
+    status = "stale" if not fresh else ("success" if not stale else "partial")
     return status, {"fresh_stations": fresh, "stale_stations": stale, "age_hours": ages}
 
 
@@ -155,6 +160,8 @@ def run(
         details.update(fresh)
     except ImplausibleBatch as exc:
         error, status = f"ImplausibleBatch: {exc}", "failed"
+    except SourceStale as exc:
+        error, status = f"{type(exc).__name__}: {exc}", "stale"
     except (SourceUnavailable, SourceNotVerified) as exc:
         error, status = f"{type(exc).__name__}: {exc}", "failed"
     except Exception as exc:  # record a short, key-free message and re-raise for the traceback
@@ -188,8 +195,8 @@ def main(argv: list[str] | None = None) -> int:
         len(result["details"].get("fresh_stations", [])),
         result["error"],
     )
-    # a stale source is a data condition (job status and model health show it), not a broken run: rows written means the job worked
-    return 0 if result["status"] in ("success", "partial") or result["rows"] > 0 else 1
+    # a lagging source is a data condition (job status and model health show it), not a broken run
+    return 0 if result["status"] in ("success", "partial", "stale") else 1
 
 
 if __name__ == "__main__":
