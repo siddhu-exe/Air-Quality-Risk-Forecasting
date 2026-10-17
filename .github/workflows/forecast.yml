@@ -1,11 +1,13 @@
-# Forecast job, MANUAL ONLY for now (same reason as ingest.yml: no source is fresh yet, so an hourly run would only be red).
-# TODO(cron): when the ingest cron is enabled, run this at minute 25 (after the :10 ingest), e.g.
-#   schedule:
-#     - cron: "25 * * * *"
-# Reads history with the writer role, verifies the model hashes (config/model_hashes.json), writes aq.forecasts.
+# Forecast job, hourly at minute 25 (after the :10 ingest). It starts producing forecasts by itself the first hour a station's data is
+# fresh; while the source lags it records status 'stale' in job_runs and stays green (the freshness gate skips stale stations, nothing is
+# written). Real faults (a model hash mismatch, an exception, every station skipped for another reason) still turn it red.
+# Reads history with the writer role, verifies the model hashes (config/live_model_hashes.json), writes aq.forecasts.
+# Scheduled runs write; a manual run is a dry run unless you untick the box.
 name: forecast
 
 on:
+  schedule:
+    - cron: "25 * * * *"
   workflow_dispatch:
     inputs:
       dry_run:
@@ -37,4 +39,4 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           DATABASE_URL_READONLY: ${{ secrets.DATABASE_URL_READONLY }}
           LIVE_WEATHER_FILL: ${{ vars.LIVE_WEATHER_FILL }}
-        run: python -m src.live.forecast ${{ inputs.dry_run && '--dry-run' || '' }}
+        run: python -m src.live.forecast ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run && '--dry-run' || '' }}

@@ -8,7 +8,7 @@ table (`reports/metrics/headline_metrics.csv`, `docs/TIER_3/LIVE_CONSISTENT_RETR
 
 ```
  OpenAQ / data.gov.in / (WAQI, candidate)          GitHub Actions cron (hourly)
-            |                                     ingest.yml        forecast.yml        score.yml (planned)
+            |                                     ingest.yml        forecast.yml        score.yml
             v                                          |                 |                    |
    src/live/sources  --QC--> Supabase Postgres (schema aq) <-- joblib inference in the job --+
                                       |
@@ -87,9 +87,10 @@ AQI from pollutants, which sits above the official series, so the frozen skill d
    AQI 6h and 24h and PM2.5 1h and 6h are the live-consistent models; PM2.5 24h, intervals and P(severe) are off.
 4. `python -m src.live.parity_live` compares the served products with the training path (`python -m src.live.parity` does the same for the frozen models).
 
-The hourly OpenAQ ingest (minute 10) and the WAQI shadow ingest (minute 20, ADR 0009) are scheduled. The forecast, scoring and
-deploy workflows are manual (`workflow_dispatch`); the forecast cron is added once a source has been under 3 hours old for 24 hours
-straight. Status: `docs/TIER_3/README.md`.
+The hourly OpenAQ ingest (minute 10), the WAQI shadow ingest (minute 20, ADR 0009), the forecast job (minute 25), the nightly score
+job (20:40 UTC) and the weekly WAQI gate (Mondays) are scheduled; deploy is manual (`workflow_dispatch`). While the source lags, ingest
+and forecast record status `stale` in `job_runs` and stay green; the forecast job starts writing by itself the first hour a station's
+data is fresh. Status: `docs/TIER_3/README.md`.
 
 ## Conventions
 

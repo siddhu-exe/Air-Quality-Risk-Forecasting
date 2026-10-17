@@ -138,7 +138,10 @@ def test_run_status_is_failed_partial_or_success():
     assert (
         forecast.classify_run([ok, ok]) == "success"
         and forecast.classify_run([ok, bad]) == "partial"
-        and forecast.classify_run([bad]) == "failed"
+        and forecast.classify_run([bad]) == "stale"  # every station skipped as stale: nothing fresh, not a fault
+        and forecast.classify_run([forecast.StationVerdict("c", False, "insufficient history: 3 rows")]) == "failed"
+        and forecast.classify_run([bad, forecast.StationVerdict("c", False, "insufficient history")]) == "failed"
+        and forecast.classify_run([]) == "failed"
     )
     assert forecast.summarize([ok, bad])["skipped"] == {"b": "stale"}
 
@@ -202,7 +205,8 @@ def test_dry_run_writes_and_records_nothing(monkeypatch):
 def test_no_fresh_aqi_fails_the_run_with_a_message(monkeypatch):
     store = FakeStore(ISSUE - pd.Timedelta(hours=30))
     result = patched_run(monkeypatch, store, [])
-    assert result["status"] == "failed" and "nothing fresh to forecast from" in result["error"] and store.writes == []
+    assert result["status"] == "stale" and "nothing fresh to forecast from" in result["error"] and store.writes == []
+    assert store.finished == [("stale", 0, result["error"])]  # recorded in job_runs, no forecast written
     assert FakeStore(None).newest_aqi_hour() is None
     assert patched_run(monkeypatch, FakeStore(None), [])["error"] == "no AQI rows in the database"
 
@@ -225,7 +229,47 @@ def test_every_station_skipped_fails_and_says_why(monkeypatch):
         FakeStore(ISSUE),
         [forecast.StationVerdict("ITO", False, "stale"), forecast.StationVerdict("Bawana", False, "stale")],
     )
-    assert result["status"] == "failed" and "ITO: stale" in result["error"]
+    assert result["status"] == "stale" and "ITO: stale" in result["error"]
+
+
+def test_a_run_that_skips_everything_for_a_non_stale_reason_still_fails(monkeypatch):
+    result = patched_run(
+        monkeypatch,
+        FakeStore(ISSUE),
+        [
+            forecast.StationVerdict("ITO", False, "stale"),
+            forecast.StationVerdict("Bawana", False, "insufficient history"),
+        ],
+    )
+    assert result["status"] == "failed"
+
+
+def test_only_a_failed_run_makes_the_workflow_red(monkeypatch):
+    class Cfg:
+        weather_fill, stale_after_hours = "none", 3.0
+
+    from contextlib import nullcontext
+
+    for status, code in (("success", 0), ("partial", 0), ("stale", 0), ("failed", 1)):
+        monkeypatch.setattr("src.live.config.load_config", lambda: Cfg)
+        monkeypatch.setattr("src.live.config.load_forecast_config", lambda: {})
+        monkeypatch.setattr(forecast.serving, "enabled_specs", lambda cfg: [])
+        monkeypatch.setattr(forecast.serving, "verify", lambda specs: {})
+        monkeypatch.setattr(forecast.serving, "load", lambda cfg, check=False: None)
+        monkeypatch.setattr(forecast, "load_gate", lambda: GATE)
+        monkeypatch.setattr("src.live.forecast_store.ForecastStore", lambda var: nullcontext())
+        monkeypatch.setattr(
+            forecast,
+            "run",
+            lambda *a, status=status, **k: {
+                "status": status,
+                "rows": 0,
+                "error": None,
+                "details": {},
+                "forecasts": None,
+            },
+        )
+        assert forecast.main(["--dry-run"]) == code
 
 
 # ------------------------------------------------------------------ SQL and model artifacts
@@ -282,10 +326,12 @@ def test_the_gate_file_records_its_validation_derivation():
     )
 
 
-def test_forecast_workflow_is_manual_only_and_defaults_to_a_dry_run():
+def test_forecast_workflow_runs_hourly_after_ingest_and_a_manual_run_defaults_to_a_dry_run():
     from pathlib import Path
 
     text = (Path(__file__).resolve().parents[1] / ".github/workflows/forecast.yml").read_text()
     code = "\n".join(line for line in text.splitlines() if not line.lstrip().startswith("#"))
-    assert "workflow_dispatch" in code and "schedule:" not in code and "default: true" in code
+    assert 'cron: "25 * * * *"' in code and "workflow_dispatch" in code and "default: true" in code
+    # only a manual run can be a dry run; the schedule always writes
+    assert "github.event_name == 'workflow_dispatch' && inputs.dry_run && '--dry-run'" in code
     assert "contents: read" in code and "python -m src.live.forecast" in code and "requirements-forecast.txt" in code

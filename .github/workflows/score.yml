@@ -1,12 +1,12 @@
-# Nightly scoring of matured forecasts, MANUAL ONLY for now (nothing is being forecast live yet, so a nightly run would only score nothing).
-# TODO(cron): add in the same commit that enables the forecast cron; a time off the hour avoids the top-of-the-hour queue:
-#   schedule:
-#     - cron: "40 20 * * *"   # 02:10 Asia/Kolkata, after the day's last forecast has matured
-# Scores forecasts whose target hour is over against the stored actuals, refreshes aq.skill_rolling, and (live runs only)
-# opens or refreshes a GitHub issue when the alert rules in src/live/score.py fire.
+# Nightly scoring of matured forecasts at 20:40 UTC (02:10 Asia/Kolkata, after the day's last forecast has matured). Scores forecasts whose
+# target hour is over against the stored actuals, refreshes aq.skill_rolling, and opens or refreshes a GitHub issue when an alert rule in
+# src/live/score.py fires (skill below zero for 7 days, a job failing 3 runs in a row; 'stale' runs never count). With nothing forecast
+# yet it scores nothing and stays green. Scheduled runs are live runs with issues on; a manual run chooses.
 name: score
 
 on:
+  schedule:
+    - cron: "40 20 * * *"
   workflow_dispatch:
     inputs:
       run_type:
@@ -44,4 +44,4 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
-        run: python -m src.live.score --run-type ${{ inputs.run_type }} ${{ inputs.open_issues && '--issues' || '' }}
+        run: python -m src.live.score --run-type ${{ inputs.run_type || 'live' }} ${{ (github.event_name == 'schedule' || inputs.open_issues) && '--issues' || '' }}

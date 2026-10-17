@@ -17,6 +17,11 @@ Design rules (docs/TIER_3/PLAN.md section 4):
   * models hash-verified against config/live_model_hashes.json; ``y_persistence`` (the current value of the target) is
     written on every row;
   * no 24h PM2.5, no intervals, no P(severe): refused by the config (ADR 0006).
+
+Run status (``aq.job_runs``, mirrored in the exit code): success / partial (some stations forecast) / **stale** (nothing fresh to
+forecast from: the newest AQI hour is too old, or every station was skipped as stale) / failed (anything else: every station
+skipped for another reason, an exception, a model hash mismatch). Only ``failed`` exits non-zero, so the hourly workflow stays
+green while the source lags and turns red for real faults; the "3 failed runs in a row" alert ignores ``stale``.
 """
 
 from __future__ import annotations
@@ -405,10 +410,20 @@ def summarize(verdicts: list[StationVerdict]) -> dict:
     }
 
 
+class NothingFresh(LookupError):
+    """The newest AQI hour is older than the freshness limit: a data condition (``stale``), not a fault."""
+
+
+def _skipped_as_stale(verdict: StationVerdict) -> bool:
+    return bool(verdict.reason) and verdict.reason.startswith("stale")
+
+
 def classify_run(verdicts: list[StationVerdict]) -> str:
     done = sum(v.ok for v in verdicts)
     dropped = any(v.notes.get("products_dropped") for v in verdicts)
-    return "failed" if done == 0 else ("success" if done == len(verdicts) and not dropped else "partial")
+    if done == 0:
+        return "stale" if verdicts and all(_skipped_as_stale(v) for v in verdicts) else "failed"
+    return "success" if done == len(verdicts) and not dropped else "partial"
 
 
 # --------------------------------------------------------------------------- the job
@@ -457,7 +472,7 @@ def run(
             issue_time = newest
             age = (now - (issue_time + pd.Timedelta(hours=1))).total_seconds() / 3600
             if age > stale_after_hours:
-                raise LookupError(
+                raise NothingFresh(
                     f"newest AQI hour {issue_time} is {age:.1f} h old (limit {stale_after_hours:g} h): nothing fresh to forecast from"
                 )
         issue = _as_kst(issue_time)
@@ -477,10 +492,12 @@ def run(
             written = store.insert_forecasts(rows)
         elif len(rows):
             written = 0
-        if status == "failed":
+        if status in ("failed", "stale"):
             error = (
                 "no station could be forecast: " + "; ".join(f"{k}: {v}" for k, v in details["skipped"].items())[:500]
             )
+    except NothingFresh as exc:
+        error, status = str(exc), "stale"
     except LookupError as exc:
         error = str(exc)
     except Exception as exc:  # record a short, key-free message and re-raise
@@ -534,7 +551,7 @@ def main(argv: list[str] | None = None) -> int:
         d.get("skipped", {}),
         result["error"],
     )
-    return 0 if result["status"] in ("success", "partial") else 1
+    return 0 if result["status"] in ("success", "partial", "stale") else 1
 
 
 if __name__ == "__main__":

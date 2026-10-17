@@ -107,6 +107,19 @@ def test_three_failed_runs_in_a_row_alert_per_job():
     assert score.evaluate_alerts(history([0.1] * 7), runs("failed", "failed")) == []
 
 
+def test_stale_runs_never_raise_an_alert():
+    """A lagging source makes ingest and forecast record 'stale' every hour; that is a data condition, not a failing job."""
+    nothing_scored = history([0.1]).iloc[0:0]  # no forecasts issued yet, so no skill rows
+    for job in ("ingest", "forecast"):
+        assert score.evaluate_alerts(nothing_scored, runs(*["stale"] * 24, job=job)) == []
+    assert score.evaluate_alerts(history([0.1] * 7), runs("stale", "stale", "stale")) == []
+    # 'stale' is not 'failed': it also breaks a streak of failures, so only three real failures in a row alert
+    assert score.evaluate_alerts(history([0.1] * 7), runs("failed", "stale", "failed", "failed")) == []
+    assert (
+        score.evaluate_alerts(history([0.1] * 7), runs("failed", "failed", "failed", "stale"))[0].key == "job-forecast"
+    )
+
+
 def test_issue_is_opened_once_and_then_refreshed(monkeypatch):
     calls = []
 
@@ -151,10 +164,11 @@ def test_sql_is_insert_only_and_scores_only_matured_forecasts_with_an_actual():
     assert "run_type = %s" in score.SELECT_MATURED
 
 
-def test_score_workflow_is_manual_only_and_scoped():
+def test_score_workflow_runs_nightly_as_a_live_run_with_issues_on():
     from pathlib import Path
 
     text = (Path(__file__).resolve().parents[1] / ".github/workflows/score.yml").read_text()
     code = "\n".join(line for line in text.splitlines() if not line.lstrip().startswith("#"))
-    assert "workflow_dispatch" in code and "schedule:" not in code
+    assert 'cron: "40 20 * * *"' in code and "workflow_dispatch" in code
+    assert "inputs.run_type || 'live'" in code and "github.event_name == 'schedule' || inputs.open_issues" in code
     assert "issues: write" in code and "python -m src.live.score" in code
