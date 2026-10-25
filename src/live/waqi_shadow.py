@@ -70,7 +70,7 @@ def fetch_rows(key: str, fetch: Any = waqi.fetch_feed) -> tuple[pd.DataFrame, di
 
 
 class ShadowStore(Store):
-    def upsert_shadow(self, rows: pd.DataFrame, station_ids: dict[str, int]) -> int:
+    def upsert_shadow(self, rows: pd.DataFrame, station_ids: dict[str, int], source: str = waqi.SOURCE_TAG) -> int:
         from psycopg2.extras import Json, execute_values
 
         def cell(value: float) -> float | None:
@@ -80,7 +80,7 @@ class ShadowStore(Store):
             (
                 station_ids[r.station_name],
                 r.ts.to_pydatetime(),
-                waqi.SOURCE_TAG,
+                source,
                 *(cell(getattr(r, p)) for p in waqi.POLLUTANTS),
                 Json(r.raw_iaqi),
                 r.waqi_time.to_pydatetime(),
@@ -97,8 +97,8 @@ class ShadowStore(Store):
         frame["ts"] = pd.to_datetime(frame["ts"], utc=True).dt.tz_convert(KST).dt.tz_localize(None)
         return frame
 
-    def shadow_since(self, since: pd.Timestamp) -> pd.DataFrame:
-        return self._frame(SELECT_SHADOW, (waqi.SOURCE_TAG, since.to_pydatetime()))
+    def shadow_since(self, since: pd.Timestamp, source: str = waqi.SOURCE_TAG) -> pd.DataFrame:
+        return self._frame(SELECT_SHADOW, (source, since.to_pydatetime()))
 
     def primary_since(self, since: pd.Timestamp) -> pd.DataFrame:
         return self._frame(SELECT_PRIMARY, (since.to_pydatetime(),))

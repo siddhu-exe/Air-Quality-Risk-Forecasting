@@ -136,7 +136,7 @@ def test_the_cli_returns_zero_on_fail_so_the_weekly_workflow_stays_green(monkeyp
         def __exit__(self, *_):
             return False
 
-        def shadow_since(self, since):
+        def shadow_since(self, since, source="waqi_backconverted"):
             return shadow
 
         def primary_since(self, since):
@@ -157,3 +157,44 @@ def test_the_weekly_workflow_posts_to_an_issue_and_stays_isolated():
     assert (
         "DATABASE_URL_READONLY" not in code and "WAQI_API_TOKEN" not in code
     )  # reads stored rows only, never calls WAQI
+
+
+# ---- Google (ADR 0010): the same rules, six pollutants, ITO judged like any other station
+GAS_RATIO = {"no2": 0.3, "so2": 0.05, "co": 0.01, "o3": 0.4}
+
+
+def google_frames(**kwargs):
+    shadow, primary = frames(**kwargs)
+    for gas, ratio in GAS_RATIO.items():
+        primary[gas] = primary["pm25"] * ratio
+        shadow[gas] = shadow["pm25"] * ratio
+    return shadow, primary
+
+
+def test_google_gate_judges_all_six_pollutants_and_includes_ito():
+    report = sc.gate(*google_frames(), sc.GOOGLE_SPEC)
+    assert report.passed and set(report.pollutants) == set(sc.GOOGLE_SPEC.pollutants)
+    assert "ITO" in report.stations_usable and len(report.stations_usable) == 7
+    assert report.subsets["pm_only"]["passed"] and report.excluded == []
+    assert "Google Air Quality gate: PASS" in sc.render_markdown(report)
+
+
+def test_google_gate_fails_when_one_gas_disagrees_but_reports_the_pm_subset_separately():
+    shadow, primary = google_frames()
+    shadow["no2"] = 1.0  # wildly different from the reference at every station
+    report = sc.gate(shadow, primary, sc.GOOGLE_SPEC)
+    assert not report.passed and not report.pollutants["no2"].passed
+    assert report.pollutants["pm25"].passed and report.subsets["pm_only"]["passed"]
+    assert report.stations_usable == []  # nothing is usable for the models unless every pollutant passes
+
+
+def test_the_default_spec_is_still_the_waqi_pm_only_gate():
+    report = sc.gate(*frames())
+    assert report.name == "WAQI fallback gate" and set(report.pollutants) == {"pm25", "pm10"}
+    assert report.excluded == ["ITO"]
+
+
+def test_the_history_endpoint_is_gated_apart_with_the_same_rules():
+    spec = sc.SPECS["google_history"]
+    assert spec.source == "google_history" and spec.pollutants == sc.GOOGLE_SPEC.pollutants
+    assert sc.gate(*google_frames(), spec).name == "Google Air Quality gate (history)"

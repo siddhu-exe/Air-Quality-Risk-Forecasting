@@ -13,3 +13,4 @@ Short records of choices that shape the system. Format: context, decision, conse
 | [0009](0009-waqi-shadow-mode.md) | WAQI in shadow mode; OpenAQ stays primary | Accepted 2026-10-15 |
 | [0008](0008-api-contract.md) | API contract: status and frozen references on every forecast | Accepted 2026-10-15 |
 | [0007](0007-structural-short-horizon-forecast.md) | Structural 1h/6h forecast from PM2.5 forecasts | Proposed |
+| [0010](0010-google-air-quality-shadow-gate.md) | Google Air Quality in shadow mode, judged by a pre-registered gate | Accepted 2026-10-25 |

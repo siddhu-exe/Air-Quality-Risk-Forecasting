@@ -1,0 +1,35 @@
+# Google Air Quality in shadow mode (ADR 0010): the current hour for the 7 stations into aq.shadow_readings (source 'google').
+# Nothing in the forecasts, the AQI or the API reads these rows. 7 requests per run, about 5,200 a month.
+# MANUAL ONLY for now: the hourly schedule below stays commented out until the quota cap and budget alert are set in the Google
+# Cloud console and the owner has confirmed them (docs/TIER_3/GOOGLE_AIR_QUALITY.md).
+name: shadow-google
+
+on:
+  # schedule:
+  #   - cron: "35 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: shadow-google
+  cancel-in-progress: false
+
+jobs:
+  shadow:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements-live.txt
+      - run: pip install -r requirements-live.txt
+      - name: Fetch the current hour
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          GOOGLE_AIR_QUALITY_API_KEY: ${{ secrets.GOOGLE_AIR_QUALITY_API_KEY }}
+        run: python -m src.live.google_shadow

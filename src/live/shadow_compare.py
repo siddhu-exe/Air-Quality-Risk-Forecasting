@@ -4,8 +4,10 @@ WAQI's hour convention is not known, so the comparison is made at three offsets:
 OpenAQ hour a WAQI feed time corresponds to. Pure functions here; the hourly shadow job logs the last day's result and
 ``python -m src.live.shadow_compare --days 7`` prints the evidence for the fallback decision.
 
-The fallback GATE (ADR 0009) is ``gate()``: one pass/fail summary for "may WAQI be a fallback live source for PM2.5/PM10?",
-run weekly by ``waqi-gate.yml`` (``--gate --issue``). Its rules, all fixed here and not tuned on the data that judges them:
+The GATE is ``gate()``: one pass/fail summary for "may this shadow source be a live source for these pollutants?". The rules below
+are shared by every source; what differs per source is a ``GateSpec`` (pollutants, excluded stations). WAQI (ADR 0009, PM2.5/PM10
+only) runs weekly in ``waqi-gate.yml`` (``--gate --issue``); Google Air Quality (ADR 0010, six pollutants) is run by hand with
+``--gate --source google``. The rules, all fixed here and not tuned on the data that judges them:
   * PM2.5 and PM10 only; the gases are never used. ITO is excluded entirely: WAQI has no ITO monitor, only one 1.9 km away.
   * The overlap is split in time at its median. The hour offset (-1/0/+1) is picked per pollutant on the FIRST half and the
     gate is scored on the SECOND half at that offset.
@@ -22,7 +24,7 @@ import argparse
 import json
 import os
 import sys
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, replace
 
 import numpy as np
 import pandas as pd
@@ -33,9 +35,50 @@ from src.live.sources.waqi import POLLUTANTS
 LAGS = (-1, 0, 1)
 MIN_PAIRS = 12  # fewer overlapping hours than this is not summarised
 
-# ---- the fallback gate (ADR 0009)
+# ---- the gate (ADR 0009, ADR 0010)
 GATE_POLLUTANTS = ("pm25", "pm10")
 EXCLUDED_STATIONS = ("ITO",)  # WAQI has no ITO monitor; the nearest is a different one 1.9 km away
+POLLUTANT_NAMES = {"pm25": "PM2.5", "pm10": "PM10", "no2": "NO2", "so2": "SO2", "co": "CO", "o3": "O3"}
+
+
+@dataclass(frozen=True)
+class GateSpec:
+    """What one source is judged on. The thresholds below are the same for every source."""
+
+    name: str  # report title
+    source: str  # aq.shadow_readings.source
+    adr: str
+    pollutants: tuple[str, ...]
+    purpose: str  # "may <source> be ...?"
+    excluded_stations: tuple[str, ...] = ()
+    subsets: tuple[tuple[str, tuple[str, ...]], ...] = ()  # named pollutant subsets reported as their own verdict
+    footer: str = ""
+
+
+WAQI_SPEC = GateSpec(
+    "WAQI fallback gate",
+    "waqi_backconverted",
+    "ADR 0009",
+    GATE_POLLUTANTS,
+    "a fallback live source",
+    EXCLUDED_STATIONS,
+    footer="Nothing changes until this passes and the PM-only audit has been reviewed; the site stays in stale mode meanwhile.",
+)
+# Every pollutant the live AQI is computed from (NH3 has no OpenAQ reference, so it cannot be judged). ITO is judged: Google is a
+# value modelled at the station's coordinates, not a mapped monitor.
+GOOGLE_SPEC = GateSpec(
+    "Google Air Quality gate",
+    "google",
+    "ADR 0010",
+    ("pm25", "pm10", "no2", "so2", "co", "o3"),
+    "a live source for the models",
+    (),
+    (("pm_only", ("pm25", "pm10")),),
+    footer="Shadow only: nothing in the forecasts, the AQI or the API reads these rows.",
+)
+# The 30-day history endpoint, judged separately from the hourly current conditions: history can be better than what was published live.
+GOOGLE_HISTORY_SPEC = replace(GOOGLE_SPEC, name="Google Air Quality gate (history)", source="google_history")
+SPECS = {spec.source: spec for spec in (WAQI_SPEC, GOOGLE_SPEC, GOOGLE_HISTORY_SPEC)}
 MIN_OVERLAP_DAYS = 7
 MIN_PAIRS_POLLUTANT = 150  # paired hours on the scoring half, pooled over the eligible stations
 MIN_STATIONS = 5  # stations that must pass individually for the network to pass
@@ -128,9 +171,15 @@ class GateReport:
     overlap_last: str | None
     split_at: str | None
     pollutants: dict = field(default_factory=dict)
-    stations_usable: list = field(default_factory=list)  # pass BOTH pollutants; empty unless the network gate passes
+    stations_usable: list = field(default_factory=list)  # pass EVERY pollutant; empty unless the network gate passes
     excluded: list = field(default_factory=lambda: list(EXCLUDED_STATIONS))
     reasons: list = field(default_factory=list)
+    name: str = WAQI_SPEC.name
+    adr: str = WAQI_SPEC.adr
+    footer: str = WAQI_SPEC.footer
+    subsets: dict = field(
+        default_factory=dict
+    )  # subset name -> {"pollutants": [...], "passed": bool, "stations": [...]}
 
     def to_json(self) -> str:
         return json.dumps(asdict(self), indent=2, default=str)
@@ -154,21 +203,32 @@ def _pairs(merged: pd.DataFrame, pollutant: str) -> pd.DataFrame:
     return merged[["station_id", "ts", f"{pollutant}_s", f"{pollutant}_p"]].dropna()
 
 
-def gate(shadow: pd.DataFrame, primary: pd.DataFrame) -> GateReport:
-    """May WAQI be a fallback live source for PM2.5/PM10? One pass/fail with the evidence behind it (see module docstring)."""
+def gate(shadow: pd.DataFrame, primary: pd.DataFrame, spec: GateSpec = WAQI_SPEC) -> GateReport:
+    """May ``spec.source`` be ``spec.purpose``? One pass/fail with the evidence behind it (see module docstring)."""
     names = {v: k for k, v in STATION_IDS.items()}
-    eligible = {i: n for i, n in names.items() if n not in EXCLUDED_STATIONS}
+    eligible = {i: n for i, n in names.items() if n not in spec.excluded_stations}
     shadow = shadow[shadow["station_id"].isin(eligible)]
     primary = primary[primary["station_id"].isin(eligible)]
 
     by_lag = {lag: pair_frame(shadow, primary, lag) for lag in LAGS}
     # overlap hours, keyed by the SHADOW hour so the split does not depend on the offset being tested
     hours = sorted(
-        {ts for merged in by_lag.values() for pollutant in GATE_POLLUTANTS for ts in _pairs(merged, pollutant)["ts"]}
+        {ts for merged in by_lag.values() for pollutant in spec.pollutants for ts in _pairs(merged, pollutant)["ts"]}
     )
-    report = GateReport(False, "", 0.0, None, None, None)
+    report = GateReport(
+        False,
+        "",
+        0.0,
+        None,
+        None,
+        None,
+        excluded=list(spec.excluded_stations),
+        name=spec.name,
+        adr=spec.adr,
+        footer=spec.footer,
+    )
     if not hours:
-        report.reasons.append("no overlapping hours between the WAQI shadow rows and OpenAQ")
+        report.reasons.append(f"no overlapping hours between the {spec.source} shadow rows and OpenAQ")
         report.summary = f"FAIL: {report.reasons[0]}"
         return report
     first, last = hours[0], hours[-1]
@@ -178,7 +238,7 @@ def gate(shadow: pd.DataFrame, primary: pd.DataFrame) -> GateReport:
     if report.overlap_days < MIN_OVERLAP_DAYS:
         report.reasons.append(f"overlap is {report.overlap_days:.1f} days, need {MIN_OVERLAP_DAYS}")
 
-    for pollutant in GATE_POLLUTANTS:
+    for pollutant in spec.pollutants:
         result = PollutantGate(pollutant)
         # 1) the offset, chosen once, on the first half only
         for lag in LAG_PREFERENCE:
@@ -218,16 +278,26 @@ def gate(shadow: pd.DataFrame, primary: pd.DataFrame) -> GateReport:
         result.passed = not result.reasons
         report.pollutants[pollutant] = result
 
-    failing = [p for p in GATE_POLLUTANTS if not report.pollutants[p].passed]
+    failing = [p for p in spec.pollutants if not report.pollutants[p].passed]
     for pollutant in failing:
         report.reasons += [f"{pollutant}: {r}" for r in report.pollutants[pollutant].reasons]
     report.passed = not report.reasons
     if report.passed:
         report.stations_usable = sorted(
-            set.intersection(*(set(report.pollutants[p].stations_passing) for p in GATE_POLLUTANTS))
+            set.intersection(*(set(report.pollutants[p].stations_passing) for p in spec.pollutants))
         )
+    for label, members in spec.subsets:
+        ok = all(m in report.pollutants and report.pollutants[m].passed for m in members)
+        report.subsets[label] = {
+            "pollutants": list(members),
+            "passed": ok,
+            "stations": sorted(set.intersection(*(set(report.pollutants[m].stations_passing) for m in members)))
+            if ok
+            else [],
+        }
+    scope = "/".join(POLLUTANT_NAMES.get(p, p) for p in spec.pollutants)
     report.summary = (
-        f"PASS: PM2.5/PM10 may be a fallback at {len(report.stations_usable)} stations ({', '.join(report.stations_usable)})"
+        f"PASS: {scope} may be {spec.purpose} at {len(report.stations_usable)} stations ({', '.join(report.stations_usable)})"
         if report.passed
         else f"FAIL: {report.reasons[0]}" + (f" (+{len(report.reasons) - 1} more)" if len(report.reasons) > 1 else "")
     )
@@ -236,12 +306,18 @@ def gate(shadow: pd.DataFrame, primary: pd.DataFrame) -> GateReport:
 
 def render_markdown(report: GateReport) -> str:
     lines = [
-        f"## WAQI fallback gate: {report.summary}",
+        f"## {report.name}: {report.summary}",
         "",
         f"Overlap {report.overlap_first or '-'} .. {report.overlap_last or '-'} ({report.overlap_days:.1f} days); offset chosen on hours "
-        f"before {report.split_at or '-'}, scored on the rest. Excluded: {', '.join(report.excluded)}. Rules: ADR 0009.",
+        f"before {report.split_at or '-'}, scored on the rest. Excluded: {', '.join(report.excluded) or 'none'}. Rules: {report.adr}.",
         "",
     ]
+    for label, sub in report.subsets.items():
+        lines += [
+            f"Subset `{label}` ({', '.join(sub['pollutants'])}): {'pass' if sub['passed'] else 'fail'}"
+            + (f" at {', '.join(sub['stations'])}" if sub["passed"] else ""),
+            "",
+        ]
     for pollutant, res in report.pollutants.items():
         lines.append(f"### {pollutant}: {'pass' if res.passed else 'fail'} (offset {res.lag_hours})")
         if res.pooled is not None:
@@ -266,9 +342,8 @@ def render_markdown(report: GateReport) -> str:
         lines += [f"- {r}" for r in report.reasons]
     elif report.overlap_days < MIN_OVERLAP_DAYS and report.pollutants:
         lines.append(f"- overlap is {report.overlap_days:.1f} days, need {MIN_OVERLAP_DAYS}")
-    lines.append(
-        "Nothing changes until this passes and the PM-only audit has been reviewed; the site stays in stale mode meanwhile."
-    )
+    if report.footer:
+        lines.append(report.footer)
     return "\n".join(lines) + "\n"
 
 
@@ -281,6 +356,7 @@ def main(argv: list[str] | None = None) -> int:
         "--gate", action="store_true", help="evaluate the fallback gate (PASS/FAIL) instead of the table"
     )
     parser.add_argument("--json", help="with --gate: also write the report as JSON to this path")
+    parser.add_argument("--source", default=WAQI_SPEC.source, choices=sorted(SPECS), help="shadow source to evaluate")
     parser.add_argument(
         "--issue", action="store_true", help="with --gate: post the result to a GitHub issue (GITHUB_TOKEN)"
     )
@@ -288,9 +364,10 @@ def main(argv: list[str] | None = None) -> int:
     days = args.days or (60 if args.gate else 7)
     since = pd.Timestamp.now(tz="Asia/Kolkata") - pd.Timedelta(days=days)
     with ShadowStore("DATABASE_URL") as store:
-        shadow, primary = store.shadow_since(since), store.primary_since(since - pd.Timedelta(hours=2))
+        shadow = store.shadow_since(since, args.source)
+        primary = store.primary_since(since - pd.Timedelta(hours=2))
     if args.gate:
-        report = gate(shadow, primary)
+        report = gate(shadow, primary, SPECS[args.source])
         body = render_markdown(report)
         print(body)
         if args.json:
