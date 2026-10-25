@@ -235,29 +235,41 @@ def evaluate_alerts(
     return alerts
 
 
-def open_or_refresh_issue(alert: Alert, repo: str, token: str, label: str = ISSUE_LABEL) -> str:
-    """Open an issue for ``alert`` or comment on the open one with the same key. Returns "opened" or "refreshed"."""
-    base = f"https://api.github.com/repos/{repo}"
+def github_call(token: str, method: str, url: str, payload: dict | None = None) -> object:
+    """One GitHub REST call (JSON in, JSON out). The token is only ever sent as a bearer header to the fixed API host."""
     headers = {
         "Authorization": f"Bearer {token}",
         "Accept": "application/vnd.github+json",
         "Content-Type": "application/json",
     }
+    request = urllib.request.Request(
+        url, data=None if payload is None else json.dumps(payload).encode(), headers=headers, method=method
+    )
+    with urllib.request.urlopen(request, timeout=30) as response:  # noqa: S310 - fixed https GitHub API URL
+        return json.loads(response.read() or b"null")
 
-    def call(method: str, url: str, payload: dict | None = None) -> object:
-        request = urllib.request.Request(
-            url, data=None if payload is None else json.dumps(payload).encode(), headers=headers, method=method
-        )
-        with urllib.request.urlopen(request, timeout=30) as response:  # noqa: S310 - fixed https GitHub API URL
-            return json.loads(response.read() or b"null")
 
-    marker = f"[{alert.key}]"
-    open_issues = call("GET", f"{base}/issues?state=open&labels={label}&per_page=100")
-    existing = next((i for i in open_issues if marker in i["title"]), None)
+def find_open_issue(key: str, repo: str, token: str, label: str = ISSUE_LABEL) -> dict | None:
+    """The open issue whose title carries ``[key]``, if there is one."""
+    open_issues = github_call(
+        token, "GET", f"https://api.github.com/repos/{repo}/issues?state=open&labels={label}&per_page=100"
+    )
+    return next((i for i in open_issues if f"[{key}]" in i["title"]), None)
+
+
+def open_or_refresh_issue(alert: Alert, repo: str, token: str, label: str = ISSUE_LABEL) -> str:
+    """Open an issue for ``alert`` or comment on the open one with the same key. Returns "opened" or "refreshed"."""
+    base = f"https://api.github.com/repos/{repo}"
+    existing = find_open_issue(alert.key, repo, token, label)
     if existing:
-        call("POST", f"{base}/issues/{existing['number']}/comments", {"body": alert.body})
+        github_call(token, "POST", f"{base}/issues/{existing['number']}/comments", {"body": alert.body})
         return "refreshed"
-    call("POST", f"{base}/issues", {"title": f"{alert.title} {marker}", "body": alert.body, "labels": [label]})
+    github_call(
+        token,
+        "POST",
+        f"{base}/issues",
+        {"title": f"{alert.title} [{alert.key}]", "body": alert.body, "labels": [label]},
+    )
     return "opened"
 
 

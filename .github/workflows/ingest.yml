@@ -3,7 +3,9 @@
 # OpenAQ is primary. While it lags behind, every run still writes whatever new hours it has (idempotent upserts) and records status
 # 'stale' in job_runs (exit 0, the run stays green); the forecast job refuses stale data on its own, so nothing is forecast until the
 # data is fresh. Real faults (request errors, database errors, missing secrets, unit changes) still fail the run.
-# The forecast cron stays OFF until a source has been under 3 h old for 24 hours straight (see docs/TIER_3/README.md).
+# After the ingest, stall_watch opens (or updates) the issue "Live source stalled" when no station has had a new reading for 48 h and
+# closes it when a station is fresh again (ADR 0009). The workflow itself stays green for a lagging source.
+# Scheduled runs are best effort: GitHub delays and drops cron runs, so expect fewer than 24 a day (docs/postmortems/2026-10-ingest-stall.md).
 name: ingest
 
 on:
@@ -19,6 +21,7 @@ on:
 
 permissions:
   contents: read
+  issues: write # open, update and close the stall issue
 
 concurrency:
   group: ingest
@@ -46,3 +49,10 @@ jobs:
           LIVE_WEATHER_FILL: ${{ vars.LIVE_WEATHER_FILL }}
           LIVE_WEATHER_DISPLAY: ${{ vars.LIVE_WEATHER_DISPLAY }}
         run: python -m src.live.ingest
+      - name: Escalate a long stall
+        if: ${{ !cancelled() }}
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: python -m src.live.stall_watch
