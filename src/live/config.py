@@ -14,6 +14,8 @@ from pathlib import Path
 CONFIG_PATH = Path(__file__).resolve().parents[2] / "config" / "live.toml"
 VALID_SOURCES = ("openaq", "data_gov_in")
 VALID_WEATHER = ("open-meteo", "none")
+# 192 h (+4 h of slot padding) x 4 slots/h = 784 records: one OpenAQ request per sensor, under the 1000-record page limit
+MAX_LOOKBACK_HOURS = 192
 
 
 class ConfigError(ValueError):
@@ -45,8 +47,8 @@ class IngestConfig:
         for name, value in (("weather_display", self.weather_display), ("weather_fill", self.weather_fill)):
             if value not in VALID_WEATHER:
                 raise ConfigError(f"{name}={value!r}: must be one of {VALID_WEATHER}")
-        if not 1 <= self.lookback_hours <= 72:
-            raise ConfigError("lookback_hours must be between 1 and 72")
+        if not 1 <= self.lookback_hours <= MAX_LOOKBACK_HOURS:
+            raise ConfigError(f"lookback_hours must be between 1 and {MAX_LOOKBACK_HOURS}")
         if self.stale_after_hours <= 0:
             raise ConfigError("stale_after_hours must be positive")
 

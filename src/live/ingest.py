@@ -2,6 +2,7 @@
 
     python -m src.live.ingest                  # production: DATABASE_URL, source from config/live.toml (or LIVE_SOURCE)
     python -m src.live.ingest --dry-run        # fetch + process, print a summary, no database
+    python -m src.live.ingest --from "2026-10-14 00:00" --to "2026-10-15 23:00"   # repair: re-ingest an explicit window
     python -m src.live.ingest --source data_gov_in --allow-unverified --dry-run
 
 Run status (written to ``aq.job_runs`` and mirrored in the process exit code):
@@ -20,13 +21,14 @@ import argparse
 import sys
 from collections import Counter
 from collections.abc import Callable
+from functools import partial
 from typing import Any
 
 import pandas as pd
 
 from src.features.compute_cpcb_aqi import POLLUTANTS, STATION_IDS, compute_aqi
 from src.live import weather as weather_mod
-from src.live.config import IngestConfig, load_config
+from src.live.config import MAX_LOOKBACK_HOURS, IngestConfig, load_config
 from src.live.log import configure as configure_logging
 from src.live.log import get_logger
 from src.live.qc import ImplausibleBatch, check_batch, finish_hourly
@@ -128,21 +130,39 @@ def classify(rows: pd.DataFrame, now: pd.Timestamp, stale_after_hours: float) ->
     return status, {"fresh_stations": fresh, "stale_stations": stale, "age_hours": ages}
 
 
+def repair_window(start: pd.Timestamp, end: pd.Timestamp, now: pd.Timestamp) -> tuple[pd.Timestamp, pd.Timestamp]:
+    """Validate an explicit hour-label window (local naive) for a repair run: ordered, complete hours only, one request per sensor."""
+    newest = now.tz_localize(None).floor("h") - pd.Timedelta(hours=1)
+    if start > end:
+        raise ValueError(f"--from {start} is after --to {end}")
+    if end > newest:
+        raise ValueError(f"--to {end} is not a complete hour yet (newest is {newest})")
+    if (end - start) / pd.Timedelta(hours=1) + 1 > MAX_LOOKBACK_HOURS:
+        raise ValueError(f"the window may span at most {MAX_LOOKBACK_HOURS} hours")
+    return start, end
+
+
 def run(
     cfg: IngestConfig,
     store: Any,
     *,
     now: pd.Timestamp | None = None,
+    window: tuple[pd.Timestamp, pd.Timestamp] | None = None,
     factory: Callable[..., LiveSource] = get_source,
     weather_fetch: Callable[..., pd.DataFrame] = weather_mod.fetch_recent,
 ) -> dict:
+    """One ingest run over the last ``cfg.lookback_hours`` hours, or over ``window`` (hour labels) when repairing a hole."""
     now = now if now is not None else pd.Timestamp.now(tz=KST)
-    end = now.tz_localize(None).floor("h") - pd.Timedelta(hours=1)  # newest complete hour label
-    start = end - pd.Timedelta(hours=cfg.lookback_hours - 1)
+    if window is not None:
+        start, end = repair_window(*window, now)
+    else:
+        end = now.tz_localize(None).floor("h") - pd.Timedelta(hours=1)  # newest complete hour label
+        start = end - pd.Timedelta(hours=cfg.lookback_hours - 1)
     run_id = store.start_run("ingest")
     details: dict = {
         "config": {"source": cfg.source, "fallback": cfg.fallback, "lookback_hours": cfg.lookback_hours},
         "window": [str(start), str(end)],
+        **({"repair": True} if window is not None else {}),
     }
     status, error, written = "failed", None, 0
     try:
@@ -177,7 +197,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--dry-run", action="store_true", help="no database; print what would be written")
     parser.add_argument("--source", help="override the configured source for this run")
     parser.add_argument("--allow-unverified", action="store_true")
+    parser.add_argument("--from", dest="start", help="repair: first hour label to re-ingest, local time (needs --to)")
+    parser.add_argument("--to", dest="end", help="repair: last hour label to re-ingest, local time (needs --from)")
     args = parser.parse_args(argv)
+    if bool(args.start) != bool(args.end):
+        parser.error("--from and --to go together")
     cfg = load_config()
     overrides = {
         k: v for k, v in (("source", args.source), ("allow_unverified", True if args.allow_unverified else None)) if v
@@ -185,8 +209,15 @@ def main(argv: list[str] | None = None) -> int:
     if overrides:
         cfg = IngestConfig(**{**cfg.__dict__, **overrides})
     store = NullStore() if args.dry_run else Store()
+    window, weather_fetch = None, weather_mod.fetch_recent
+    if args.start:
+        window = (pd.Timestamp(args.start), pd.Timestamp(args.end))
+        days_back = (pd.Timestamp.now(tz=KST).tz_localize(None) - window[0]).days + 2
+        weather_fetch = partial(
+            weather_mod.fetch_recent, past_days=min(days_back, 92)
+        )  # Open-Meteo reaches back 92 days
     with store:
-        result = run(cfg, store)
+        result = run(cfg, store, window=window, weather_fetch=weather_fetch)
     log.info(
         "status=%s rows=%s source=%s fresh=%s/7 error=%s",
         result["status"],

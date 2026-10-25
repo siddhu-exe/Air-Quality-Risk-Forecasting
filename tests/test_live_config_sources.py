@@ -39,6 +39,13 @@ def test_the_repository_config_loads_and_defaults_to_openaq():
     )
 
 
+def test_the_ingest_window_reaches_back_further_than_a_late_openaq_delivery():
+    # a 72 h window missed whole days that OpenAQ delivered late in October 2026
+    lookback = cfgmod.load_config(env={}).lookback_hours
+    assert lookback >= 192
+    assert lookback <= cfgmod.MAX_LOOKBACK_HOURS
+
+
 def test_environment_overrides_the_file_and_blank_variables_are_ignored(tmp_path):
     path = _toml(tmp_path)
     assert cfgmod.load_config(path, {"LIVE_SOURCE": "data_gov_in"}).source == "data_gov_in"

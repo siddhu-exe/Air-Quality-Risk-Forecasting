@@ -345,7 +345,9 @@ def test_store_sql_refreshes_only_rows_of_the_same_source_and_never_deletes():
 def test_main_exit_code_follows_the_run_status(monkeypatch):
     for status, code in (("success", 0), ("partial", 0), ("stale", 0), ("failed", 1)):
         monkeypatch.setattr(
-            ingest, "run", lambda cfg, st, status=status: {"status": status, "rows": 0, "error": None, "details": {}}
+            ingest,
+            "run",
+            lambda cfg, st, status=status, **_: {"status": status, "rows": 0, "error": None, "details": {}},
         )
         assert ingest.main(["--dry-run"]) == code
 
@@ -374,3 +376,33 @@ def test_a_scale_error_at_one_station_is_nullified_and_flagged_but_does_not_fail
         rows[rows.station_name == "Bawana"].nox.isna().all() and rows[rows.station_name != "Bawana"].nox.notna().all()
     )
     assert st.last_run["details"]["qc_flagged_cells"]["nox"] == 6
+
+
+def test_a_repair_window_ingests_exactly_those_hours_and_is_marked():
+    hours = pd.date_range("2026-10-08 00:00", "2026-10-11 13:00", freq="h")
+    window = (pd.Timestamp("2026-10-09 00:00"), pd.Timestamp("2026-10-09 23:00"))
+    fake = FakeStore()
+    result = ingest.run(
+        IngestConfig(),
+        fake,
+        now=NOW,
+        window=window,
+        factory=lambda _: make_source(synthetic(hours))(),
+        weather_fetch=weather_stub,
+    )
+    written = fake.readings[0].reset_index()
+    assert written["hour"].min() == window[0] and written["hour"].max() == window[1]
+    assert result["details"]["repair"] is True and result["details"]["window"] == [str(window[0]), str(window[1])]
+
+
+@pytest.mark.parametrize(
+    "start, end",
+    [
+        ("2026-10-10 05:00", "2026-10-10 04:00"),  # reversed
+        ("2026-10-11 00:00", "2026-10-11 14:00"),  # the hour that has not finished yet
+        ("2026-09-01 00:00", "2026-10-10 00:00"),  # wider than one request per sensor
+    ],
+)
+def test_an_invalid_repair_window_is_refused_before_anything_is_fetched(start, end):
+    with pytest.raises(ValueError):
+        ingest.run(IngestConfig(), FakeStore(), now=NOW, window=(pd.Timestamp(start), pd.Timestamp(end)))
