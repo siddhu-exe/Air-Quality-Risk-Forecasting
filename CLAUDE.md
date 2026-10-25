@@ -15,6 +15,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Treat this as a production project, not a coursework repo: clean structure, clean code, accurate docs, no stale or duplicate files, no internal working notes in public docs. Every number in a doc comes from a script output.
 - Local machine is old and crashes under load: run heavy work (training, big matrix builds) on Colab, keep local runs single-threaded and low priority (`OMP_NUM_THREADS=1 nice -n 19`), one job at a time.
 
+## Principles
+
+The project's direction and phases are in `docs/ROADMAP.md`; each phase ends with a report and stops for the owner's approval. Work that adds no evidence for operations, the model lifecycle, decision evaluation, generalization or documentation is out of scope.
+
+1. Every number is reported against a baseline (persistence, plus window-update persistence for AQI) with CIs, and comes from a script output, never typed by hand.
+2. Train/serve consistency: a model is only served on inputs built the way its training inputs were built. A new data source must pass a shadow period plus a pre-registered gate before it can feed a model.
+3. Select on validation; score test once. Live data collected after a model is frozen is the cleanest test.
+4. Honest states: if data is stale or a model has no skill, the product says so. Never fake freshness or extrapolate beyond the trained horizon.
+5. Every decision gets an ADR (`docs/decisions/`); every incident gets a postmortem (`docs/postmortems/`); every month gets an ops report (`docs/ops/`).
+6. Trunk-based on `main`, small commits, tests and CI green, staged list shown before commit, production-standard repo (see Working rules).
+7. Heavy training runs in Colab bundles (the laptop is weak); the repo stays reproducible through make targets.
+
 ## What this is
 
 Delhi air quality risk forecasting: 1h/6h/24h AQI forecasts across 7 CAAQMS stations, CPCB/GRAP risk classification with cost-sensitive alert thresholds, and a Diwali-ban causal (ITS/placebo) analysis. The project is a sequence of phases (ETL → EDA → features → modeling → classification), each leaving artifacts on disk that later phases and the UIs consume. `README.md` has results and background; `docs/` and `reports/**/*.md` hold per-phase findings and specs.
